@@ -24,6 +24,10 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'rake', '~> 10.1.0'
   s.add_development_dependency 'database_cleaner'
-  s.add_development_dependency 'minitest'
+  s.add_development_dependency 'dotenv'
+  s.add_development_dependency 'rspec'
   s.add_development_dependency 'pg'
+
+  s.add_development_dependency 'factory_girl', '~> 4.5.0'
+  s.add_development_dependency 'faker', '~> 1.5.0'
 end
