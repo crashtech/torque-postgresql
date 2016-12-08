@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
   s.test_files = Dir['test/**/*']
 
   s.add_dependency 'activerecord', '>= 4.0.0'
+  s.add_dependency 'activesupport', '>= 4.0.0'
   s.add_dependency 'arel', '>= 4.0.1'
 
   s.add_development_dependency 'rake', '~> 10.1.0'
