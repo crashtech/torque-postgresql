@@ -2,8 +2,13 @@ module Torque
   module Postgresql
     module Migration
 
+      Dumper    = ActiveRecord::SchemaDumper
+
       Connector = ActiveRecord::ConnectionAdapters::PostgreSQL
       Adapter   = ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
+
+      Migration = ActiveRecord::Migration
+      Reversion = Migration::CommandRecorder
 
       Utils     = Connector::Utils
 

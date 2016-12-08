@@ -86,9 +86,23 @@ module Torque
 
       end
 
-      Adapter.send :include, TypesStatements
+      module TypesReversion
 
-      ActiveRecord::SchemaDumper.send :include, TypesDumper
+        # Records the rename operation for types.
+        def rename_type(*args, &block)
+          record(:rename_type, args, &block)
+        end
+
+        # Inverts the type name.
+        def invert_rename_type(args)
+          [:rename_type, args.reverse]
+        end
+
+      end
+
+      Adapter.send :include, TypesStatements
+      Dumper.send :include, TypesDumper
+      Reversion.send :include, TypesReversion
 
     end
   end

@@ -42,11 +42,6 @@ module Torque
           end
         end
 
-        # Allows an direct inversion of enum creation.
-        def invert_create_enum(args, &block)
-          [:drop_type, args, block]
-        end
-
         # Returns all values that an enum type can have.
         def enum_values(name)
           select_values("SELECT unnest(enum_range(NULL::#{name}))")
@@ -68,7 +63,22 @@ module Torque
 
       end
 
+      module EnumReversion
+
+        # Records the creation of the enum to be reverted.
+        def create_enum(*args, &block)
+          record(:create_enum, args, &block)
+        end
+
+        # Inverts the creation of the enum.
+        def invert_create_enum(args)
+          [:drop_type, [args.first]]
+        end
+
+      end
+
       Adapter.send :include, EnumStatements
+      Reversion.send :include, EnumReversion
 
     end
   end
