@@ -68,35 +68,29 @@ RSpec.describe 'Enum' do
   end
 
   context 'on table definition' do
-    subject { ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition.new('posts') }
+    subject { ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition.new('articles') }
 
     it 'has the enum method' do
       expect(subject).to respond_to(:enum)
     end
 
     it 'can be used in a single form' do
-      connection.create_enum(:status, %i(foo bar))
-      subject.enum('status')
-
-      expect(subject['status'].name).to eql('status')
-      expect(subject['status'].type).to eql(:status)
+      subject.enum('content_status')
+      expect(subject['content_status'].name).to eql('content_status')
+      expect(subject['content_status'].type).to eql(:content_status)
     end
 
     it 'can be used in a multiple form' do
-      connection.create_enum(:status, %i(foo bar))
-
-      subject.enum('foo', 'bar', 'baz', type: :status)
-      expect(subject['foo'].type).to eql(:status)
-      expect(subject['bar'].type).to eql(:status)
-      expect(subject['baz'].type).to eql(:status)
+      subject.enum('foo', 'bar', 'baz', enumerator: :content_status)
+      expect(subject['foo'].type).to eql(:content_status)
+      expect(subject['bar'].type).to eql(:content_status)
+      expect(subject['baz'].type).to eql(:content_status)
     end
 
     it 'can have custom type' do
-      connection.create_enum(:status, %i(foo bar))
-      subject.enum('foo', type: :status)
-
+      subject.enum('foo', enumerator: :content_status)
       expect(subject['foo'].name).to eql('foo')
-      expect(subject['foo'].type).to eql(:status)
+      expect(subject['foo'].type).to eql(:content_status)
     end
 
     it 'raises StatementInvalid when type isn\'t defined' do
@@ -108,18 +102,23 @@ RSpec.describe 'Enum' do
 
   context 'on schema' do
     it 'dumps when has it' do
-      connection.create_enum(:status, %i(foo bar))
-
       dumo_io = StringIO.new
       ActiveRecord::SchemaDumper.dump(connection, dumo_io)
-      expect(dumo_io.string).to match /create_enum :status, \["foo", "bar"\]/
+      expect(dumo_io.string).to match /create_enum :content_status, \[/
     end
+
     it 'doesn\'t dump when has none' do
-      connection.user_defined_types.map(&connection.method(:drop_type))
+      connection.drop_type(:content_status, force: :cascade)
 
       dumo_io = StringIO.new
       ActiveRecord::SchemaDumper.dump(connection, dumo_io)
-      expect(dumo_io.string).not_to match /create_enum :\w+, \[[^\]]+\]/
+      expect(dumo_io.string).not_to match /create_enum :content_status, \[/
+    end
+
+    it 'can be used on tables too' do
+      dumo_io = StringIO.new
+      ActiveRecord::SchemaDumper.dump(connection, dumo_io)
+      expect(dumo_io.string).to match /t\.enum +"status", +enumerator: :content_status/
     end
   end
 end

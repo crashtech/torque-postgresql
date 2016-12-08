@@ -51,8 +51,10 @@ module Torque
         end
 
         # Drops a type.
-        def drop_type(name)
-          execute "DROP TYPE IF EXISTS #{quote_type_name(name)}"
+        def drop_type(name, options = {})
+          force = options.fetch(:force, '').upcase
+          check = 'IF EXISTS' if options.fetch(:check, true)
+          execute "DROP TYPE #{check} #{quote_type_name(name)} #{force}"
         end
 
         # Renames a type.
@@ -94,7 +96,7 @@ module Torque
 
           def enum(name, stream)
             values = @connection.enum_values(name).map { |v| "\"#{v}\"" }
-            stream.puts "  create_enum :#{name}, [#{values.join(', ')}]"
+            stream.puts "  create_enum :#{name}, [#{values.join(', ')}], force: :cascade"
           end
 
       end

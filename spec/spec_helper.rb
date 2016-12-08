@@ -6,7 +6,9 @@ require 'rspec'
 Dotenv.load
 
 ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'])
-Dir.glob(File.join('{models,factories}', '*.rb'), &method(:require))
+Dir.glob(File.join('spec', '{models,factories}', '*.rb')) do |file|
+  require file[5..-4]
+end
 
 load File.join('schema.rb')
 RSpec.configure do |config|

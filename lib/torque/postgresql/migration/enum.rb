@@ -10,7 +10,9 @@ module Torque
         #   create_enum 'status', ['foo', 'bar']
         #   create_enum 'status', ['foo', 'bar'], prefix: true
         #   create_enum 'status', ['foo', 'bar'], suffix: 'test'
+        #   create_enum 'status', ['foo', 'bar'], force: true
         def create_enum(name, values, options = {})
+          drop_type(name, options) if options[:force]
           execute <<-SQL
             CREATE TYPE #{quote_type_name(name)} AS ENUM
             (#{quote_enum_values(name, values, options).join(', ')})
@@ -80,12 +82,36 @@ module Torque
       module EnumMethods
         def enum(*args, **options)
           args.each do |name|
-            type = options.fetch(:type, name)
+            type = options.fetch(:enumerator, name)
             column(name, type, options)
           end
         end
       end
 
+      module EnumDumper
+
+        # Adds +:enumerator+ as a valid migration key
+        def migration_keys
+          super + [:enumerator]
+        end
+
+        def prepare_column_options(column)
+          spec = super
+
+          if enumerator = schema_enum(column)
+            spec[:enumerator] = enumerator
+          end
+
+          spec
+        end
+
+        def schema_enum(column)
+          column.sql_type.to_sym.inspect if column.type == :enum
+        end
+
+      end
+
+      Adapter.send :include, EnumDumper
       Adapter.send :include, EnumStatements
       Reversion.send :include, EnumReversion
 
