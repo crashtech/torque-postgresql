@@ -30,4 +30,5 @@ module Torque
   end
 end
 
+require 'torque/postgresql/migration/types'
 require 'torque/postgresql/migration/enum'

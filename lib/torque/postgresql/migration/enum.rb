@@ -47,27 +47,9 @@ module Torque
           [:drop_type, args, block]
         end
 
-        # Drops a type.
-        def drop_type(name)
-          execute "DROP TYPE IF EXISTS #{quote_type_name(name)}"
-        end
-
         # Returns all values that an enum type can have.
         def enum_values(name)
           select_values("SELECT unnest(enum_range(NULL::#{name}))")
-        end
-
-        # Returns true if type exists.
-        def type_exists?(name)
-          select_value("SELECT 1 FROM pg_type WHERE typname = '#{name}'").to_i > 0
-        end
-
-        # Renames a type.
-        def rename_type(type_name, new_name)
-          execute <<-SQL
-            ALTER TYPE #{quote_type_name(type_name)}
-            RENAME TO #{quote_type_name(new_name)}
-          SQL
         end
 
         private
