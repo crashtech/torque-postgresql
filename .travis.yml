@@ -2,7 +2,7 @@ sudo: false
 language: ruby
 cache: bundler
 rvm:
-- 2.2.0
+- 2.2.2
 - 2.3.1
 
 gemfile:
@@ -12,7 +12,6 @@ env: DATABASE_URL=postgres://postgres@localhost/torque_postgresql_test
 
 before_script:
 - psql -c 'create database torque_postgresql_test;' -U postgres -h localhost
-- bundle exec rake db:migrate
 
 # notifications:
 #   email:
