@@ -45,7 +45,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 - [ ] Domain manager [DOCS](https://www.postgresql.org/docs/9.2/static/extend-type-system.html#AEN27940)
 - [ ] 'Compound' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
 - [x] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
--+ [x] Create, remove and change values
--+ [x] Schema dumper
--+ [x] Migration up and down
--+ [ ] Enum for active model
+ - [x] Create, remove and change values
+ - [x] Schema dumper
+ - [x] Migration up and down
+ - [ ] Enum for active model
