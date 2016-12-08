@@ -77,8 +77,19 @@ module Torque
 
       end
 
+      module EnumMethods
+        def enum(*args, **options)
+          args.each do |name|
+            type = options.fetch(:type, name)
+            column(name, type, options)
+          end
+        end
+      end
+
       Adapter.send :include, EnumStatements
       Reversion.send :include, EnumReversion
+
+      Connector::TableDefinition.send :include, EnumMethods
 
     end
   end

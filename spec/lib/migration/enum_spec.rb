@@ -67,6 +67,45 @@ RSpec.describe 'Enum' do
     end
   end
 
+  context 'on table definition' do
+    subject { ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition.new('posts') }
+
+    it 'has the enum method' do
+      expect(subject).to respond_to(:enum)
+    end
+
+    it 'can be used in a single form' do
+      connection.create_enum(:status, %i(foo bar))
+      subject.enum('status')
+
+      expect(subject['status'].name).to eql('status')
+      expect(subject['status'].type).to eql(:status)
+    end
+
+    it 'can be used in a multiple form' do
+      connection.create_enum(:status, %i(foo bar))
+
+      subject.enum('foo', 'bar', 'baz', type: :status)
+      expect(subject['foo'].type).to eql(:status)
+      expect(subject['bar'].type).to eql(:status)
+      expect(subject['baz'].type).to eql(:status)
+    end
+
+    it 'can have custom type' do
+      connection.create_enum(:status, %i(foo bar))
+      subject.enum('foo', type: :status)
+
+      expect(subject['foo'].name).to eql('foo')
+      expect(subject['foo'].type).to eql(:status)
+    end
+
+    it 'raises StatementInvalid when type isn\'t defined' do
+      subject.enum('foo')
+      creation = connection.schema_creation.accept subject
+      expect{ connection.execute creation }.to raise_error(ActiveRecord::StatementInvalid)
+    end
+  end
+
   context 'on schema' do
     it 'dumps when has it' do
       connection.create_enum(:status, %i(foo bar))

@@ -48,4 +48,5 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [x] Create, remove and change values
  - [x] Schema dumper
  - [x] Migration up and down
+ - [x] On create table, enum column method
  - [ ] Enum for active model

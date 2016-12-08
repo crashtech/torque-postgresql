@@ -3,14 +3,32 @@ module Torque
     module Migration
 
       module TypesStatements
+
+        EXTENDED_DATABASE_TYPES = {
+          enum: { name: "" }
+        }
+
+        def self.included(base)
+          base.class_eval do
+            # Check if a given type is valid.
+            def valid_type?(type)
+              native_database_types.key?(type) || extended_types.key?(type)
+            end
+          end
+        end
+
+        def extended_types
+          EXTENDED_DATABASE_TYPES
+        end
+
         # Gets a list of user defined types.
         # You can even choose the +typcategory+ filter
         def user_defined_types(category = nil)
-          category_condition = "AND     typcategory = '#{category}'" unless category.nil?
+          category_condition = "AND     typtype = '#{category}'" unless category.nil?
           select_all(<<-SQL).rows.to_h
             SELECT      t.typname AS name,
-                        CASE t.typcategory
-                        WHEN 'E' THEN 'enum'
+                        CASE t.typtype
+                        WHEN 'e' THEN 'enum'
                         END AS type
             FROM        pg_type t
             LEFT JOIN   pg_catalog.pg_namespace n ON n.oid = t.typnamespace
@@ -25,11 +43,6 @@ module Torque
                         WHERE c.oid = t.typrelid
                       ))
           SQL
-        end
-
-        # Check if a given type is valid.
-        def valid_type?(type)
-          super || user_defined_types.key?(type.to_s)
         end
 
         # Returns true if type exists.
