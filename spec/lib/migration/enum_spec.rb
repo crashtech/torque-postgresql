@@ -1,12 +1,12 @@
 require 'spec_helper'
 
 RSpec.describe 'Enum' do
-  before(:each) { ActiveRecord::Base.connection.drop_type(:status) }
-  after(:all) { ActiveRecord::Base.connection.drop_type(:status) }
 
   let(:connection) { ActiveRecord::Base.connection }
 
   context 'on migration' do
+    after(:each) { ActiveRecord::Base.connection.drop_type(:status) }
+
     it 'can be created' do
       connection.create_enum(:status, %i(foo bar))
       expect(connection.type_exists?(:status)).to be_truthy
@@ -120,5 +120,10 @@ RSpec.describe 'Enum' do
       ActiveRecord::SchemaDumper.dump(connection, dumo_io)
       expect(dumo_io.string).to match /t\.enum +"status", +enumerator: :content_status/
     end
+  end
+
+  context 'on model' do
+    subject { Post }
+    subject(:instance) { subject.new }
   end
 end
