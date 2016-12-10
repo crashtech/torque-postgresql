@@ -2,6 +2,7 @@ require 'torque-postgresql'
 require 'database_cleaner'
 require 'dotenv'
 require 'rspec'
+require 'byebug'
 
 Dotenv.load
 

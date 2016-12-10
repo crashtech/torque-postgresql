@@ -44,9 +44,14 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 - [ ] Replace the *postgres_ext* gem
 - [ ] Domain manager [DOCS](https://www.postgresql.org/docs/9.2/static/extend-type-system.html#AEN27940)
 - [ ] 'Compound' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
-- [x] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
+- [ ] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
  - [x] Create, remove and change values
  - [x] Schema dumper
  - [x] Migration up and down
  - [x] On create table, enum column method
- - [ ] Enum for active model
+ - [ ] Enum for active model (based on Enumerize)
+- [ ] DISTINCT ON [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT)
+ - [ ] Static model method
+ - [x] Relation method
+ - [x] Where-like columns search for querying
+- [ ] `.group`, `.order`, and `.select` Allowing hash association

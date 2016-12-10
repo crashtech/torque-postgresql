@@ -19,6 +19,22 @@ ActiveRecord::Schema.define(version: 0) do
   # These are user defined custom column types used on this database
   create_enum :content_status, ["created", "draft", "published", "archived"], force: :cascade
 
+  create_table "authors", force: :cascade do |t|
+    t.integer  "post_id"
+    t.string   "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["post_id"], name: "index_authors_on_post_id", using: :btree
+  end
+
+  create_table "comments", force: :cascade do |t|
+    t.integer  "author_id"
+    t.text     "body"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_comments_on_author_id", using: :btree
+  end
+
   create_table "posts", force: :cascade do |t|
     t.string   "title"
     t.text     "content"
@@ -26,5 +42,8 @@ ActiveRecord::Schema.define(version: 0) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
+
+  add_foreign_key "authors", "posts"
+  add_foreign_key "comments", "authors"
 
 end

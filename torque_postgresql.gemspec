@@ -19,8 +19,7 @@ Gem::Specification.new do |s|
   s.files      = Dir['MIT-LICENSE', 'README.rdoc', 'lib/**/*', 'Rakefile']
   s.test_files = Dir['test/**/*']
 
-  s.add_dependency 'activerecord', '>= 4.0.0'
-  s.add_dependency 'arel', '>= 4.0.1'
+  s.add_dependency 'rails', '>= 5.0.0'
 
   s.add_development_dependency 'rake', '~> 10.1.0'
   s.add_development_dependency 'database_cleaner'
