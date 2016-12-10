@@ -50,4 +50,16 @@ RSpec.describe 'DistinctOn' do
     end
   end
 
+  context 'on model' do
+    subject { Post }
+
+    it 'has its method' do
+      expect(subject).to respond_to(:distinct_on)
+    end
+
+    it 'returns a relation when using the method' do
+      expect(subject.distinct_on(:title)).to be_a(ActiveRecord::Relation)
+    end
+  end
+
 end

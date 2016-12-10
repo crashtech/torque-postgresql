@@ -50,8 +50,8 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [x] Migration up and down
  - [x] On create table, enum column method
  - [ ] Enum for active model (based on Enumerize)
-- [ ] DISTINCT ON [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT)
- - [ ] Static model method
+- [x] DISTINCT ON [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT)
+ - [x] Static model method
  - [x] Relation method
  - [x] Where-like columns search for querying
 - [ ] `.group`, `.order`, and `.select` Allowing hash association
