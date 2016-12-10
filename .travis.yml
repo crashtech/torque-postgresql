@@ -18,3 +18,5 @@ before_script:
 #   - git@danmcclain.net
 addons:
   postgresql: '9.3'
+  code_climate:
+    repo_token: d21c4c9d0d7ba6a27368b8e25edad911eb1daa03202e69fe2bc2e42a3ed21de3
