@@ -16,8 +16,15 @@ ActiveRecord::Schema.define(version: 0) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
-  # These are user defined custom column types used on this database
-  create_enum :content_status, ["created", "draft", "published", "archived"], force: :cascade
+  # These are user-defined types used on this database
+  create_enum "content_status", ["created", "draft", "published", "archived"], force: :cascade
+
+  create_composite_type "published", force: :cascade do |t|
+    t.integer  "user_id"
+    t.datetime "datetime"
+    t.string   "url"
+    t.boolean  "status"
+  end
 
   create_table "authors", force: :cascade do |t|
     t.integer  "post_id"
@@ -36,14 +43,18 @@ ActiveRecord::Schema.define(version: 0) do
   end
 
   create_table "posts", force: :cascade do |t|
-    t.string   "title"
-    t.text     "content"
-    t.enum     "status",                  enumerator: :content_status
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.string    "title"
+    t.text      "content"
+    t.enum      "status",                  subtype: :content_status
+    t.composite "published"
+    t.datetime  "created_at", null: false
+    t.datetime  "updated_at", null: false
+  end
+
+  create_table "users", id: :integer, force: :cascade do |t|
+    t.string "name", null: false
   end
 
   add_foreign_key "authors", "posts"
   add_foreign_key "comments", "authors"
-
 end

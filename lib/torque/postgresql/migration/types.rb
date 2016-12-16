@@ -5,7 +5,8 @@ module Torque
       module TypesStatements
 
         EXTENDED_DATABASE_TYPES = {
-          enum: { name: "" }
+          enum:      { name: "" },
+          composite: { name: "" }
         }
 
         def self.included(base)
@@ -29,6 +30,7 @@ module Torque
             SELECT      t.typname AS name,
                         CASE t.typtype
                         WHEN 'e' THEN 'enum'
+                        WHEN 'c' THEN 'composite'
                         END AS type
             FROM        pg_type t
             LEFT JOIN   pg_catalog.pg_namespace n ON n.oid = t.typnamespace
@@ -42,12 +44,13 @@ module Torque
                       SELECT c.relkind = 'c' FROM pg_catalog.pg_class c
                         WHERE c.oid = t.typrelid
                       ))
+            ORDER BY    t.typtype DESC
           SQL
         end
 
         # Returns true if type exists.
         def type_exists?(name)
-          select_value("SELECT 1 FROM pg_type WHERE typname = '#{name}'").to_i > 0
+          user_defined_types.key? name.to_s
         end
 
         # Drops a type.
@@ -64,6 +67,7 @@ module Torque
             RENAME TO #{quote_type_name(new_name)}
           SQL
         end
+
       end
 
       module TypesDumper
@@ -87,16 +91,16 @@ module Torque
             types = @connection.user_defined_types
             return unless types.any?
 
-            stream.puts "  # These are user defined custom column types used on this database"
-            @connection.user_defined_types.each do |name, type|
+            stream.puts "  # These are user-defined types used on this database"
+            types.each do |name, type|
+              raise StandardError, "User-defined type '#{name}' cannot be dumped!" if type.blank?
               send(type.to_sym, name, stream)
             end
             stream.puts
-          end
-
-          def enum(name, stream)
-            values = @connection.enum_values(name).map { |v| "\"#{v}\"" }
-            stream.puts "  create_enum :#{name}, [#{values.join(', ')}], force: :cascade"
+          rescue => e
+            stream.puts "# Could not dump user-defined types because of following #{e.class}"
+            stream.puts "#   #{e.message}"
+            stream.puts
           end
 
       end
@@ -115,8 +119,8 @@ module Torque
 
       end
 
-      Adapter.send :include, TypesStatements
       Dumper.send :include, TypesDumper
+      Adapter.send :include, TypesStatements
       Reversion.send :include, TypesReversion
 
     end
