@@ -44,6 +44,14 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 - [ ] Replace the *postgres_ext* gem
 - [ ] Domain manager [DOCS](https://www.postgresql.org/docs/9.2/static/extend-type-system.html#AEN27940)
 - [ ] 'Compound' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
+ - [x] Create composite type
+ - [ ] Alter composite type
+ - [x] Schema dumper
+ - [x] On create table, composite column method
+ - [x] Read value from database
+ - [x] Write value on database
+  - [ ] Write quotes properly
+ - [ ] Model attribute using as much as possible from ActiveRecord::Base
 - [ ] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
  - [x] Create, remove and change values
  - [x] Schema dumper

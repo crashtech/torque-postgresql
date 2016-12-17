@@ -8,6 +8,7 @@ module Torque
         def initialize(delim, columns)
           @delim   = delim
           @columns = columns
+          @struct  = create_struct
         end
 
         def type
@@ -15,23 +16,52 @@ module Torque
         end
 
         def type_cast_for_schema(value)
-          "ROW(#{value.map(&:inspect).join(',')})"
+          "(#{value.map(&:inspect).join(delim)})"
         end
 
-        def cast_value(value)
-          return value unless value.is_a?(::String)
-          value = value.split(@delim, -1)
+        def cast(value)
+          result = @struct.dup
+          return result if value.blank?
 
-          columns.each_with_index do |column, idx|
-            column.cast_value value[idx]
+          if value.is_a?(::String)
+            value = value[1..-2] if value.start_with?('(') && value.end_with?(')')
+            value = value.split(delim, -1).map(&method(:unescape))
           end
+
+          case value
+          when Array
+            columns.each_with_index do |(name, column), idx|
+              result[name] = column.cast(value[idx])
+            end
+          when Hash
+            value.each do |key, part|
+              next unless columns.key? key.to_s
+              result[key] = columns[key.to_s].cast(part)
+            end
+          else
+            assert_valid_value(value)
+          end
+
+          result
         end
 
         def serialize(value)
-          return unless value.is_a?(::Array)
-          Data.new(value.each_with_index.map do |value, idx|
-            column[idx].serialize(value)
-          end.join(','))
+          value = columns.map do |name, column|
+            column.serialize(value[name])
+          end
+
+          return if value.compact.blank?
+          Data.new(value, delim)
+        end
+
+        def assert_valid_value(value)
+          unless value.blank? || value.is_a?(::Array) || value.is_a?(::Hash) || value.is_a?(::String)
+            raise ArgumentError, "'#{value}' is not a valid composite value"
+          end
+        end
+
+        def changed_in_place?(raw_old_value, new_value)
+          cast(raw_old_value) != new_value
         end
 
         def ==(other)
@@ -43,15 +73,24 @@ module Torque
           value.map
         end
 
-        class Data # :nodoc:
-          def initialize(value)
-            @value = value
+        private
+
+          class Data < ::Array
+            attr_reader :delim
+
+            def initialize(values, delim)
+              super(values)
+              @delim = delim
+            end
           end
 
-          def to_s
-            @value
+          def create_struct
+            OpenStruct.new(columns.map { |name, _| [name, nil] }.to_h)
           end
-        end
+
+          def unescape(value)
+            value.start_with?('"') && value.end_with?('"') ? value[1..-2] : value
+          end
 
       end
 
@@ -220,8 +259,8 @@ module Torque
         def composite_types(type_name)
           type_name = type_name.to_s
           column_definitions(type_name).map do |column_name, type, _, _, oid, fmod, *rest|
-            get_oid_type(oid, fmod, column_name, type)
-          end
+            [column_name, get_oid_type(oid, fmod, column_name, type)]
+          end.to_h
         end
 
         private

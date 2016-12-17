@@ -87,4 +87,46 @@ RSpec.describe 'Composite Type' do
       expect(dump_io.string).to match /t\.composite +"published", +subtype: :published/
     end
   end
+
+  context 'on model' do
+    let(:simple) { Post.new }
+    let(:filled) { FactoryGirl.create(:post, published: [1, Time.now, 'URL', true]) }
+    let(:type_class) { OpenStruct }
+
+    it 'published attribute starts with the correct value' do
+      expect(simple.published).to be_a(type_class)
+    end
+
+    it 'published attribute has the correct format' do
+      expect(filled.published).to be_a(type_class)
+      expect(filled.published.status).to be_truthy
+      expect(filled.published.url).to be_eql('URL')
+      expect(filled.published.user_id).to be_eql(1)
+    end
+
+    it 'respect model changed identification' do
+      expect(filled.published.status).to be_truthy
+      expect(filled.changed?).to be_falsey
+      filled.published.status = false
+      expect(filled.changed?).to be_truthy
+      expect(filled.published.status).to be_falsey
+    end
+
+    it 'works on changing and saving' do
+      filled.published.url = 'NEW URL'
+      expect(filled.save!).to be_truthy
+
+      filled.reload
+      expect(filled.published.url).to be_eql('NEW URL')
+    end
+
+    xit 'works with quoutes' do
+      filled.published.url = 'Quoutes test "\''
+      expect(filled.save!).to be_truthy
+
+      filled.reload
+      expect(filled.published.url).to be_eql('Quoutes test "\'')
+    end
+
+  end
 end
