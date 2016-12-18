@@ -46,15 +46,6 @@ module Torque
         def quote_type_name(name)
           PGconn.quote_ident(name.to_s)
         end
-
-        private
-
-          def _type_cast(value)
-            # TODO: Fix quotes issue
-            return super unless value.is_a? CompositeOID::Data
-            "(#{value.map(&method(:type_cast)).join(value.delim)})"
-          end
-
       end
 
       Adapter.send :include, Helper

@@ -5,6 +5,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 ## Backend
 
 - [ ] Table Inheritance [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
+ - [ ] FROM ONLY and FROM asterisk [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
 - [ ] Create view and materialized view [DOCS VIEW](https://www.postgresql.org/docs/9.2/static/sql-createview.html) [DOCS MATERIALIZED VIEW](https://www.postgresql.org/docs/9.3/static/sql-creatematerializedview.html)
 - [ ] Ranges and Ranges Index [DOCS](https://www.postgresql.org/docs/9.3/static/rangetypes.html)
 - [ ] Constrains and Checks [DOCS](https://www.postgresql.org/docs/9.4/static/ddl-constraints.html)
@@ -13,12 +14,12 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 
 ## Performance
 
+- [ ] TABLE Command, when using `.all` [DOCS](www.postgresql.org/docs/9.5/static/sql-select.html#SQL-TABLE)
 - [ ] SKIP LOCKED clause [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-FOR-UPDATE-SHARE)
 - [ ] TABLESAMPLE clause [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-FROM)
 
 ## To check if already exists
 
-- [ ] JSON data type [DOCS](https://www.postgresql.org/docs/9.4/static/datatype-json.html)
 - [ ] Explicit Locking [DOCS](https://www.postgresql.org/docs/9.4/static/explicit-locking.html)
 - [ ] Update views [DOCS](https://www.postgresql.org/docs/9.5/static/sql-createview.html#SQL-CREATEVIEW-UPDATABLE-VIEWS)
 - [ ] Constrains to model error
@@ -26,7 +27,6 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 
 ## To be evaluated
 
-- [ ] FROM ONLY and FROM asterisk [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
 - [ ] Arel *tableoid* and *pg_class* [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
 - [ ] GROUP BY using GROUPING SETS, CUBE, and ROLLUP [DOCS](https://www.postgresql.org/docs/9.5/static/queries-table-expressions.html#QUERIES-GROUPING-SETS)
 - [ ] JSON functions [DOCS](https://www.postgresql.org/docs/9.5/static/functions-json.html)
@@ -35,15 +35,40 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 - [ ] Extra types of joins [DOCS](https://www.postgresql.org/docs/9.4/static/queries-table-expressions.html#QUERIES-JOIN)
 - [ ] LATERAL Queries [DOCS](https://www.postgresql.org/docs/9.4/static/queries-table-expressions.html#QUERIES-LATERAL)
 - [ ] BRIN Indexes [DOCS](https://www.postgresql.org/docs/9.5/static/brin-intro.html)
-- [ ] Aggregate manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createaggregate.html)
 - [ ] 'Simple' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
+- [ ] Allow use the 'stream_each' method from PostgreSQL connection [DOCS](https://deveiate.org/code/pg/PG/Result.html#method-i-stream_each)
+- [ ] FILTER Clause [DOCS](https://www.postgresql.org/docs/9.4/static/sql-expressions.html#SYNTAX-AGGREGATES)
+- [ ] GIN Indexes [DOCS](https://www.postgresql.org/docs/current/static/gin-intro.html)
 
 ## Desirable
 
+- [ ] Record column data type [DOCS](https://www.postgresql.org/docs/9.6/static/datatype-pseudo.html)
+ - [ ] Allow per record extra data customization
+ - [ ] Index on expressions [DOCS](https://www.postgresql.org/docs/current/static/indexes-expressional.html)
+ - [ ] Partial index, using *WHERE* [DOCS](https://www.postgresql.org/docs/9.6/static/sql-createindex.html)
+- [ ] Interval data type [DOCS](https://www.postgresql.org/docs/9.4/static/datatype-datetime.html#DATATYPE-INTERVAL-INPUT)
+ - [ ] Setup the interval style to the easier *iso_8601* [DOCS](https://www.postgresql.org/docs/9.6/static/runtime-config-client.html#RUNTIME-CONFIG-CLIENT-FORMAT)
+ - [ ] On create table, interval column method
+ - [ ] Accepts integer as a value
+ - [ ] Accepts time range as a value
+ - [ ] Accepts date range as a value
+ - [ ] Schema dumper
+ - [ ] ActiveModel decorator
+ - [ ] Uses Ruby Comparable module [DOCS](https://ruby-doc.org/core-2.3.0/Comparable.html)
+- [ ] Simple nested relation find (User -> has_many :groups should search for UserGroups then Groups)
+ - [ ] Configuration to enable and disable this feature
 - [ ] Arel windows functions [DOCS](https://www.postgresql.org/docs/9.3/static/functions-window.html)
+ - [ ] Allow partition over
 - [ ] Replace the *postgres_ext* gem
+ - [ ] Basic CTE queries
+ - [ ] Recursive CTE queries
+ - [ ] Rank windows function
+ - [ ] Array operators
 - [ ] Domain manager [DOCS](https://www.postgresql.org/docs/9.2/static/extend-type-system.html#AEN27940)
-- [ ] 'Compound' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
+ - [ ] Create domain
+ - [ ] Use domain on table creation
+ - [ ] Allow domain check
+- [ ] 'Composite' type manager [DOCS](https://www.postgresql.org/docs/9.6/static/rowtypes.html)
  - [x] Create composite type
  - [ ] Alter composite type
  - [x] Schema dumper
@@ -52,14 +77,23 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [x] Write value on database
   - [ ] Write quotes properly
  - [ ] Model attribute using as much as possible from ActiveRecord::Base
+ - [ ] Study coders to better understand data transmition [Here](active_record\connection_adapters\postgresql_adapter.rb:780)
 - [ ] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
  - [x] Create, remove and change values
  - [x] Schema dumper
  - [x] Migration up and down
  - [x] On create table, enum column method
  - [ ] Enum for active model (based on Enumerize)
+ - [ ] Uses Ruby Comparable module [DOCS](https://ruby-doc.org/core-2.3.0/Comparable.html)
 - [x] DISTINCT ON [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT)
  - [x] Static model method
  - [x] Relation method
  - [x] Where-like columns search for querying
 - [ ] `.group`, `.order`, and `.select` Allowing hash association
+ - [ ] User the new `resolve_column` on Group
+ - [ ] User the new `resolve_column` on Select
+ - [ ] User the new `resolve_column` as a base for Order, because it may have :asc or :desc as last value
+
+## Form for
+
+- [ ] Integrate resources with form for

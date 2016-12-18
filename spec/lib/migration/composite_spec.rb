@@ -120,7 +120,7 @@ RSpec.describe 'Composite Type' do
       expect(filled.published.url).to be_eql('NEW URL')
     end
 
-    xit 'works with quoutes' do
+    it 'works with quoutes' do
       filled.published.url = 'Quoutes test "\''
       expect(filled.save!).to be_truthy
 
