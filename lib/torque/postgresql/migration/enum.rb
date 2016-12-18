@@ -82,36 +82,21 @@ module Torque
       module EnumMethods
         def enum(*args, **options)
           args.each do |name|
-            type = options.fetch(:enumerator, name)
+            type = options.fetch(:subtype, name)
             column(name, type, options)
           end
         end
       end
 
       module EnumDumper
-
-        # Adds +:enumerator+ as a valid migration key
-        def migration_keys
-          super + [:enumerator]
-        end
-
-        def prepare_column_options(column)
-          spec = super
-
-          if enumerator = schema_enum(column)
-            spec[:enumerator] = enumerator
+        private
+          def enum(name, stream)
+            values = @connection.enum_values(name).map { |v| "\"#{v}\"" }
+            stream.puts "  create_enum \"#{name}\", [#{values.join(', ')}], force: :cascade"
           end
-
-          spec
-        end
-
-        def schema_enum(column)
-          column.sql_type.to_sym.inspect if column.type == :enum
-        end
-
       end
 
-      Adapter.send :include, EnumDumper
+      Dumper.send :include, EnumDumper
       Adapter.send :include, EnumStatements
       Reversion.send :include, EnumReversion
 

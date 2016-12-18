@@ -1,6 +1,8 @@
 require 'torque-postgresql'
 require 'database_cleaner'
+require 'factory_girl'
 require 'dotenv'
+require 'faker'
 require 'rspec'
 require 'byebug'
 
