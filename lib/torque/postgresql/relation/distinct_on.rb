@@ -1,11 +1,6 @@
 module Torque
-  module Postgresql
-    module QueryMethods
-
-      module DistinctOnQuerying
-        delegate :distinct_on, to: :all
-      end
-
+  module PostgreSQL
+    module Relation
       module DistinctOn
 
         attr_accessor :distinct_on_value
@@ -43,10 +38,6 @@ module Torque
           end
 
       end
-
-      ActiveRecord::Base.send :extend, DistinctOnQuerying
-      ActiveRecord::Relation.send :include, DistinctOn
-
     end
   end
 end

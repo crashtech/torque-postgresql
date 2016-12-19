@@ -1,6 +1,11 @@
+
+require_relative 'relation/distinct_on'
+
 module Torque
-  module Postgresql
-    module QueryMethods
+  module PostgreSQL
+    module Relation
+
+      include DistinctOn
 
       # Resolve column definition up to second value.
       # For example, based on Post model:
@@ -50,9 +55,6 @@ module Torque
 
     end
 
-    ActiveRecord::Relation.send :include, QueryMethods
-
+    ActiveRecord::Relation.send :include, Relation
   end
 end
-
-require 'torque/postgresql/query_methods/distinct_on'

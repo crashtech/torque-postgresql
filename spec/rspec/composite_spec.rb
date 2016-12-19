@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'Composite Type' do
+RSpec.describe 'Composite Type', type: :feature do
   before(:each) { ActiveRecord::Base.connection.drop_type(:address) }
   after(:all) { ActiveRecord::Base.connection.drop_type(:address) }
 

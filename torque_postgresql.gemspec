@@ -6,7 +6,7 @@ require 'torque/postgresql/version'
 # Describe your gem and declare its dependencies:
 Gem::Specification.new do |s|
   s.name        = 'torque-postgresql'
-  s.version     = Torque::Postgresql::VERSION
+  s.version     = Torque::PostgreSQL::VERSION
   s.authors     = ['Carlos Silva']
   s.email       = ['carlinhus.fsilva@gmail.com']
   s.homepage    = 'https://github.com/crashtech/torque-postgresql'
