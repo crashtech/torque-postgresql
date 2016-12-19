@@ -3,16 +3,17 @@ module Torque
     module Adapter
       module OID
         class Composite < ActiveModel::Type::Value
+          include ActiveModel::Type::Helpers::Mutable
+
           attr_reader :delimiter, :subtypes
 
-          # TODO Use Struct in place of OpenStruct
           def initialize(subtypes, delimiter = ',')
             @subtypes  = subtypes
             @delimiter = delimiter
             @struct    = create_struct
 
-            # It uses the array encoder because the strcuture is the same
             @pg_encoder = PG::TextEncoder::Array.new delimiter: delimiter
+            @pg_decoder = Coder
           end
 
           def type
@@ -23,10 +24,7 @@ module Torque
             result = @struct.dup
             return result if value.blank?
 
-            if value.is_a?(::String)
-              value = value.gsub(/\A\((.*)\)\Z/m,'\1')
-              value = value.split(delimiter, -1).map(&method(:unescape))
-            end
+            value = @pg_decoder.decode(value, delimiter) if value.is_a?(::String)
 
             case value
             when Array
@@ -60,10 +58,6 @@ module Torque
             end
           end
 
-          def changed_in_place?(raw_old_value, new_value)
-            cast(raw_old_value) != new_value
-          end
-
           def ==(other)
             other.is_a?(CompositeOID) &&
               other.subtypes == subtypes
@@ -81,13 +75,7 @@ module Torque
           private
 
             def create_struct
-              OpenStruct.new(subtypes.map { |name, _| [name, nil] }.to_h)
-            end
-
-            def unescape(value)
-              # There's an issue with double quotes, the database always saves it duplicated, but
-              # never brings back with a single quoute
-              value.gsub(/\A"(.*)"\Z/m, '\1').gsub(/""/m, '"')
+              Struct.new(*subtypes.keys.map(&:to_sym)).new
             end
 
         end

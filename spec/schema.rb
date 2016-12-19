@@ -45,7 +45,6 @@ ActiveRecord::Schema.define(version: 201612170001) do
   create_table "posts", force: :cascade do |t|
     t.string    "title"
     t.text      "content"
-    t.string    "grades" , array: true
     t.enum      "status",                  subtype: :content_status
     t.composite "published"
     t.datetime  "created_at", null: false
