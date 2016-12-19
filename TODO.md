@@ -75,14 +75,16 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [x] On create table, composite column method
  - [x] Read value from database
  - [x] Write value on database
-  - [ ] Write quotes properly
+ - [x] Write quotes properly
+ - [ ] Create single Module for each composite type
  - [ ] Model attribute using as much as possible from ActiveRecord::Base
- - [ ] Study coders to better understand data transmition [Here](active_record\connection_adapters\postgresql_adapter.rb:780)
+ - [x] Study coders to better understand data transmition [Here](active_record\connection_adapters\postgresql_adapter.rb:780)
 - [ ] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
  - [x] Create, remove and change values
  - [x] Schema dumper
  - [x] Migration up and down
  - [x] On create table, enum column method
+ - [ ] Create single Module or Class for each enum type
  - [ ] Enum for active model (based on Enumerize)
  - [ ] Uses Ruby Comparable module [DOCS](https://ruby-doc.org/core-2.3.0/Comparable.html)
 - [x] DISTINCT ON [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT)
