@@ -5,6 +5,8 @@ module Torque
       class << self
 
         # This method replace the +read_array+ method from PG gem
+        # See https://github.com/ged/ruby-pg/blob/master/ext/pg_text_decoder.c#L177
+        # for more information
         def decode(value, delimiter = ',')
           _decode(::StringIO.new(value), delimiter)
         end
