@@ -12,7 +12,7 @@ module Torque
             @delimiter = delimiter
             @struct    = create_struct
 
-            @pg_encoder = PG::TextEncoder::Array.new delimiter: delimiter
+            @pg_encoder = Coder
             @pg_decoder = Coder
           end
 
@@ -24,7 +24,7 @@ module Torque
             result = @struct.dup
             return result if value.blank?
 
-            value = @pg_decoder.decode(value, delimiter) if value.is_a?(::String)
+            value = @pg_decoder.decode(value) if value.is_a?(::String)
 
             case value
             when Array
@@ -49,7 +49,7 @@ module Torque
             end
 
             return if value.compact.blank?
-            @pg_encoder.encode(value).gsub(/\A{(.*)}\Z/m,'(\1)')
+            @pg_encoder.encode(Coder::Record.new(value))
           end
 
           def assert_valid_value(value)
@@ -65,7 +65,7 @@ module Torque
 
           def type_cast_for_schema(value)
             value.to_h.map! { |name, value| column[name.to_s].type_cast_for_schema(value) }
-            "[#{value.join(delimiter)}]"
+            "[#{value.join(',')}]"
           end
 
           def map(value, &block)

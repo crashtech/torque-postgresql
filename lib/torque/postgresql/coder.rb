@@ -2,18 +2,32 @@ module Torque
   module PostgreSQL
     module Coder
 
+      # This class represents an Record to be encoded, instead of a literal Array
+      class Record < Array
+      end
+
       class << self
+
+        NEED_QUOTE_FOR = /[\\"(){}, \t\n\r\v\f]/m
+        DELIMITER = ','.freeze
 
         # This method replace the +read_array+ method from PG gem
         # See https://github.com/ged/ruby-pg/blob/master/ext/pg_text_decoder.c#L177
         # for more information
-        def decode(value, delimiter = ',')
-          _decode(::StringIO.new(value), delimiter)
+        def decode(value)
+          _decode(::StringIO.new(value))
+        end
+
+        # This method replace the ++ method from PG gem
+        # See https://github.com/ged/ruby-pg/blob/master/ext/pg_text_encoder.c#L398
+        # for more information
+        def encode(value)
+          _encode(value)
         end
 
         private
 
-          def _decode(stream, delimiter)
+          def _decode(stream)
             quoted = 0
             escaped = false
             result = []
@@ -32,7 +46,7 @@ module Torque
               case
               when quoted < 1
                 case
-                when c == delimiter, c == '}', c == ')'
+                when c == DELIMITER, c == '}', c == ')'
 
                   unless escaped
                     # Non-quoted empty string or NULL as extense
@@ -40,7 +54,7 @@ module Torque
                     result << part
                   end
 
-                  return result unless c == delimiter
+                  return result unless c == DELIMITER
 
                   escaped = false
                   quoted = 0
@@ -49,7 +63,7 @@ module Torque
                 when c == '"'
                   quoted = 1
                 when c == '{', c == '('
-                  result << _decode(stream, delimiter)
+                  result << _decode(stream)
                   escaped = true
                 else
                   part << c
@@ -67,10 +81,46 @@ module Torque
                   quoted = -1
                 end
               else
-                part << c
+                if ( c == '"' || c == "'" ) && stream.getc != c
+                  stream.pos -= 1
+                  quoted = -1
+                else
+                  part << c
+                end
               end
 
             end
+          end
+
+          def _encode(list)
+            is_record = list.is_a?(Record)
+            list.map! do |part|
+              case part
+              when NilClass
+                is_record ? '' : 'NULL'
+              when Array
+                _encode(part)
+              else
+                _quote(part.to_s)
+              end
+            end
+
+            result = is_record ? '(%s)'.freeze : '{%s}'.freeze
+            result % list.join(DELIMITER)
+          end
+
+          def _quote(string)
+            len = string.length
+
+            # Fast results
+            return '""' if len == 0
+            return '"NULL"' if len == 4 && string == 'NULL'
+
+            # Check if the string don't need quotes
+            return string unless string =~ NEED_QUOTE_FOR
+
+            # Use the original string escape function
+            PG::Connection.escape_string(string).inspect
           end
 
       end

@@ -6,7 +6,7 @@ module Torque
 
           def initialize(subtype, delimiter = ',')
             super
-            # @pg_encoder = Coder
+            @pg_encoder = Coder
             @pg_decoder = Coder
           end
 
