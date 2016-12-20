@@ -9,17 +9,20 @@ module Torque
 
       module ClassMethods
 
+        attr_accessor :composite_decorators
+
         private
 
           def load_schema!
             super
             klass = self
+            klass.composite_decorators = {}
             attribute_types.each do |name, type|
 
               case type
               when Torque::PostgreSQL::Adapter::OID::Composite
                 decorate_attribute_type(name, :composite) do |subtype|
-                  Composite::Decorator.new(type.name, subtype)
+                  klass.composite_decorators[name] = Composite::Decorator.new(type.name, subtype)
                 end
               when ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Enum
                 enum_values = ActiveSupport::HashWithIndifferentAccess.new
@@ -37,10 +40,8 @@ module Torque
 
       # Bind this instance to any composite types
       def init_internals
-        @attributes.map do |attribute|
-          next unless attribute.type.is_a?(Composite::Decorator)
-          attribute.type.bind(self, attribute.name)
-        end
+        return super unless self.class.composite_decorators
+        self.class.composite_decorators.each { |name, type| type.bind(self, name) }
         super
       end
 

@@ -67,6 +67,7 @@ module Torque
         end
 
         class Base < ActiveRecord::Base
+          include Attributes
 
           # Methods to be better understood
           # new_record? destroyed? persisted?
