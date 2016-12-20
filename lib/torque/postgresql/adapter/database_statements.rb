@@ -22,6 +22,7 @@ module Torque
         def type_exists?(name)
           user_defined_types.key? name.to_s
         end
+        alias data_type_exists? type_exists?
 
         # Drops a type.
         def drop_type(name, options = {})
@@ -152,14 +153,6 @@ module Torque
           end
         end
 
-        # Return the list of types that compose a user-defined type.
-        def composite_types(type_name)
-          type_name = type_name.to_s
-          column_definitions(type_name).map do |column_name, type, _, _, oid, fmod, *rest|
-            [column_name, get_oid_type(oid, fmod, column_name, type)]
-          end.to_h
-        end
-
         # Add the composite types to be loaded too.
         def load_additional_types(type_map, oids = nil)
           super
@@ -186,8 +179,7 @@ module Torque
 
           execute_and_clear(query, 'SCHEMA', []) do |records|
             records.each do |row|
-              subtypes = composite_types(row['typname'])
-              type = OID::Composite.new(subtypes, row['typdelim'])
+              type = OID::Composite.new(row['typname'], row['typdelim'])
               type_map.register_type row['oid'].to_i, type
               type_map.alias_type row['typname'], row['oid']
             end

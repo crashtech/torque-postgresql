@@ -5,12 +5,11 @@ module Torque
         class Composite < ActiveModel::Type::Value
           include ActiveModel::Type::Helpers::Mutable
 
-          attr_reader :delimiter, :subtypes
+          attr_reader :delimiter, :name
 
-          def initialize(subtypes, delimiter = ',')
-            @subtypes  = subtypes
+          def initialize(name, delimiter = ',')
+            @name      = name
             @delimiter = delimiter
-            @struct    = create_struct
 
             @pg_encoder = Coder
             @pg_decoder = Coder
@@ -21,33 +20,14 @@ module Torque
           end
 
           def cast(value)
-            result = @struct.dup
-            return result if value.blank?
+            return if value.blank?
 
+            assert_valid_value(value)
             value = @pg_decoder.decode(value) if value.is_a?(::String)
-
-            case value
-            when Array
-              subtypes.each_with_index do |(name, column), idx|
-                result[name] = column.cast(value[idx])
-              end
-            when Hash
-              value.each do |key, part|
-                next unless subtypes.key? key.to_s
-                result[key] = subtypes[key.to_s].cast(part)
-              end
-            else
-              assert_valid_value(value)
-            end
-
-            result
+            value
           end
 
           def serialize(value)
-            value = subtypes.map do |name, column|
-              column.serialize(value[name])
-            end
-
             return if value.compact.blank?
             @pg_encoder.encode(Coder::Record.new(value))
           end
@@ -59,24 +39,17 @@ module Torque
           end
 
           def ==(other)
-            other.is_a?(CompositeOID) &&
-              other.subtypes == subtypes
-          end
-
-          def type_cast_for_schema(value)
-            value.to_h.map! { |name, value| column[name.to_s].type_cast_for_schema(value) }
-            "[#{value.join(',')}]"
+            other.is_a?(Composite) &&
+              other.name == name
           end
 
           def map(value, &block)
             value.map(&block)
           end
 
-          private
-
-            def create_struct
-              Struct.new(*subtypes.keys.map(&:to_sym)).new
-            end
+          def hash
+            [self.class, name].hash
+          end
 
         end
       end

@@ -90,8 +90,8 @@ RSpec.describe 'Composite Type', type: :feature do
 
   context 'on model' do
     let(:simple) { Post.new }
-    let(:filled) { FactoryGirl.create(:post, published: [1, Time.now, 'URL', true]) }
-    let(:type_class) { Struct }
+    let(:filled) { FactoryGirl.create(:post, published: [1, Time.now.utc, 'URL', true]) }
+    let(:type_class) { Torque::PostgreSQL::Attributes::Composite::Base }
 
     it 'published attribute starts with the correct value' do
       expect(simple.published).to be_a(type_class)
