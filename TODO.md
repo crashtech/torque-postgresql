@@ -47,7 +47,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [ ] Index on expressions [DOCS](https://www.postgresql.org/docs/current/static/indexes-expressional.html)
  - [ ] Partial index, using *WHERE* [DOCS](https://www.postgresql.org/docs/9.6/static/sql-createindex.html)
 - [ ] Interval data type [DOCS](https://www.postgresql.org/docs/9.4/static/datatype-datetime.html#DATATYPE-INTERVAL-INPUT)
- - [ ] Setup the interval style to the easier *iso_8601* [DOCS](https://www.postgresql.org/docs/9.6/static/runtime-config-client.html#RUNTIME-CONFIG-CLIENT-FORMAT)
+ - [x] Setup the interval style to the easier *iso_8601* [DOCS](https://www.postgresql.org/docs/9.6/static/runtime-config-client.html#RUNTIME-CONFIG-CLIENT-FORMAT)
  - [ ] On create table, interval column method
  - [ ] Accepts integer as a value
  - [ ] Accepts time range as a value

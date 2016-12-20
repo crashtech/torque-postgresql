@@ -21,6 +21,12 @@ module Torque
             .match(/#{Adapter::ADAPTER_NAME} ([\d\.]+)/)[1])
       end
 
+      # Configure the interval format
+      def configure_connection
+        super
+        execute("SET SESSION IntervalStyle TO 'iso_8601'", 'SCHEMA')
+      end
+
     end
 
     ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.send :prepend, Adapter
