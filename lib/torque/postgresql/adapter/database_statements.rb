@@ -1,12 +1,9 @@
-
-require_relative 'oid/composite'
-
 module Torque
   module PostgreSQL
     module Adapter
       module DatabaseStatements
 
-        EXTENDED_DATABASE_TYPES = %i(enum composite)
+        EXTENDED_DATABASE_TYPES = %i(enum composite interval)
 
         # Check if a given type is valid.
         def valid_type?(type)
@@ -179,7 +176,7 @@ module Torque
 
           execute_and_clear(query, 'SCHEMA', []) do |records|
             records.each do |row|
-              type = OID::Composite.new(row['typname'], row['typdelim'])
+              type =  Adapter::OID::Composite.new(row['typname'], row['typdelim'])
               type_map.register_type row['oid'].to_i, type
               type_map.alias_type row['typname'], row['oid']
             end

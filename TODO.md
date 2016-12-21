@@ -46,15 +46,12 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [ ] Allow per record extra data customization
  - [ ] Index on expressions [DOCS](https://www.postgresql.org/docs/current/static/indexes-expressional.html)
  - [ ] Partial index, using *WHERE* [DOCS](https://www.postgresql.org/docs/9.6/static/sql-createindex.html)
-- [ ] Interval data type [DOCS](https://www.postgresql.org/docs/9.4/static/datatype-datetime.html#DATATYPE-INTERVAL-INPUT)
+- [x] Interval data type [DOCS](https://www.postgresql.org/docs/9.4/static/datatype-datetime.html#DATATYPE-INTERVAL-INPUT)
  - [x] Setup the interval style to the easier *iso_8601* [DOCS](https://www.postgresql.org/docs/9.6/static/runtime-config-client.html#RUNTIME-CONFIG-CLIENT-FORMAT)
- - [ ] On create table, interval column method
- - [ ] Accepts integer as a value
- - [ ] Accepts time range as a value
- - [ ] Accepts date range as a value
- - [ ] Schema dumper
- - [ ] ActiveModel decorator
- - [ ] Uses Ruby Comparable module [DOCS](https://ruby-doc.org/core-2.3.0/Comparable.html)
+ - [x] On create table, interval column method
+ - [x] Value OID
+ - [x] Accepts integer as a value
+ - [x] Accepts array and hash as a value
 - [ ] Simple nested relation find (User -> has_many :groups should search for UserGroups then Groups)
  - [ ] Configuration to enable and disable this feature
 - [ ] Arel windows functions [DOCS](https://www.postgresql.org/docs/9.3/static/functions-window.html)
@@ -69,6 +66,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [ ] Use domain on table creation
  - [ ] Allow domain check
 - [ ] 'Composite' type manager [DOCS](https://www.postgresql.org/docs/9.6/static/rowtypes.html)
+ - [ ] Allow schema option for database statements
  - [x] Create composite type
  - [ ] Alter composite type
  - [x] Schema dumper
@@ -80,6 +78,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [ ] Model attribute using as much as possible from ActiveRecord::Base
  - [x] Study coders to better understand data transmition [Here](active_record\connection_adapters\postgresql_adapter.rb:780)
 - [ ] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
+ - [ ] Allow schema option for database statements
  - [x] Create, remove and change values
  - [x] Schema dumper
  - [x] Migration up and down

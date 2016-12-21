@@ -106,7 +106,7 @@ RSpec.describe 'Enum', type: :feature do
       expect(dump_io.string).to match /create_enum \"content_status\", \[/
     end
 
-    it 'doesn\'t dump when has none' do
+    it 'do not dump when has none' do
       connection.drop_type(:content_status, force: :cascade)
 
       dump_io = StringIO.new

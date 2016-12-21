@@ -15,6 +15,8 @@ module Torque
         # See https://github.com/ged/ruby-pg/blob/master/ext/pg_text_decoder.c#L177
         # for more information
         def decode(value)
+          # TODO: Use StringScanner
+          # See http://ruby-doc.org/stdlib-1.9.3/libdoc/strscan/rdoc/StringScanner.html
           _decode(::StringIO.new(value))
         end
 
