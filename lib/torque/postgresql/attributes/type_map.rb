@@ -14,9 +14,9 @@ module Torque
             types[key] = block
           end
 
-          def lookup(key, *args)
+          def lookup(key, klass, *args)
             return unless present?(key)
-            types[key.class].(key, *args)
+            klass.instance_exec(key, *args, &types[key.class])
           end
 
           def present?(key)

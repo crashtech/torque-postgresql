@@ -29,6 +29,10 @@ module Torque
       # classes
       composite.namespace = ::Object
 
+      # Specify the name of the constant where users can shortcut the Base class
+      # through ActiveRecord
+      composite.shortcut = 'Composite'
+
     end
 
   end

@@ -11,19 +11,27 @@ module Torque
       module ClassMethods
         private
 
-          def inherited(subclass)
-            subclass.class_eval do
-              decorate_name = :_additional_decorators
-              matcher = ->(name, type) { TypeMap.present?(type) }
-              decorate_matching_attribute_types(matcher, decorate_name) do |subtype|
-                TypeMap.lookup(subtype)
-              end
-            end
-            super
+          def define_attribute_method(attribute)
+            type = attribute_types[attribute]
+            super unless TypeMap.lookup(type, self, attribute)
           end
 
       end
 
+      def init_with(*)
+        instance = super
+        aggregate_reflections.each { |name, _| composition_init(name) }
+        instance
+      end
+
+      private
+
+        # Force a build method if any value was loaded
+        def composition_init(name)
+          value = _read_attribute(name)
+          return if value.nil?
+          send("build_#{name}", *value)
+        end
     end
 
     ActiveRecord::Base.include Attributes

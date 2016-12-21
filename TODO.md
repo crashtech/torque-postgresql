@@ -77,9 +77,11 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [x] Write quotes properly
  - [x] Create single Module for each composite type
  - [x] Model attribute using as much as possible from ActiveRecord::Base
- - [ ] Bind parent instance and attribute where is attatched to internal composite instance (Act as `has_one`)
- - [ ] Special behavior fo *composite_type[]* for binding (Act as `has_many`)
- - [ ] Allow Model override to change the type behavior
+ - [x] Bind parent instance and attribute where is attatched to internal composite instance (Act as `has_one`)
+ - [x] Block querying on Composite types
+ - [ ] Nested callbacks and validations
+ - [ ] Special behavior for *composite_type[]* (Act as `has_many`)
+ - [ ] Allow composite model class be edited by users by reopening the class
  - [ ] Allow `belongs_to` for composite types
  - [ ] Tests
 - [ ] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
