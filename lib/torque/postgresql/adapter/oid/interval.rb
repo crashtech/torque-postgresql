@@ -63,7 +63,12 @@ module Torque
 
           # Always use the numeric value for schema dumper
           def type_cast_for_schema(value)
-            value.to_i.inspect
+            cast(value).value.inspect
+          end
+
+          # Check if the user input has the correct format
+          def assert_valid_value(value)
+            # TODO: Implement!
           end
 
           # Transform a list of parts into a duration object

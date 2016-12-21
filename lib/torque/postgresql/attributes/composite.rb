@@ -16,51 +16,48 @@ module Torque
 
         end
 
-        # class Decorator < ActiveModel::Type::Value
-        #   include ActiveModel::Type::Helpers::Mutable
-        #   include Attributes::Bindable
+        class Decorator < ActiveModel::Type::Value
+          include ActiveModel::Type::Helpers::Mutable
 
-        #   attr_reader :subtype, :type
+          attr_reader :subtype
 
-        #   # Decorate the value for a given composition.
-        #   def initialize(type, subtype)
-        #     @type    = type
-        #     @subtype = subtype
-        #   end
+          # Decorate the value for a given composition.
+          def initialize(subtype)
+            @subtype = subtype
+          end
 
-        #   # Type casts a value from user input (e.g. from a setter).
-        #   def cast(value)
-        #     return value if value.is_a?(Base)
+          # Type casts a value from user input (e.g. from a setter).
+          def cast(value)
+            return value if value.is_a?(Base)
+            to_model(subtype.cast(value))
+          end
 
-        #     list = subtype.cast(value)
-        #     to_model.tap do |entry|
-        #       list = entry.class.column_names.zip(list).to_h if list.is_a?(Array)
-        #       entry.attributes = list unless list.blank?
-        #     end
-        #   end
+          # Converts a value from database input to the appropriate ruby type.
+          def deserialize(value)
+            to_model(subtype.deserialize(value))
+          end
 
-        #   # Converts a value from database input to the appropriate ruby type.
-        #   def deserialize(value)
-        #     list = subtype.deserialize(value)
-        #     to_model.tap do |entry|
-        #       entry.attributes = entry.class.column_names.zip(list).to_h unless list.blank?
-        #     end
-        #   end
+          # Casts a value from the ruby type to a type that the database knows
+          # how to understand.
+          def serialize(value)
+            subtype.serialize(value.attributes.values)
+          end
 
-        #   # Casts a value from the ruby type to a type that the database knows
-        #   # how to understand.
-        #   def serialize(value)
-        #     subtype.serialize(value.attributes.values)
-        #   end
+          # Check if the user input has the correct format
+          def assert_valid_value(value)
+            # TODO: Implement!
+          end
 
-        #   # Get the prepared model to use as a value.
-        #   def to_model
-        #     Composite.lookup(type).new
-        #   end
+          # Get the prepared model to use as a value.
+          def to_model(values)
+            model = Composite.lookup(subtype.name)
+            values = model.column_names.zip(values || [nil]).to_h
+            model.instantiate(values || {})
+          end
 
-        # end
+        end
 
-        class Base < DelegateClass(ActiveRecord::Base)
+        class Base < ActiveRecord::Base
           include Attributes
 
           # Methods to be better understood
@@ -106,13 +103,6 @@ module Torque
 
           end
 
-          # Bind the composition model to a parent model
-          def bind(parent, attribute)
-            @bind_parent = parent
-            @bind_attribute = attribute
-            self
-          end
-
           # Add the Type string to the inspection
           def inspect
             super.insert(2 + self.class.name.length, ' Type')
@@ -121,16 +111,10 @@ module Torque
         end
 
         # Create the methods related to the attribute to handle the composite type
-        TypeMap.register_type Adapter::OID::Composite do |attribute|
-          return unless Torque::PostgreSQL.config.composite.initializer
-          puts attribute
-
-          # return if attributes_with_bindable_types.key? attribute
-
-          # decorate_attribute_type(attribute, :composite) do |subtype|
-          #   decorator = Composite::Decorator.new(type.name, subtype)
-          #   attributes_with_bindable_types[attribute] = decorator
-          # end
+        if Torque::PostgreSQL.config.composite.initializer
+          TypeMap.register_type Adapter::OID::Composite do |subtype|
+            Composite::Decorator.new(subtype)
+          end
         end
 
       end

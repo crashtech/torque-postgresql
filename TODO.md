@@ -66,6 +66,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [ ] Use domain on table creation
  - [ ] Allow domain check
 - [ ] 'Composite' type manager [DOCS](https://www.postgresql.org/docs/9.6/static/rowtypes.html)
+ - [x] Configurations
  - [ ] Allow schema option for database statements
  - [x] Create composite type
  - [ ] Alter composite type
@@ -74,10 +75,15 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [x] Read value from database
  - [x] Write value on database
  - [x] Write quotes properly
- - [ ] Create single Module for each composite type
- - [ ] Model attribute using as much as possible from ActiveRecord::Base
- - [x] Study coders to better understand data transmition [Here](active_record\connection_adapters\postgresql_adapter.rb:780)
+ - [x] Create single Module for each composite type
+ - [x] Model attribute using as much as possible from ActiveRecord::Base
+ - [ ] Bind parent instance and attribute where is attatched to internal composite instance (Act as `has_one`)
+ - [ ] Special behavior fo *composite_type[]* for binding (Act as `has_many`)
+ - [ ] Allow Model override to change the type behavior
+ - [ ] Allow `belongs_to` for composite types
+ - [ ] Tests
 - [ ] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
+ - [x] Configurations
  - [ ] Allow schema option for database statements
  - [x] Create, remove and change values
  - [x] Schema dumper

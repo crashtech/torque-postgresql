@@ -44,10 +44,9 @@ module Torque
 
             def cast_value(value)
               case value
-              when ::Array              then value
-              when ::Hash               then value.values
-              when ::String             then @pg_decoder.decode(value)
-              when ::ActiveRecord::Base then value.attributes.values
+              when ::Array  then value
+              when ::Hash   then value.values
+              when ::String then @pg_decoder.decode(value)
               else nil
               end
             end
