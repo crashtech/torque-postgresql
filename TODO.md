@@ -84,7 +84,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [x] Migration up and down
  - [x] On create table, enum column method
  - [ ] Create single Module or Class for each enum type
- - [ ] Enum for active model (based on Enumerize)
+ - [ ] Enum for active model (based on Enumerize and StringInquirer)
  - [ ] Uses Ruby Comparable module [DOCS](https://ruby-doc.org/core-2.3.0/Comparable.html)
 - [x] DISTINCT ON [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT)
  - [x] Static model method

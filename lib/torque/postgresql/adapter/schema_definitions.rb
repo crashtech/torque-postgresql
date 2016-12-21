@@ -41,10 +41,9 @@ module Torque
 
       end
 
-      ActiveRecord::ConnectionAdapters::PostgreSQL::Table.send :include, ColumnMethods
-      ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition.send :include, ColumnMethods
-
-      ActiveRecord::ConnectionAdapters::PostgreSQL::ColumnDefinition.send :include, ColumnDefinition
+      ActiveRecord::ConnectionAdapters::PostgreSQL::Table.include ColumnMethods
+      ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition.include ColumnMethods
+      ActiveRecord::ConnectionAdapters::PostgreSQL::ColumnDefinition.include ColumnDefinition
     end
   end
 end

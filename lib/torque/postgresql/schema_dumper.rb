@@ -84,6 +84,6 @@ module Torque
 
     end
 
-    ActiveRecord::SchemaDumper.send :prepend, SchemaDumper
+    ActiveRecord::SchemaDumper.prepend SchemaDumper
   end
 end

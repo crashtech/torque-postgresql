@@ -23,8 +23,8 @@ module Torque
       # Add internal cache for type with +type_name+.
       def add_type(type_name)
         if data_type_exists?(type_name)
-          columns('type::' + type_name)
-          columns_hash('type::' + type_name)
+          columns("type::#{type_name}")
+          columns_hash("type::#{type_name}")
         end
       end
 
@@ -35,14 +35,14 @@ module Torque
       # Get the columns for a table or a type
       def columns(name, from_type = false)
         return super(name) unless from_type
-        @columns['type::' + name] ||= connection.composite_columns(name)
+        @columns["type::#{name}"] ||= connection.composite_columns(name)
       end
 
       # Get the columns for a table or a type as a hash, key is the column name
       # value is the column object.
       def columns_hash(name, from_type = false)
         return super(name) unless from_type
-        @columns_hash['type::' + name] ||= Hash[columns(name, true).map { |col|
+        @columns_hash["type::#{name}"] ||= Hash[columns(name, true).map { |col|
           [col.name, col]
         }]
       end
@@ -60,8 +60,8 @@ module Torque
       # Clear out internal caches for +name+.
       def clear_data_source_cache!(name, from_type = false)
         return super(name) unless from_type
-        @columns.delete 'type::' + name
-        @columns_hash.delete 'type::' + name
+        @columns.delete "type::#{name}"
+        @columns_hash.delete "type::#{name}"
         @data_types.delete name
       end
 
@@ -84,6 +84,6 @@ module Torque
 
     end
 
-    ActiveRecord::ConnectionAdapters::SchemaCache.send :prepend, SchemaCache
+    ActiveRecord::ConnectionAdapters::SchemaCache.prepend SchemaCache
   end
 end

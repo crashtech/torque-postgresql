@@ -35,7 +35,7 @@ module Torque
 
       end
 
-      ActiveRecord::Migration::CommandRecorder.send :include, CommandRecorder
+      ActiveRecord::Migration::CommandRecorder.include CommandRecorder
     end
   end
 end

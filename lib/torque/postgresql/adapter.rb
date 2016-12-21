@@ -36,6 +36,6 @@ module Torque
 
     end
 
-    ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.send :prepend, Adapter
+    ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.prepend Adapter
   end
 end

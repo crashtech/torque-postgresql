@@ -88,7 +88,7 @@ RSpec.describe 'Composite Type', type: :feature do
     end
   end
 
-  context 'on model' do
+  xcontext 'on model' do
     let(:simple) { Post.new }
     let(:filled) { FactoryGirl.create(:post, published: [1, Time.now.utc, 'URL', true]) }
     let(:type_class) { Torque::PostgreSQL::Attributes::Composite::Base }

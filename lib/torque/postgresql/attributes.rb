@@ -1,52 +1,30 @@
 
+require_relative 'attributes/type_map'
+require_relative 'attributes/bindable'
 require_relative 'attributes/composite'
-# require_relative 'adapter/schema_statements'
+# require_relative 'adapter/enum'
 
 module Torque
   module PostgreSQL
     module Attributes
-      extend ActiveSupport::Concern
+      # extend ActiveSupport::Concern
 
-      module ClassMethods
+      # module ClassMethods
 
-        attr_accessor :composite_decorators
+      #   # def define_attribute_method(attr_name)
+      #   #   super unless TypeMap.lookup(attribute_types[attr_name], self, attr_name)
+      #   # end
+      #   # define_method_attribute
+      #   # define_method_attribute=
 
-        private
+      # end
 
-          def load_schema!
-            super
-            klass = self
-            klass.composite_decorators = {}
-            attribute_types.each do |name, type|
-
-              case type
-              when Torque::PostgreSQL::Adapter::OID::Composite
-                decorate_attribute_type(name, :composite) do |subtype|
-                  klass.composite_decorators[name] = Composite::Decorator.new(type.name, subtype)
-                end
-              when ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Enum
-                enum_values = ActiveSupport::HashWithIndifferentAccess.new
-                decorate_attribute_type(name, :enum) do |subtype|
-                  ActiveRecord::Enum::EnumType.new(name, enum_values, subtype)
-                end
-              else
-                super
-              end
-
-            end
-          end
-
-      end
-
-      # Bind this instance to any composite types
-      def init_internals
-        return super unless self.class.composite_decorators
-        self.class.composite_decorators.each { |name, type| type.bind(self, name) }
-        super
-      end
+      # def _read_attribute(attr_name)
+      #   return value unless (value = super).nil?
+      # end
 
     end
 
-    ActiveRecord::Base.send :include, Attributes
+    ActiveRecord::Base.include Attributes
   end
 end

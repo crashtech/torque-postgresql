@@ -12,7 +12,7 @@ module Torque
 
         end
 
-        ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Array.send :prepend, Array
+        ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Array.prepend Array
       end
     end
   end

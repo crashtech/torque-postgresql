@@ -55,6 +55,6 @@ module Torque
 
     end
 
-    ActiveRecord::Relation.send :include, Relation
+    ActiveRecord::Relation.include Relation
   end
 end

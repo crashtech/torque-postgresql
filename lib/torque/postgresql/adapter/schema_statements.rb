@@ -18,7 +18,7 @@ module Torque
 
       end
 
-      ActiveRecord::ConnectionAdapters::PostgreSQL::SchemaCreation.send :include, SchemaCreation
+      ActiveRecord::ConnectionAdapters::PostgreSQL::SchemaCreation.include SchemaCreation
     end
   end
 end

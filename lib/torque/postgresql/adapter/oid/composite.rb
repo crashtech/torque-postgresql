@@ -3,7 +3,6 @@ module Torque
     module Adapter
       module OID
         class Composite < ActiveModel::Type::Value
-          include ActiveModel::Type::Helpers::Mutable
 
           attr_reader :delimiter, :name
 
@@ -19,23 +18,13 @@ module Torque
             :composite
           end
 
-          def cast(value)
-            return if value.blank?
-
-            assert_valid_value(value)
-            value = @pg_decoder.decode(value) if value.is_a?(::String)
-            value
-          end
-
           def serialize(value)
-            return if value.compact.blank?
+            return if (value = cast_value(value)).blank?
             @pg_encoder.encode(Coder::Record.new(value))
           end
 
-          def assert_valid_value(value)
-            unless value.blank? || value.is_a?(::Array) || value.is_a?(::Hash) || value.is_a?(::String)
-              raise ArgumentError, "'#{value}' is not a valid composite value"
-            end
+          def changed_in_place?(raw_old_value, new_value)
+            raw_old_value != serialize(new_value)
           end
 
           def ==(other)
@@ -50,6 +39,18 @@ module Torque
           def hash
             [self.class, name].hash
           end
+
+          private
+
+            def cast_value(value)
+              case value
+              when ::Array              then value
+              when ::Hash               then value.values
+              when ::String             then @pg_decoder.decode(value)
+              when ::ActiveRecord::Base then value.attributes.values
+              else nil
+              end
+            end
 
         end
       end
