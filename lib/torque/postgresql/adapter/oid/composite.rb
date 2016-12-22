@@ -6,6 +6,10 @@ module Torque
 
           attr_reader :delimiter, :name
 
+          def self.create(row)
+            new(row['typname'], row['typdelim'])
+          end
+
           def initialize(name, delimiter = ',')
             @name      = name
             @delimiter = delimiter

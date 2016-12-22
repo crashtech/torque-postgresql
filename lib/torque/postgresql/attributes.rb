@@ -1,7 +1,7 @@
 
 require_relative 'attributes/type_map'
 require_relative 'attributes/composite'
-# require_relative 'adapter/enum'
+require_relative 'attributes/enum'
 
 module Torque
   module PostgreSQL
@@ -32,6 +32,7 @@ module Torque
           return if value.nil?
           send("build_#{name}", *value)
         end
+
     end
 
     ActiveRecord::Base.include Attributes

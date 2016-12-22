@@ -53,12 +53,13 @@ module Torque
           filter = "AND     a.typelem::integer IN (%s)" % oids.join(", ") if oids
 
           query = <<-SQL
-            SELECT      a.typelem AS oid, t.typname, t.typelem, t.typdelim, t.typbasetype
+            SELECT      a.typelem AS oid, t.typname, t.typelem,
+                        t.typdelim, t.typbasetype, t.typtype
             FROM        pg_type t
             INNER JOIN  pg_type a ON (a.oid = t.typarray)
             LEFT JOIN   pg_catalog.pg_namespace n ON n.oid = t.typnamespace
             WHERE       n.nspname NOT IN ('pg_catalog', 'information_schema')
-            AND     t.typtype = 'c'
+            AND     t.typtype IN ( 'c','e' )
             #{filter}
             AND     NOT EXISTS(
                       SELECT 1 FROM pg_catalog.pg_type el
@@ -72,7 +73,14 @@ module Torque
 
           execute_and_clear(query, 'SCHEMA', []) do |records|
             records.each do |row|
-              type =  Adapter::OID::Composite.new(row['typname'], row['typdelim'])
+              typtype = row['typtype']
+              type = begin
+                case
+                when typtype == 'e'.freeze then OID::Enum.create(row)
+                when typtype == 'c'.freeze then OID::Composite.create(row)
+                end
+              end
+
               type_map.register_type row['oid'].to_i, type
             end
           end

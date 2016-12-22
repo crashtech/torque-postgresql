@@ -107,7 +107,7 @@ module Torque
 
             # Get the direct OID composite type
             def oid_type
-              ActiveRecord::Base.connection.type_map.lookup(type)
+              connection.type_map.lookup(type)
             end
 
             # The process of loading the schema is very different from a normal

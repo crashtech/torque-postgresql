@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 201612170001) do
+ActiveRecord::Schema.define(version: 2) do
   self.verbose = false
 
   # These are extensions that must be enabled in order to support this database
@@ -27,43 +27,26 @@ ActiveRecord::Schema.define(version: 201612170001) do
   end
 
   create_table "authors", force: :cascade do |t|
-    t.integer  "post_id"
     t.string   "name"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["post_id"], name: "index_authors_on_post_id", using: :btree
-  end
-
-  create_table "comments", force: :cascade do |t|
-    t.integer  "author_id"
-    t.text     "body"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["author_id"], name: "index_comments_on_author_id", using: :btree
   end
 
   create_table "posts", force: :cascade do |t|
+    t.integer   "author_id"
     t.string    "title"
     t.text      "content"
-    t.enum      "status",                  subtype: :content_status
+    t.enum      "status",   subtype: :content_status
     t.composite "published"
-    t.datetime  "created_at", null: false
-    t.datetime  "updated_at", null: false
+    t.index ["author_id"], name: "index_posts_on_author_id", using: :btree
   end
 
   create_table "users", force: :cascade do |t|
-    t.string   "name",       null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.string   "name",    null: false
   end
 
   create_table "courses", force: :cascade do |t|
-    t.string   "title",      null: false
+    t.string   "title",   null: false
     t.interval "duration"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
   end
 
-  add_foreign_key "authors", "posts"
-  add_foreign_key "comments", "authors"
+  add_foreign_key "posts", "authors"
 end

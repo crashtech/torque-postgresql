@@ -16,6 +16,9 @@ module Torque
       # automatically or not
       enum.initializer = true
 
+      # Specify the namespace of each enum type of value
+      enum.namespace = ::Object.const_set('Enum', Module.new)
+
     end
 
     # Configure Composite features

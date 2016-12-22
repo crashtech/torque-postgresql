@@ -42,12 +42,12 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 
 ## Desirable
 
-- [ ] Record column data type [DOCS](https://www.postgresql.org/docs/9.6/static/datatype-pseudo.html)
+- [ ] Record column data type (maybe Vector) [DOCS](https://www.postgresql.org/docs/9.6/static/datatype-pseudo.html)
  - [ ] Allow per record extra data customization
  - [ ] Index on expressions [DOCS](https://www.postgresql.org/docs/current/static/indexes-expressional.html)
- - [ ] Partial index, using *WHERE* [DOCS](https://www.postgresql.org/docs/9.6/static/sql-createindex.html)
+ - [ ] Partial index, using `WHERE` [DOCS](https://www.postgresql.org/docs/9.6/static/sql-createindex.html)
 - [x] Interval data type [DOCS](https://www.postgresql.org/docs/9.4/static/datatype-datetime.html#DATATYPE-INTERVAL-INPUT)
- - [x] Setup the interval style to the easier *iso_8601* [DOCS](https://www.postgresql.org/docs/9.6/static/runtime-config-client.html#RUNTIME-CONFIG-CLIENT-FORMAT)
+ - [x] Setup the interval style to the easier 'iso_8601' [DOCS](https://www.postgresql.org/docs/9.6/static/runtime-config-client.html#RUNTIME-CONFIG-CLIENT-FORMAT)
  - [x] On create table, interval column method
  - [x] Value OID
  - [x] Accepts integer as a value
@@ -56,7 +56,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [ ] Configuration to enable and disable this feature
 - [ ] Arel windows functions [DOCS](https://www.postgresql.org/docs/9.3/static/functions-window.html)
  - [ ] Allow partition over
-- [ ] Replace the *postgres_ext* gem
+- [ ] Replace the 'postgres_ext' gem
  - [ ] Basic CTE queries
  - [ ] Recursive CTE queries
  - [ ] Rank windows function
@@ -72,18 +72,17 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [ ] Alter composite type
  - [x] Schema dumper
  - [x] On create table, composite column method
- - [x] Read value from database
- - [x] Write value on database
+ - [x] Read value from database *TEST*
+ - [x] Write value on database *TEST*
  - [x] Write quotes properly
- - [x] Create single Module for each composite type
- - [x] Model attribute using as much as possible from ActiveRecord::Base
- - [x] Bind parent instance and attribute where is attatched to internal composite instance (Act as `has_one`)
- - [x] Block querying on Composite types
+ - [x] Create single Module for each composite type *TEST*
+ - [x] Model attribute using as much as possible from ActiveRecord::Base *TEST*
+ - [x] Bind parent instance and attribute where is attatched to internal composite instance (Act as `has_one`) *TEST*
+ - [x] Block querying on Composite types *TEST*
  - [ ] Nested callbacks and validations
- - [ ] Special behavior for *composite_type[]* (Act as `has_many`)
+ - [ ] Accept array of composite (Act as `has_many`)
  - [ ] Allow composite model class be edited by users by reopening the class
  - [ ] Allow `belongs_to` for composite types
- - [ ] Tests
 - [ ] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
  - [x] Configurations
  - [x] Allow schema option for database statements
@@ -91,14 +90,16 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [x] Schema dumper
  - [x] Migration up and down
  - [x] On create table, enum column method
- - [ ] Create single Module or Class for each enum type
+ - [x] Create single Module or Class for each enum type *TEST*
  - [ ] Enum for active model (based on Enumerize and StringInquirer)
- - [ ] Uses Ruby Comparable module [DOCS](https://ruby-doc.org/core-2.3.0/Comparable.html)
+ - [x] Uses Ruby Comparable module [DOCS](https://ruby-doc.org/core-2.3.0/Comparable.html) *TEST*
  - [ ] Accept array of enum and consider it as a set
+ - [ ] I18n support for translating values
 - [x] DISTINCT ON [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT)
  - [x] Static model method
  - [x] Relation method
  - [x] Where-like columns search for querying
+ - [ ] Sanatize tests
 - [ ] `.group`, `.order`, and `.select` Allowing hash association
  - [ ] User the new `resolve_column` on Group
  - [ ] User the new `resolve_column` on Select
