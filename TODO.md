@@ -86,7 +86,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [ ] Tests
 - [ ] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
  - [x] Configurations
- - [ ] Allow schema option for database statements
+ - [x] Allow schema option for database statements
  - [x] Create, remove and change values
  - [x] Schema dumper
  - [x] Migration up and down
@@ -94,6 +94,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
  - [ ] Create single Module or Class for each enum type
  - [ ] Enum for active model (based on Enumerize and StringInquirer)
  - [ ] Uses Ruby Comparable module [DOCS](https://ruby-doc.org/core-2.3.0/Comparable.html)
+ - [ ] Accept array of enum and consider it as a set
 - [x] DISTINCT ON [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT)
  - [x] Static model method
  - [x] Relation method

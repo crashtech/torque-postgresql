@@ -1,9 +1,6 @@
 require 'spec_helper'
 
 RSpec.describe 'Composite Type', type: :feature do
-  before(:each) { ActiveRecord::Base.connection.drop_type(:address) }
-  after(:all) { ActiveRecord::Base.connection.drop_type(:address) }
-
   let(:connection) { ActiveRecord::Base.connection }
 
   context 'on migration' do
@@ -26,7 +23,6 @@ RSpec.describe 'Composite Type', type: :feature do
     end
 
     it 'can be renamed' do
-      # Rename is only available after the type is really created
       connection.rename_type(:published, :new_published)
       expect(connection.type_exists?(:new_published)).to be_truthy
       expect(connection.type_exists?(:published)).to be_falsey

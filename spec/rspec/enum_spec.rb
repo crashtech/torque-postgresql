@@ -4,8 +4,6 @@ RSpec.describe 'Enum', type: :feature do
   let(:connection) { ActiveRecord::Base.connection }
 
   context 'on migration' do
-    after(:each) { ActiveRecord::Base.connection.drop_type(:status) }
-
     it 'can be created' do
       connection.create_enum(:status, %i(foo bar))
       expect(connection.type_exists?(:status)).to be_truthy
@@ -21,10 +19,9 @@ RSpec.describe 'Enum', type: :feature do
     end
 
     it 'can be renamed' do
-      connection.create_enum(:status, %i(foo bar))
-      connection.rename_type(:status, :new_status)
-      expect(connection.type_exists?(:new_status)).to be_truthy
-      expect(connection.type_exists?(:status)).to be_falsey
+      connection.rename_type(:content_status, :status)
+      expect(connection.type_exists?(:content_status)).to be_falsey
+      expect(connection.type_exists?(:status)).to be_truthy
     end
 
     it 'can have prefix' do
