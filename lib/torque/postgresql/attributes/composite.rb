@@ -197,22 +197,21 @@ module Torque
         end
 
         # Create the methods related to the attribute to handle the composite type
-        if Torque::PostgreSQL.config.composite.initializer
-          TypeMap.register_type Adapter::OID::Composite do |subtype, attribute|
-            relation = Composite.lookup(subtype.name)
+        TypeMap.register_type Adapter::OID::Composite do |subtype, attribute, initial = false|
+          return if initial && !Torque::PostgreSQL.config.composite.initializer
+          relation = Composite.lookup(subtype.name)
 
-            # Create all methods needed
-            Composite.reader_method(self, attribute, relation)
-            Composite.writer_method(self, attribute, relation)
-            Composite.build_method(self, attribute, relation)
+          # Create all methods needed
+          Composite.reader_method(self, attribute, relation)
+          Composite.writer_method(self, attribute, relation)
+          Composite.build_method(self, attribute, relation)
 
-            # Build the options for aggregate reflection
-            options = {class_name: relation.name, allow_nil: true, composite: true}
+          # Build the options for aggregate reflection
+          options = {class_name: relation.name, allow_nil: true, composite: true}
 
-            # Register the aggregate reflection
-            reflection = ActiveRecord::Reflection.create(:composed_of, attribute, nil, options, self)
-            ActiveRecord::Reflection.add_aggregate_reflection self, attribute, reflection
-          end
+          # Register the aggregate reflection
+          reflection = ActiveRecord::Reflection.create(:composed_of, attribute, nil, options, self)
+          ActiveRecord::Reflection.add_aggregate_reflection self, attribute, reflection
         end
 
       end

@@ -13,7 +13,7 @@ module Torque
 
           def define_attribute_method(attribute)
             type = attribute_types[attribute]
-            super unless TypeMap.lookup(type, self, attribute)
+            super unless TypeMap.lookup(type, self, attribute, true)
           end
 
       end

@@ -1,11 +1,15 @@
 module Torque
   module PostgreSQL
     module Base
+      extend ActiveSupport::Concern
 
-      delegate :distinct_on, to: :all
+      module ClassMethods
 
+        delegate :distinct_on, to: :all
+
+      end
     end
 
-    ActiveRecord::Base.send :extend, Base
+    ActiveRecord::Base.send :include, Base
   end
 end

@@ -10,43 +10,49 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2) do
-  self.verbose = false
+begin
+  version = 2
 
-  # These are extensions that must be enabled in order to support this database
-  enable_extension "plpgsql"
+  raise SystemExit if ActiveRecord::Migrator.current_version == version
+  ActiveRecord::Schema.define(version: version) do
+    self.verbose = false
 
-  # These are user-defined types used on this database
-  create_enum "content_status", ["created", "draft", "published", "archived"], force: :cascade
+    # These are extensions that must be enabled in order to support this database
+    enable_extension "plpgsql"
 
-  create_composite_type "published", force: :cascade do |t|
-    t.integer  "user_id"
-    t.datetime "datetime"
-    t.string   "url"
-    t.boolean  "status"
+    # These are user-defined types used on this database
+    create_enum "content_status", ["created", "draft", "published", "archived"], force: :cascade
+
+    create_composite_type "published", force: :cascade do |t|
+      t.integer  "user_id"
+      t.datetime "datetime"
+      t.string   "url"
+      t.boolean  "status"
+    end
+
+    create_table "authors", force: :cascade do |t|
+      t.string   "name"
+    end
+
+    create_table "posts", force: :cascade do |t|
+      t.integer   "author_id"
+      t.string    "title"
+      t.text      "content"
+      t.enum      "status",   subtype: :content_status
+      t.composite "published"
+      t.index ["author_id"], name: "index_posts_on_author_id", using: :btree
+    end
+
+    create_table "users", force: :cascade do |t|
+      t.string   "name",    null: false
+    end
+
+    create_table "courses", force: :cascade do |t|
+      t.string   "title",   null: false
+      t.interval "duration"
+    end
+
+    add_foreign_key "posts", "authors"
   end
-
-  create_table "authors", force: :cascade do |t|
-    t.string   "name"
-  end
-
-  create_table "posts", force: :cascade do |t|
-    t.integer   "author_id"
-    t.string    "title"
-    t.text      "content"
-    t.enum      "status",   subtype: :content_status
-    t.composite "published"
-    t.index ["author_id"], name: "index_posts_on_author_id", using: :btree
-  end
-
-  create_table "users", force: :cascade do |t|
-    t.string   "name",    null: false
-  end
-
-  create_table "courses", force: :cascade do |t|
-    t.string   "title",   null: false
-    t.interval "duration"
-  end
-
-  add_foreign_key "posts", "authors"
+rescue SystemExit
 end

@@ -14,7 +14,7 @@ module Torque
 
       # Indicates if the enum features on ActiveRecord::Base should be initiated
       # automatically or not
-      enum.initializer = true
+      enum.initializer = false
 
       # Specify the namespace of each enum type of value
       enum.namespace = ::Object.const_set('Enum', Module.new)

@@ -19,8 +19,8 @@ module Torque
 
           def serialize(value)
             return if value.blank?
-            value = cast_value(value) unless value.is_a?(@klass)
-            value.to_i
+            value = cast_value(value)
+            value.to_s if value
           end
 
           def assert_valid_value(value)
@@ -31,7 +31,10 @@ module Torque
 
             def cast_value(value)
               return if value.blank?
+              return value if value.is_a?(@klass)
               @klass.new(value)
+            rescue Attributes::Enum::EnumError
+              nil
             end
 
         end
