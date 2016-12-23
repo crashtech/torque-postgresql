@@ -42,6 +42,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 
 ## Desirable
 
+- [ ] Create a Lazy attribute to warp lazy-kind values
 - [ ] Record column data type (maybe Vector) [DOCS](https://www.postgresql.org/docs/9.6/static/datatype-pseudo.html)
   - [ ] Allow per record extra data customization
   - [ ] Index on expressions [DOCS](https://www.postgresql.org/docs/current/static/indexes-expressional.html)
@@ -97,6 +98,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [ ] Accept array of enum and consider it as a set
   - [ ] I18n support for translating values
   - [ ] Extras
+    - [x] Uses `chomp!` to check for '?' and '!' methods [DOCS](https://ruby-doc.org/core-2.2.0/String.html#method-i-chomp-21)
     - [ ] Allow generator to postgre cast enum to integer [DOCS](http://stackoverflow.com/a/12347716/7321983)
 - [x] DISTINCT ON [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT)
   - [x] Static model method

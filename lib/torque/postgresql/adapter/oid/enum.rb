@@ -20,7 +20,7 @@ module Torque
           def serialize(value)
             return if value.blank?
             value = cast_value(value)
-            value.to_s if value
+            value.to_s unless value.nil?
           end
 
           def assert_valid_value(value)

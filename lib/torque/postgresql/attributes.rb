@@ -1,5 +1,7 @@
 
 require_relative 'attributes/type_map'
+require_relative 'attributes/lazy'
+
 require_relative 'attributes/composite'
 require_relative 'attributes/enum'
 

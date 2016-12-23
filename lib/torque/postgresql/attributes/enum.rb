@@ -6,6 +6,8 @@ module Torque
 
         class EnumError < ArgumentError; end
 
+        LAZY_VALUE = 0.chr
+
         class << self
 
           # Find or create the class that will handle the value
@@ -24,7 +26,8 @@ module Torque
 
           # Overpass new so blank values return only nil
           def new(value)
-            super unless value.blank?
+            return Lazy.new(self, LAZY_VALUE) if value.blank?
+            super
           end
 
           # Load the list of values in a lazy way
@@ -39,6 +42,7 @@ module Torque
           # Check if the value is valid
           def valid?(value)
             return false if self == Enum
+            return true if value.equal?(LAZY_VALUE)
             self.values.include?(value.to_s)
           end
 
@@ -90,12 +94,20 @@ module Torque
         # Only allow value comparison with values of the same class
         def ==(other)
           (self <=> other) == 0
+        rescue EnumError
+          false
         end
 
         # Get the index of the value
         def to_i
           self.class.values.index(self)
         end
+
+        # Since it can have a lazy value, nil can be true here
+        def nil?
+          self == LAZY_VALUE
+        end
+        alias empty? nil?
 
         # It only accepts if the other value is valid
         def replace(value)
@@ -105,23 +117,32 @@ module Torque
 
         # Change the inspection to show the enum name
         def inspect
-          "#<#{self.class.name} #{super}>"
+          nil? ? 'nil' : "#<#{self.class.name} #{super}>"
+        end
+
+        # Change the string result for lazy value
+        def to_s
+          nil? ? '' : super
         end
 
         private
 
           # Check for valid '?' and '!' methods
           def respond_to_missing?(method_name, include_private = false)
-            return true if method_name[-1] == '?'
-            method_name[-1] == '!' && self.class.valid?(method_name[0..-2])
+            name = method_name.to_s
+
+            return true if name.chomp!('?')
+            name.chomp!('!') && self.class.valid?(name)
           end
 
           # Allow '_' to be associated to '-'
           def method_missing(method_name, *arguments)
-            if method_name[-1] == '?'
-              self == method_name[0..-2].tr('_', '-') || self == method_name[0..-2]
-            elsif method_name[-1] == '!'
-              replace(method_name[0..-2])
+            name = method_name.to_s
+
+            if name.chomp!('?')
+              self == name.tr('_', '-') || self == name
+            elsif name.chomp!('!')
+              replace(name)
             else
               super
             end
@@ -138,7 +159,7 @@ module Torque
 
           # Throw an exception for comparasion between different enums
           def raise_comparison(other)
-            raise EnumError, "Comparison of #{other.class.name} with #{self.class.name} is not allowed"
+            raise EnumError, "Comparison of #{self.class.name} with #{self.inspect} failed"
           end
 
       end

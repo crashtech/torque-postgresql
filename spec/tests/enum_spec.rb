@@ -151,10 +151,20 @@ RSpec.describe 'Enum', type: :feature do
       expect(value).to be_a(subject)
     end
 
-    it 'keeps blank values as nil' do
+    it 'keeps blank values as Lazy' do
       expect(subject.new(nil)).to be_nil
       expect(subject.new([])).to be_nil
       expect(subject.new('')).to be_nil
+    end
+
+    it 'can start from nil value using lazy' do
+      lazy  = Torque::PostgreSQL::Attributes::Lazy
+      value = subject.new(nil)
+
+      expect(value.__class__).to be_eql(lazy)
+      expect(value.draft?).to be_falsey
+      expect(value.to_s).to be_eql('')
+      expect(value.to_i).to be_nil
     end
 
     it 'accepts values to come from numeric' do
@@ -172,6 +182,7 @@ RSpec.describe 'Enum', type: :feature do
       expect(value).to be > subject.created
       expect(value).to be < subject.archived
       expect(value).to_not be_eql(subject.published)
+      expect(subject.draft == mock_enum.draft).to be_falsey
     end
 
     it 'allows values comparison with string' do
@@ -189,7 +200,6 @@ RSpec.describe 'Enum', type: :feature do
     end
 
     it 'does not allow cross-enum comparison' do
-      expect { subject.draft == mock_enum.draft }.to raise_error(error, /^Comparison/)
       expect { subject.draft < mock_enum.published }.to raise_error(error, /^Comparison/)
       expect { subject.draft > mock_enum.created }.to raise_error(error, /^Comparison/)
     end

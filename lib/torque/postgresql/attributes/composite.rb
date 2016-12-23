@@ -59,26 +59,10 @@ module Torque
         end
 
         # Only builds the relation if a method is called. It acts as nil
-        class LazyBuilder < BasicObject
-
-          def initialize(obj, attribute)
-            @obj, @attribute = obj, attribute
-          end
-
-          def ==(other)
-            other.nil?
-          end
-
-          def nil?
-            true
-          end
-
-          def inspect
-            'nil'
-          end
+        class LazyBuilder < Lazy
 
           def method_missing(name, *args, &block)
-            @obj.send("build_#{@attribute}").send(name, *args, &block)
+            @klass.send("build_#{@values[0]}").send(name, *args, &block)
           end
 
         end
