@@ -16,7 +16,7 @@ module Torque
             namespace = Torque::PostgreSQL.config.enum.namespace
 
             return namespace.const_get(const) if namespace.const_defined?(const)
-            namespace.const_set(const, define_from_type(name))
+            namespace.const_set(const, Class.new(Enum))
           end
 
           # You can specify the connection name for each enum
@@ -35,8 +35,13 @@ module Torque
             @values ||= self == Enum ? nil : begin
               conn_name = connection_specification_name
               conn = connection(conn_name)
-              conn.enum_values(@name)
+              conn.enum_values(type_name)
             end
+          end
+
+          # Get the type name from its class name
+          def type_name
+            @type_name ||= self.name.demodulize.underscore
           end
 
           # Check if the value is valid
@@ -57,13 +62,6 @@ module Torque
             def method_missing(method_name, *arguments)
               return super if self == Enum
               self.valid?(method_name) ? new(method_name.to_s) : super
-            end
-
-            # Generate a class to identify enum values specifically by its type
-            def define_from_type(name)
-              klass = Class.new(Enum)
-              klass.instance_variable_set(:@name, name)
-              klass
             end
 
             # Get a connection based on its name
@@ -98,11 +96,6 @@ module Torque
           false
         end
 
-        # Get the index of the value
-        def to_i
-          self.class.values.index(self)
-        end
-
         # Since it can have a lazy value, nil can be true here
         def nil?
           self == LAZY_VALUE
@@ -115,9 +108,10 @@ module Torque
           super
         end
 
-        # Change the inspection to show the enum name
-        def inspect
-          nil? ? 'nil' : "#<#{self.class.name} #{super}>"
+        # Get a translated version of the value
+        def text
+          keys = i18n_keys << self.underscore.humanize
+          I18n.t(keys.shift, default: keys)
         end
 
         # Change the string result for lazy value
@@ -125,7 +119,25 @@ module Torque
           nil? ? '' : super
         end
 
+        # Get the index of the value
+        def to_i
+          self.class.values.index(self)
+        end
+
+        # Change the inspection to show the enum name
+        def inspect
+          nil? ? 'nil' : "#<#{self.class.name} #{super}>"
+        end
+
         private
+
+          # Get the i18n keys to check
+          def i18n_keys
+            values = { type: self.class.type_name, value: to_s }
+            Torque::PostgreSQL.config.enum.i18n_type_scopes.map do |key|
+              (key % values).to_sym
+            end
+          end
 
           # Check for valid '?' and '!' methods
           def respond_to_missing?(method_name, include_private = false)

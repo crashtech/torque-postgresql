@@ -42,11 +42,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 
 ## Desirable
 
-- [ ] Create a Lazy attribute to warp lazy-kind values
-- [ ] Record column data type (maybe Vector) [DOCS](https://www.postgresql.org/docs/9.6/static/datatype-pseudo.html)
-  - [ ] Allow per record extra data customization
-  - [ ] Index on expressions [DOCS](https://www.postgresql.org/docs/current/static/indexes-expressional.html)
-  - [ ] Partial index, using `WHERE` [DOCS](https://www.postgresql.org/docs/9.6/static/sql-createindex.html)
+- [x] Create a Lazy attribute to warp lazy-kind values
 - [x] Interval data type [DOCS](https://www.postgresql.org/docs/9.4/static/datatype-datetime.html#DATATYPE-INTERVAL-INPUT)
   - [x] Setup the interval style to the easier 'iso_8601' [DOCS](https://www.postgresql.org/docs/9.6/static/runtime-config-client.html#RUNTIME-CONFIG-CLIENT-FORMAT)
   - [x] On create table, interval column method
@@ -81,9 +77,9 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [x] Bind parent instance and attribute where is attatched to internal composite instance (Act as `has_one`) *TEST*
   - [x] Block querying on Composite types *TEST*
   - [ ] Nested callbacks and validations
-  - [ ] Accept array of composite (Act as `has_many`)
   - [ ] Allow composite model class be edited by users by reopening the class
   - [ ] Allow `belongs_to` for composite types
+  - [ ] Check how it works with `human_attribute_name`
 - [ ] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
   - [x] Configurations
   - [x] Allow schema option for database statements
@@ -93,18 +89,15 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [x] On create table, enum column method
   - [x] Create single Module or Class for each enum type
   - [ ] Enum for active model (based on Enumerize)
+    - [ ] Generate a method `_text` so the i18n key can have the model name
   - [x] Uses Ruby Comparable module [DOCS](https://ruby-doc.org/core-2.3.0/Comparable.html)
   - [x] Allow methods ended with '?' to check or '!' to replace value
-  - [ ] Accept array of enum and consider it as a set
-  - [ ] I18n support for translating values
-  - [ ] Extras
-    - [x] Uses `chomp!` to check for '?' and '!' methods [DOCS](https://ruby-doc.org/core-2.2.0/String.html#method-i-chomp-21)
-    - [ ] Allow generator to postgre cast enum to integer [DOCS](http://stackoverflow.com/a/12347716/7321983)
+  - [x] I18n support for translating values
+  - [x] Uses `chomp!` to check for '?' and '!' methods [DOCS](https://ruby-doc.org/core-2.2.0/String.html#method-i-chomp-21)
 - [x] DISTINCT ON [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT)
   - [x] Static model method
   - [x] Relation method
   - [x] Where-like columns search for querying
-  - [ ] Sanatize tests
 - [ ] `.group`, `.order`, and `.select` Allowing hash association
   - [ ] User the new `resolve_column` on Group
   - [ ] User the new `resolve_column` on Select
@@ -113,3 +106,18 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 ## Form for
 
 - [ ] Integrate resources with form for
+
+## Next version
+- [ ] Composite
+  - [ ] Accept array of composite (Act as `has_many`)
+- [ ] Enum
+  - [ ] Accept array of enum and consider it as a set
+  - [ ] Allow generator to postgre cast enum to integer [DOCS](http://stackoverflow.com/a/12347716/7321983)
+- [ ] Distinct On
+  - [ ] Sanitize test
+- [ ] Record column data type (maybe Vector) [DOCS](https://www.postgresql.org/docs/9.6/static/datatype-pseudo.html)
+  - [ ] Allow per record extra data customization
+  - [ ] Allow using symbol (:string), constant name over ActiveRecord::Type (String), or anything that respond to #cast, #serialize, and #deserialize to map the values
+  - [ ] Index on expressions [DOCS](https://www.postgresql.org/docs/current/static/indexes-expressional.html)
+  - [ ] Partial index, using `WHERE` [DOCS](https://www.postgresql.org/docs/9.6/static/sql-createindex.html)
+  - [ ] Array of record

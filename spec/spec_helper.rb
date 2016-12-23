@@ -13,6 +13,8 @@ Dir.glob(File.join('spec', '{models,factories}', '*.rb')) do |file|
   require file[5..-4]
 end
 
+I18n.load_path << Pathname.pwd.join('spec', 'en.yml')
+
 load File.join('schema.rb')
 RSpec.configure do |config|
   config.formatter = :documentation

@@ -123,7 +123,7 @@ RSpec.describe 'Enum', type: :feature do
     let(:values) { %w(created draft published archived) }
     let(:error) { Torque::PostgreSQL::Attributes::Enum::EnumError }
     let(:mock_enum) do
-      klass = Torque::PostgreSQL::Attributes::Enum.send(:define_from_type, 'mock')
+      klass = Class.new(subject.superclass)
       klass.instance_variable_set(:@values, values << '15')
       klass
     end
@@ -283,6 +283,21 @@ RSpec.describe 'Enum', type: :feature do
         expect(value).to be_eql(enum.draft)
         expect(value).to be_a(enum)
       end
+    end
+  end
+
+  context 'on I18n' do
+    subject { Enum::ContentStatus }
+
+    it 'has the text method' do
+      expect(subject.new(0)).to respond_to(:text)
+    end
+
+    it 'brings the correct values' do
+      expect(subject.new(0).text).to be_eql('1 - Created')
+      expect(subject.new(1).text).to be_eql('Draft (2)')
+      expect(subject.new(2).text).to be_eql('Finally published')
+      expect(subject.new(3).text).to be_eql('Archived')
     end
   end
 end

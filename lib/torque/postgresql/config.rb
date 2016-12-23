@@ -19,6 +19,23 @@ module Torque
       # Specify the namespace of each enum type of value
       enum.namespace = ::Object.const_set('Enum', Module.new)
 
+      # Specify the scopes for I18n translations
+      enum.i18n_scopes = [
+        'activerecord.attributes.%{model}.%{attr}.%{value}',
+        'activerecord.attributes.%{attr}.%{value}',
+        'activerecord.enums.%{type}.%{value}',
+        'enum.%{type}.%{value}',
+        'enum.%{value}'
+      ]
+
+      # Specify the scopes for I18n translations but with type only
+      enum.i18n_type_scopes = Enumerator.new do |yielder|
+        enum.i18n_scopes.each do |key|
+          next if key.include?('%{model}') || key.include?('%{attr}')
+          yielder << key
+        end
+      end
+
     end
 
     # Configure Composite features

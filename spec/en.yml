@@ -1,0 +1,10 @@
+en:
+  torque: 'Torque Rocks!'
+  activerecord:
+    enums:
+      content_status:
+        created: '1 - Created'
+  enum:
+    content_status:
+      draft: 'Draft (2)'
+    published: 'Finally published'
