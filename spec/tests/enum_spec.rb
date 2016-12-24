@@ -181,14 +181,24 @@ RSpec.describe 'Enum', type: :feature do
       value = subject.draft
       expect(value).to be > subject.created
       expect(value).to be < subject.archived
+      expect(value).to be_eql(subject.draft)
       expect(value).to_not be_eql(subject.published)
       expect(subject.draft == mock_enum.draft).to be_falsey
     end
 
     it 'allows values comparison with string' do
       value = subject.draft
+      expect(value).to be > :created
+      expect(value).to be < :archived
+      expect(value).to be_eql(:draft)
+      expect(value).to_not be_eql(:published)
+    end
+
+    it 'allows values comparison with symbol' do
+      value = subject.draft
       expect(value).to be > 'created'
       expect(value).to be < 'archived'
+      expect(value).to be_eql('draft')
       expect(value).to_not be_eql('published')
     end
 
@@ -196,6 +206,7 @@ RSpec.describe 'Enum', type: :feature do
       value = subject.draft
       expect(value).to be > 0
       expect(value).to be < 3
+      expect(value).to be_eql(1)
       expect(value).to_not be_eql(2.5)
     end
 
@@ -298,6 +309,132 @@ RSpec.describe 'Enum', type: :feature do
       expect(subject.new(1).text).to be_eql('Draft (2)')
       expect(subject.new(2).text).to be_eql('Finally published')
       expect(subject.new(3).text).to be_eql('Archived')
+    end
+  end
+
+  context 'on model' do
+    before(:all) do
+      Torque::PostgreSQL.config.enum.initializer = true
+      User.send(:define_attribute_method, 'role')
+      Torque::PostgreSQL.config.enum.initializer = false
+    end
+    subject { User }
+    let(:instance) { FactoryGirl.build(:user) }
+
+    it 'has all enum methods' do
+      expect(subject).to respond_to(:roles)
+      expect(instance).to respond_to(:role_text)
+
+      subject.roles.each do |value|
+        expect(subject).to  respond_to(value)
+        expect(instance).to respond_to(value + '?')
+        expect(instance).to respond_to(value + '!')
+      end
+    end
+
+    it 'plural method brings the list of values' do
+      result = subject.roles
+      expect(result).to be_a(Array)
+      expect(result).to be_eql(Enum::Roles.values)
+    end
+
+    it 'text value now uses model and attribute references' do
+      instance.role = :visitor
+      expect(instance.role_text).to be_eql('A simple Visitor')
+
+      instance.role = :assistant
+      expect(instance.role_text).to be_eql('An Assistant')
+
+      instance.role = :manager
+      expect(instance.role_text).to be_eql('The Manager')
+
+      instance.role = :admin
+      expect(instance.role_text).to be_eql('Super Duper Admin')
+    end
+
+    it 'scopes are correctly applied' do
+      subject.roles.each do |value|
+        expect(subject.send(value).to_sql).to match(/WHERE "users"."role" = '#{value}'/)
+      end
+    end
+
+    it 'ask methods work' do
+      instance.role = :assistant
+      expect(instance.manager?).to be_falsey
+      expect(instance.assistant?).to be_truthy
+    end
+
+    it 'bang methods work' do
+      instance.admin!
+      expect(instance.persisted?).to be_truthy
+
+      updated_at = instance.updated_at
+      subject.enum_save_on_bang = false
+      instance.visitor!
+
+      expect(instance.role).to be_eql(:visitor)
+      expect(instance.updated_at).to be_eql(updated_at)
+
+      instance.reload
+      expect(instance.role).to be_eql(:admin)
+    end
+
+    it 'raises when starting an enum with conflicting methods' do
+      expect { Post.enum :conflict }.to raise_error(ArgumentError, /already exists in/)
+    end
+
+    context 'without autoload' do
+      subject { Author }
+      let(:instance) { FactoryGirl.build(:author) }
+
+      it 'does not create all methods' do
+        expect(subject).to_not respond_to(:specialties)
+        expect(instance).to_not respond_to(:specialty_text)
+
+        Enum::ContentStatus.values.each do |value|
+          expect(subject).to_not  respond_to(value)
+          expect(instance).to_not respond_to(value + '?')
+          expect(instance).to_not respond_to(value + '!')
+        end
+      end
+    end
+
+    context 'with prefix' do
+      before(:all) { Author.enum :specialty, prefix: 'in' }
+      subject { Author }
+      let(:instance) { FactoryGirl.build(:author) }
+
+      it 'creates all methods correctly' do
+        expect(subject).to respond_to(:specialties)
+        expect(instance).to respond_to(:specialty_text)
+
+        subject.specialties.each do |value|
+          expect(subject).to  respond_to('in_' + value)
+          expect(instance).to respond_to('in_' + value + '?')
+          expect(instance).to respond_to('in_' + value + '!')
+        end
+      end
+    end
+
+    context 'with suffix, only, and except' do
+      before(:all) { Author.enum :specialty, suffix: 'expert', only: %w(books movies), except: 'books' }
+      subject { Author }
+      let(:instance) { FactoryGirl.build(:author) }
+
+      it 'creates only the requested methods' do
+        expect(subject).to  respond_to('movies_expert')
+        expect(instance).to respond_to('movies_expert?')
+        expect(instance).to respond_to('movies_expert!')
+
+        expect(subject).to_not  respond_to('books_expert')
+        expect(instance).to_not respond_to('books_expert?')
+        expect(instance).to_not respond_to('books_expert!')
+
+        expect(subject).to_not  respond_to('plays_expert')
+        expect(instance).to_not respond_to('plays_expert?')
+        expect(instance).to_not respond_to('plays_expert!')
+
+      end
     end
   end
 end

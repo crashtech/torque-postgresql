@@ -20,51 +20,6 @@ module Torque
             namespace.const_set(const, Base.define_from_type(name))
           end
 
-          # Define the reader method on klass to bring the relation
-          def reader_method(klass, name, relation)
-            klass.send(:define_method, name) do
-              if @aggregation_cache.key?(name)
-                @aggregation_cache[name]
-              elsif (values = _read_attribute(name)).nil?
-                @aggregation_cache[name] = LazyBuilder.new(self, name)
-              else
-                self.send("build_#{name}", *values)
-              end
-            end
-          end
-
-          # Define the writer method on klass to update the relation
-          def writer_method(klass, name, relation)
-            klass.send(:define_method, "#{name}=") do |value|
-              case
-              when value.nil?
-                @aggregation_cache[name] = LazyBuilder.new(self, name)
-                write_attribute_with_type_cast(name, nil, false)
-              when @aggregation_cache[name].nil?
-                self.send("build_#{name}", value)
-              else
-                @aggregation_cache[name].attributes = cast_value(value)
-              end
-            end
-          end
-
-          # Define the build so it can turn nil values into a relation
-          def build_method(klass, name, relation)
-            klass.send(:define_method, "build_#{name}") do |*args|
-              @aggregation_cache[name] = relation.modelize(self, name, args)
-              write_attribute_with_type_cast(name, @aggregation_cache[name], false)
-            end
-          end
-
-        end
-
-        # Only builds the relation if a method is called. It acts as nil
-        class LazyBuilder < Lazy
-
-          def method_missing(name, *args, &block)
-            @klass.send("build_#{@values[0]}").send(name, *args, &block)
-          end
-
         end
 
         class Base < ActiveRecord::Base
@@ -186,9 +141,7 @@ module Torque
           relation = Composite.lookup(subtype.name)
 
           # Create all methods needed
-          Composite.reader_method(self, attribute, relation)
-          Composite.writer_method(self, attribute, relation)
-          Composite.build_method(self, attribute, relation)
+          Builder::Composite.new(self, attribute, relation).build
 
           # Build the options for aggregate reflection
           options = {class_name: relation.name, allow_nil: true, composite: true}

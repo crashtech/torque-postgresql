@@ -71,9 +71,24 @@ module Torque
 
         end
 
+        # Extension of the ActiveRecord::Base to initiate the enum features
+        module Base
+
+          method_name = Torque::PostgreSQL.config.enum.base_method
+          module_eval <<-STR, __FILE__, __LINE__ + 1
+            def #{method_name}(*args, **options)
+              args.map(&:to_s).each do |attribute|
+                type = attribute_types[attribute]
+                TypeMap.lookup(type, self, attribute, false, options)
+              end
+            end
+          STR
+
+        end
+
         # Override string initializer to check for a valid value
         def initialize(value)
-          str_value = value.is_a?(Numeric) ? self.class.values[value.to_i] : value
+          str_value = value.is_a?(Numeric) ? self.class.values[value.to_i] : value.to_s
           raise_invalid(value) unless self.class.valid?(str_value)
           super(str_value)
         end
@@ -83,8 +98,8 @@ module Torque
           raise_comparison(other) if other.is_a?(Enum) && other.class != self.class
 
           case other
-          when Numeric, Enum then to_i <=> other.to_i
-          when String        then to_i <=> self.class.values.index(other)
+          when Numeric, Enum  then to_i <=> other.to_i
+          when String, Symbol then to_i <=> self.class.values.index(other.to_s)
           else raise_comparison(other)
           end
         end
@@ -95,6 +110,7 @@ module Torque
         rescue EnumError
           false
         end
+        alias eql? ==
 
         # Since it can have a lazy value, nil can be true here
         def nil?
@@ -109,8 +125,8 @@ module Torque
         end
 
         # Get a translated version of the value
-        def text
-          keys = i18n_keys << self.underscore.humanize
+        def text(attr = nil, model = nil)
+          keys = i18n_keys(attr, model) << self.underscore.humanize
           I18n.t(keys.shift, default: keys)
         end
 
@@ -132,9 +148,17 @@ module Torque
         private
 
           # Get the i18n keys to check
-          def i18n_keys
+          def i18n_keys(attr = nil, model = nil)
             values = { type: self.class.type_name, value: to_s }
-            Torque::PostgreSQL.config.enum.i18n_type_scopes.map do |key|
+            list_from = :i18n_type_scopes
+
+            if attr && model
+              values[:attr] = attr
+              values[:model] = model.class.model_name.i18n_key
+              list_from = :i18n_scopes
+            end
+
+            Torque::PostgreSQL.config.enum.send(list_from).map do |key|
               (key % values).to_sym
             end
           end
@@ -174,6 +198,20 @@ module Torque
             raise EnumError, "Comparison of #{self.class.name} with #{self.inspect} failed"
           end
 
+      end
+
+      # Extend ActiveRecord::Base so it can have the initializer
+      ActiveRecord::Base.extend Enum::Base
+
+      # Create the methods related to the attribute to handle the enum type
+      TypeMap.register_type Adapter::OID::Enum do |subtype, attribute, initial = false, options = nil|
+        return if initial && !Torque::PostgreSQL.config.enum.initializer
+        options = {} if options.nil?
+
+        # Generate methods on self class
+        builder = Builder::Enum.new(self, attribute, subtype, initial, options)
+        return if builder.conflicting?
+        builder.build
       end
     end
   end

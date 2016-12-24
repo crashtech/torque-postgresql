@@ -1,10 +1,19 @@
 en:
   torque: 'Torque Rocks!'
   activerecord:
+    attributes:
+      user:
+        role:
+          visitor: 'A simple Visitor'
+      role:
+        assistant: 'An Assistant'
     enums:
       content_status:
         created: '1 - Created'
+      roles:
+        manager: 'The Manager'
   enum:
     content_status:
       draft: 'Draft (2)'
     published: 'Finally published'
+    admin: 'Super Duper Admin'

@@ -16,6 +16,14 @@ module Torque
       # automatically or not
       enum.initializer = false
 
+      # The name of the method to be used on any ActiveRecord::Base to
+      # initialize model-based enum features
+      enum.base_method = :enum
+
+      # Indicates if bang methods like 'disabled!' should update the record on
+      # database or not
+      enum.save_on_bang = true
+
       # Specify the namespace of each enum type of value
       enum.namespace = ::Object.const_set('Enum', Module.new)
 

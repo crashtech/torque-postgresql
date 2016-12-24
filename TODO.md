@@ -39,6 +39,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 - [ ] Allow use the 'stream_each' method from PostgreSQL connection [DOCS](https://deveiate.org/code/pg/PG/Result.html#method-i-stream_each)
 - [ ] FILTER Clause [DOCS](https://www.postgresql.org/docs/9.4/static/sql-expressions.html#SYNTAX-AGGREGATES)
 - [ ] GIN Indexes [DOCS](https://www.postgresql.org/docs/current/static/gin-intro.html)
+- [ ] Both Enum and Composite builded methods inside a self-generated module
 
 ## Desirable
 
@@ -80,7 +81,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [ ] Allow composite model class be edited by users by reopening the class
   - [ ] Allow `belongs_to` for composite types
   - [ ] Check how it works with `human_attribute_name`
-- [ ] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
+- [x] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
   - [x] Configurations
   - [x] Allow schema option for database statements
   - [x] Create, remove and change values
@@ -88,8 +89,8 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [x] Migration up and down
   - [x] On create table, enum column method
   - [x] Create single Module or Class for each enum type
-  - [ ] Enum for active model (based on Enumerize)
-    - [ ] Generate a method `_text` so the i18n key can have the model name
+  - [x] Enum for active model (based on Enumerize)
+    - [x] Generate a method `_text` so the i18n key can have the model name
   - [x] Uses Ruby Comparable module [DOCS](https://ruby-doc.org/core-2.3.0/Comparable.html)
   - [x] Allow methods ended with '?' to check or '!' to replace value
   - [x] I18n support for translating values
@@ -113,6 +114,8 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 - [ ] Enum
   - [ ] Accept array of enum and consider it as a set
   - [ ] Allow generator to postgre cast enum to integer [DOCS](http://stackoverflow.com/a/12347716/7321983)
+  - [ ] Accept `pluralize: true` and `singularize: true` to create the enum methods
+  - [ ] Enum equivalences
 - [ ] Distinct On
   - [ ] Sanitize test
 - [ ] Record column data type (maybe Vector) [DOCS](https://www.postgresql.org/docs/9.6/static/datatype-pseudo.html)

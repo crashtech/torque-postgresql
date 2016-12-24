@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 2
+  version = 5
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -22,6 +22,9 @@ begin
 
     # These are user-defined types used on this database
     create_enum "content_status", ["created", "draft", "published", "archived"], force: :cascade
+    create_enum "specialties", ["books", "movies", "plays"], force: :cascade
+    create_enum "roles", ["visitor", "assistant", "manager", "admin"], force: :cascade
+    create_enum "conflicts", ["valid", "invalid", "untrusted"], force: :cascade
 
     create_composite_type "published", force: :cascade do |t|
       t.integer  "user_id"
@@ -32,23 +35,28 @@ begin
 
     create_table "authors", force: :cascade do |t|
       t.string   "name"
+      t.enum     "specialty", subtype: :specialties
     end
 
     create_table "posts", force: :cascade do |t|
       t.integer   "author_id"
       t.string    "title"
       t.text      "content"
-      t.enum      "status",   subtype: :content_status
+      t.enum      "status",    subtype: :content_status
+      t.enum      "conflict",  subtype: :conflicts
       t.composite "published"
       t.index ["author_id"], name: "index_posts_on_author_id", using: :btree
     end
 
     create_table "users", force: :cascade do |t|
-      t.string   "name",    null: false
+      t.string "name",         null: false
+      t.enum   "role",                      subtype: :roles
+      t.datetime "created_at", null: false
+      t.datetime "updated_at", null: false
     end
 
     create_table "courses", force: :cascade do |t|
-      t.string   "title",   null: false
+      t.string   "title",    null: false
       t.interval "duration"
     end
 

@@ -4,6 +4,8 @@ module Torque
       module OID
         class Enum < ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Enum
 
+          attr_reader :name, :klass
+
           def self.create(row)
             new(row['typname'])
           end
