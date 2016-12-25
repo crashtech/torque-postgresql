@@ -13,11 +13,11 @@ module Torque
 
           # Find or create the class that will handle the field
           def lookup(name)
-            const     = name.camelize
+            const     = name.camelize.to_s
             namespace = Torque::PostgreSQL.config.composite.namespace
 
             return namespace.const_get(const) if namespace.const_defined?(const)
-            namespace.const_set(const, Base.define_from_type(name))
+            namespace.const_set(const, Class.new(Base))
           end
 
         end
@@ -33,26 +33,20 @@ module Torque
 
           class << self
 
-            attr_reader :type
-
-            # Generate a model class that is defined as a shared user-defined
-            # type.
-            def define_from_type(name)
-              klass = Class.new(Base)
-              klass.instance_variable_set(:@type, name)
-              klass.send(:load_schema)
-              klass
+            # Get the type name from its class name
+            def type_name
+              @type_name ||= self.name.demodulize.underscore
             end
 
             # Get the direct OID composite type
             def oid_type
-              connection.type_map.lookup(type)
+              connection.type_map.lookup(type_name)
             end
 
             # The process of loading the schema is very different from a normal
             # table table reading and defining
             def load_schema!
-              columns = connection.schema_cache.columns_hash(type, true)
+              columns = connection.schema_cache.columns_hash(type_name, true)
               @columns_hash = columns.except(*ignored_columns)
               @columns_hash.each do |name, column|
                 warn_if_deprecated_type(column)
