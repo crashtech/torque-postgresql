@@ -148,6 +148,28 @@ RSpec.describe 'Enum', type: :feature do
       expect(subject.each.entries).to be_eql(values)
     end
 
+    it 'values can be reach using fetch, as in hash enums' do
+      expect(subject).to respond_to(:fetch)
+
+      value = subject.fetch('archived', 'archived')
+      expect(value).to be_a(subject)
+      expect(value).to be_eql(subject.archived)
+
+      value = subject.fetch('other', 'other')
+      expect(value).to be_nil
+    end
+
+    it 'values can be reach using [], as in hash enums' do
+      expect(subject).to respond_to(:[])
+
+      value = subject['archived']
+      expect(value).to be_a(subject)
+      expect(value).to be_eql(subject.archived)
+
+      value = subject['other']
+      expect(value).to be_nil
+    end
+
     it 'accepts respond_to against value' do
       expect(subject).to respond_to(:archived)
     end
@@ -397,10 +419,22 @@ RSpec.describe 'Enum', type: :feature do
         expect(subject).to_not respond_to(:specialties)
         expect(instance).to_not respond_to(:specialty_text)
 
-        Enum::ContentStatus.values.each do |value|
+        Enum::Specialties.values.each do |value|
           expect(subject).to_not  respond_to(value)
           expect(instance).to_not respond_to(value + '?')
           expect(instance).to_not respond_to(value + '!')
+        end
+      end
+
+      it 'can be manually initiated' do
+        Author.enum :specialty
+        expect(subject).to respond_to(:specialties)
+        expect(instance).to respond_to(:specialty_text)
+
+        Enum::Specialties.values.each do |value|
+          expect(subject).to  respond_to(value)
+          expect(instance).to respond_to(value + '?')
+          expect(instance).to respond_to(value + '!')
         end
       end
     end

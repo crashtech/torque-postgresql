@@ -64,13 +64,13 @@ module Torque
             return false
           rescue Interrupt => err
             if !initial
-              raise ArgumentError, <<-MSG
+              raise ArgumentError, <<~MSG.tr("\n", '')
                 #{subtype.class.name} was not able to generate requested
                 methods because the method #{err} already exists in
                 #{klass.name}.
               MSG
             else
-              warn <<-MSG
+              warn <<~MSG.tr("\n", '')
                 #{subtype.class.name} was not able to autoload on
                 #{klass.name} because the method #{err} already exists.
               MSG

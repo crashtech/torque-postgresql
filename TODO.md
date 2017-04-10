@@ -2,20 +2,56 @@
 
 Following the PostgreSQL features list on [this page](https://www.postgresql.org/about/featurematrix/).
 
+> **cte** - Common Table Expressions
+
 ## v0.1.0
 
 - [ ] DOCS!!!
   - [ ] Interval
-  - [ ] Composite
   - [ ] Enum
   - [ ] Distinct On
   - [ ] Config
+- [ ] Replace the 'postgres_ext' gem
+  - [ ] Basic CTE queries
+  - [ ] Recursive CTE queries
 - [x] Interval data type [DOCS](https://www.postgresql.org/docs/9.4/static/datatype-datetime.html#DATATYPE-INTERVAL-INPUT)
   - [x] Setup the interval style to the easier 'iso_8601' [DOCS](https://www.postgresql.org/docs/9.6/static/runtime-config-client.html#RUNTIME-CONFIG-CLIENT-FORMAT)
   - [x] On create table, interval column method
   - [x] Value OID
   - [x] Accepts integer as a value
   - [x] Accepts array and hash as a value
+- [x] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
+  - [x] Configurations
+  - [x] Allow schema option for database statements
+  - [x] Create, remove and change values
+  - [x] Schema dumper
+  - [x] Migration up and down
+  - [x] On create table, enum column method
+  - [x] Create single Module or Class for each enum type
+  - [x] Enum for active model (based on Enumerize)
+    - [x] Generate a method `_text` so the i18n key can have the model name
+  - [x] Uses Ruby Comparable module [DOCS](https://ruby-doc.org/core-2.3.0/Comparable.html)
+  - [x] Allow methods ended with '?' to check or '!' to replace value
+  - [x] I18n support for translating values
+  - [x] Uses `chomp!` to check for '?' and '!' methods [DOCS](https://ruby-doc.org/core-2.2.0/String.html#method-i-chomp-21)
+  - [x] Allow 'Enum::Roles.each', iteration over class using 'delegate :each, to: :values'
+  - [x] Allow manual enum initialization by calling 'enum :roles' on models
+- [x] DISTINCT ON [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT)
+  - [x] Static model method
+  - [x] Relation method
+  - [x] Where-like columns search for querying
+
+## v0.1.1
+
+- [ ] Enum
+  - [ ] Fix bug on Enum start before the model is instantiate, if you try to use 'User.roles' before any instance, it throws and error because the column roles wasn't defined
+
+## v0.2.0
+
+- [ ] DOCS!!!
+  - [ ] Composite
+- [ ] Table Inheritance [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
+  - [ ] FROM ONLY and FROM asterisk [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
 - [ ] 'Composite' type manager [DOCS](https://www.postgresql.org/docs/9.6/static/rowtypes.html)
   - [x] Configurations
   - [ ] Allow schema option for database statements
@@ -37,32 +73,6 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
     - [ ] Allow where conditions
   - [x] Check how it works with `human_attribute_name`
     - [x] It already works fine using dot syntax `'published.url'` *TEST*
-- [x] 'Enum' type manager [DOCS](https://www.postgresql.org/docs/9.2/static/sql-createtype.html)
-  - [x] Configurations
-  - [x] Allow schema option for database statements
-  - [x] Create, remove and change values
-  - [x] Schema dumper
-  - [x] Migration up and down
-  - [x] On create table, enum column method
-  - [x] Create single Module or Class for each enum type
-  - [x] Enum for active model (based on Enumerize)
-    - [x] Generate a method `_text` so the i18n key can have the model name
-  - [x] Uses Ruby Comparable module [DOCS](https://ruby-doc.org/core-2.3.0/Comparable.html)
-  - [x] Allow methods ended with '?' to check or '!' to replace value
-  - [x] I18n support for translating values
-  - [x] Uses `chomp!` to check for '?' and '!' methods [DOCS](https://ruby-doc.org/core-2.2.0/String.html#method-i-chomp-21)
-  - [x] Allow 'Enum::Roles.each', iteration over class using 'delegate :each, to: :values'
-  - [ ] Allow manual enum initialization by calling 'enum :roles' on models
-  - [ ] Fix bug on Enum start before the model is instantiate, if you try to use 'User.roles' before any instance, it throws and error because the column roles wasn't defined
-- [x] DISTINCT ON [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT)
-  - [x] Static model method
-  - [x] Relation method
-  - [x] Where-like columns search for querying
-
-## v0.2.0
-
-- [ ] Table Inheritance [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
-  - [ ] FROM ONLY and FROM asterisk [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
 - [ ] Enum
   - [ ] Allow generator to postgre cast enum to integer [DOCS](http://stackoverflow.com/a/12347716/7321983)
   - [ ] Accept `pluralize: true` and `singularize: true` to create the enum methods
@@ -70,7 +80,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 - [ ] Integrate resources with form for
   - [ ] Interval input type
   - [ ] Enum input type
-  - [ ] Nested form for compsoite input type
+  - [ ] Nested form for composite input type
 
 ## Backend
 
@@ -115,8 +125,6 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 - [ ] Simple nested relation find (User -> has_many :groups should search for UserGroups then Groups)
   - [ ] Configuration to enable and disable this feature
 - [ ] Replace the 'postgres_ext' gem
-  - [ ] Basic CTE queries
-  - [ ] Recursive CTE queries
   - [ ] Rank windows function
   - [ ] Array operators
 - [ ] Domain manager [DOCS](https://www.postgresql.org/docs/9.2/static/extend-type-system.html#AEN27940)

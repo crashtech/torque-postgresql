@@ -40,6 +40,15 @@ module Torque
             end
           end
 
+          # Fetch a value from the list
+          # see https://github.com/rails/rails/blob/v5.0.0/activerecord/lib/active_record/fixtures.rb#L656
+          # see https://github.com/rails/rails/blob/v5.0.0/activerecord/lib/active_record/validations/uniqueness.rb#L101
+          def fetch(value, *)
+            return nil unless values.include?(value)
+            send(value)
+          end
+          alias [] fetch
+
           # Get the type name from its class name
           def type_name
             @type_name ||= self.name.demodulize.underscore
@@ -78,9 +87,9 @@ module Torque
           method_name = Torque::PostgreSQL.config.enum.base_method
           module_eval <<-STR, __FILE__, __LINE__ + 1
             def #{method_name}(*args, **options)
-              args.map(&:to_s).each do |attribute|
-                type = attribute_types[attribute]
-                TypeMap.lookup(type, self, attribute, false, options)
+              args.each do |attribute|
+                type = attribute_types[attribute.to_s]
+                TypeMap.lookup(type, self, attribute.to_s, false, options)
               end
             end
           STR
@@ -213,6 +222,9 @@ module Torque
         builder = Builder::Enum.new(self, attribute, subtype, initial, options)
         return if builder.conflicting?
         builder.build
+
+        # Mark the enum as defined
+        defined_enums[attribute] = subtype.klass
       end
     end
   end

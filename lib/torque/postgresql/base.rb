@@ -4,12 +4,10 @@ module Torque
       extend ActiveSupport::Concern
 
       module ClassMethods
-
         delegate :distinct_on, to: :all
-
       end
     end
 
-    ActiveRecord::Base.send :include, Base
+    ActiveRecord::Base.include Base
   end
 end
