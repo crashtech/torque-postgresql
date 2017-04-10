@@ -142,6 +142,12 @@ RSpec.describe 'Enum', type: :feature do
       expect(subject.values).to be_eql(values)
     end
 
+    it 'values can be iterated by using each direct on class' do
+      expect(subject).to respond_to(:each)
+      expect(subject.each).to be_a(Enumerator)
+      expect(subject.each.entries).to be_eql(values)
+    end
+
     it 'accepts respond_to against value' do
       expect(subject).to respond_to(:archived)
     end

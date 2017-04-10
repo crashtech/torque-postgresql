@@ -51,6 +51,9 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [x] Allow methods ended with '?' to check or '!' to replace value
   - [x] I18n support for translating values
   - [x] Uses `chomp!` to check for '?' and '!' methods [DOCS](https://ruby-doc.org/core-2.2.0/String.html#method-i-chomp-21)
+  - [x] Allow 'Enum::Roles.each', iteration over class using 'delegate :each, to: :values'
+  - [ ] Allow manual enum initialization by calling 'enum :roles' on models
+  - [ ] Fix bug on Enum start before the model is instantiate, if you try to use 'User.roles' before any instance, it throws and error because the column roles wasn't defined
 - [x] DISTINCT ON [DOCS](https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT)
   - [x] Static model method
   - [x] Relation method

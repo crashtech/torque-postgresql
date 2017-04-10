@@ -19,14 +19,14 @@ Gem::Specification.new do |s|
   s.files      = Dir['MIT-LICENSE', 'README.rdoc', 'lib/**/*', 'Rakefile']
   s.test_files = Dir['test/**/*']
 
-  s.add_dependency 'rails', '>= 5.0.0'
-  s.add_dependency 'pg', '>= 0.19.0'
+  s.add_dependency 'rails', '~> 5.0', '>= 5.0.0'
+  s.add_dependency 'pg', '~> 0.19', '>= 0.19.0'
 
-  s.add_development_dependency 'rake', '~> 10.1.0'
-  s.add_development_dependency 'database_cleaner'
-  s.add_development_dependency 'dotenv'
-  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'rake', '~> 10.1', '>= 10.1.0'
+  s.add_development_dependency 'database_cleaner', '~> 1.5', '>= 1.5.3'
+  s.add_development_dependency 'dotenv', '~> 2.1', '>= 2.1.1'
+  s.add_development_dependency 'rspec', '~> 3.5', '>= 3.5.0'
 
-  s.add_development_dependency 'factory_girl', '~> 4.5.0'
-  s.add_development_dependency 'faker', '~> 1.5.0'
+  s.add_development_dependency 'factory_girl', '~> 4.5', '>= 4.5.0'
+  s.add_development_dependency 'faker', '~> 1.5', '>= 1.5.0'
 end

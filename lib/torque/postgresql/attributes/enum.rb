@@ -9,6 +9,7 @@ module Torque
         LAZY_VALUE = 0.chr
 
         class << self
+          delegate :each, to: :values
 
           # Find or create the class that will handle the value
           def lookup(name)
