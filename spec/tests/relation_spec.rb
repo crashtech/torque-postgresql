@@ -32,13 +32,13 @@ RSpec.describe 'Relation', type: :helper do
     end
 
     it 'asserts direct hash relations' do
-      check = [:title, authors: :name]
+      check = [:title, author: :name]
       result = [['posts', 'title'], ['authors', 'name']]
       expect(subject.call(check)).to be_attributes_as(result)
     end
 
     it 'asserts multiple values on hash definition' do
-      check = [authors: [:name, :age]]
+      check = [author: [:name, :age]]
       result = [['authors', 'name'], ['authors', 'age']]
       expect(subject.call(check)).to be_attributes_as(result)
     end
@@ -49,7 +49,7 @@ RSpec.describe 'Relation', type: :helper do
     end
 
     it 'raises on third level access' do
-      check = [authors: [comments: :body]]
+      check = [author: [comments: :body]]
       expect{ subject.call(check) }.to raise_error(ArgumentError, /on third level/)
     end
   end

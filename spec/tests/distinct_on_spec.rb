@@ -30,12 +30,12 @@ RSpec.describe 'DistinctOn' do
     end
 
     it 'is able to do with relation' do
-      expect(subject.distinct_on(authors: :name).to_sql).to \
+      expect(subject.distinct_on(author: :name).to_sql).to \
         eql('SELECT DISTINCT ON ( "authors"."name" ) "posts".* FROM "posts"')
     end
 
     it 'is able to do with relation and multiple attributes' do
-      expect(subject.distinct_on(authors: [:name, :age]).to_sql).to \
+      expect(subject.distinct_on(author: [:name, :age]).to_sql).to \
         eql('SELECT DISTINCT ON ( "authors"."name", "authors"."age" ) "posts".* FROM "posts"')
     end
 
@@ -45,7 +45,7 @@ RSpec.describe 'DistinctOn' do
     end
 
     it 'raises with third level hash' do
-      expect { subject.distinct_on(authors: [comments: :body]).to_sql }.to \
+      expect { subject.distinct_on(author: [comments: :body]).to_sql }.to \
         raise_error(ArgumentError, /on third level/)
     end
   end
