@@ -7,6 +7,7 @@ require 'active_record/connection_adapters/postgresql_adapter'
 
 require 'torque/postgresql/config'
 require 'torque/postgresql/version'
+require 'torque/postgresql/collector'
 
 require 'torque/postgresql/adapter'
 require 'torque/postgresql/attributes'
