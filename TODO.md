@@ -7,10 +7,11 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 ## v0.1.0
 
 - [ ] DOCS!!!
+  - [ ] Config
+  - [ ] Auxiliary Statements
   - [ ] Interval
   - [ ] Enum
   - [ ] Distinct On
-  - [ ] Config
 - [x] CTE queries (auxiliary statements)
   - [x] Configure CTE queries on model, and enable using `with(:name)` on relations
   - [x] Allow custom join type, besides the default InnerJoin
