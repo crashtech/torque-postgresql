@@ -11,7 +11,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [ ] Enum
   - [ ] Distinct On
   - [ ] Config
-- [ ] CTE queries (auxiliary statements)
+- [x] CTE queries (auxiliary statements)
   - [x] Configure CTE queries on model, and enable using `with(:name)` on relations
   - [x] Allow custom join type, besides the default InnerJoin
   - [x] Only provides the CTE fields when the main query doesn't select columns
@@ -67,26 +67,26 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 - [ ] Table Inheritance [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
   - [ ] FROM ONLY and FROM asterisk [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
 - [ ] 'Composite' type manager [DOCS](https://www.postgresql.org/docs/9.6/static/rowtypes.html)
-  - [x] Configurations
+  - [ ] Configurations
   - [ ] Allow schema option for database statements
-  - [x] Create composite type
+  - [ ] Create composite type
   - [ ] Alter composite type
-  - [x] Schema dumper
-  - [x] On create table, composite column method
-  - [x] Read value from database *TEST*
-  - [x] Write value on database *TEST*
-  - [x] Write quotes properly
-  - [x] Create single Module for each composite type *TEST*
-  - [x] Model attribute using as much as possible from ActiveRecord::Base *TEST*
-  - [x] Bind parent instance and attribute where is attatched to internal composite instance (Act as `has_one`) *TEST*
-  - [x] Block querying on Composite types *TEST*
+  - [ ] Schema dumper
+  - [ ] On create table, composite column method
+  - [ ] Read value from database *TEST*
+  - [ ] Write value on database *TEST*
+  - [ ] Write quotes properly
+  - [ ] Create single Module for each composite type *TEST*
+  - [ ] Model attribute using as much as possible from ActiveRecord::Base *TEST*
+  - [ ] Bind parent instance and attribute where is attatched to internal composite instance (Act as `has_one`) *TEST*
+  - [ ] Block querying on Composite types *TEST*
   - [ ] Nested callbacks and validations
-  - [x] Allow composite model class be edited by users by reopening the class
-  - [x] Allow `belongs_to` for composite types *TEST*
+  - [ ] Allow composite model class be edited by users by reopening the class
+  - [ ] Allow `belongs_to` for composite types *TEST*
     - [ ] Allow eager load
     - [ ] Allow where conditions
-  - [x] Check how it works with `human_attribute_name`
-    - [x] It already works fine using dot syntax `'published.url'` *TEST*
+  - [ ] Check how it works with `human_attribute_name`
+    - [ ] It already works fine using dot syntax `'published.url'` *TEST*
 - [ ] Integrate resources with form for
   - [ ] Interval input type
   - [ ] Enum input type
@@ -142,6 +142,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 
 ## Desirable
 
+- [ ] Turn queries on 'database_statements' into Arel queries
 - [ ] Simple nested relation find (User -> has_many :groups should search for UserGroups then Groups)
   - [ ] Configuration to enable and disable this feature
 - [ ] Replace the 'postgres_ext' gem

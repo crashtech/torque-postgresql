@@ -69,62 +69,6 @@ module Torque
           select_values("SELECT unnest(enum_range(NULL::#{name}))")
         end
 
-        # Creates a new composite type with the name +type_name+. +type_name+
-        # may either be a String or a Symbol.
-        #
-        # There are two ways to work with #create_composite_type. You can use
-        # the block form or the regular form, like this:
-        #
-        # === Block form
-        #
-        #   # create_composite_type() passes a CompositeTypeDefinition object
-        #   # to the block. This form will not only create the type, but also
-        #   # columns for it.
-        #
-        #   create_composite_type(:address) do |t|
-        #     t.column :street, :string, limit: 60
-        #     # Other fields here
-        #   end
-        #
-        # === Block form, with shorthand
-        #
-        #   # You can also use the column types as method calls, rather than
-        #   # calling the column method.
-        #   create_composite_type(:address) do |t|
-        #     t.string :street, limit: 60
-        #     # Other fields here
-        #   end
-        #
-        # === Regular form
-        #
-        #   # Creates a type called 'address' with no columns.
-        #   create_composite_type(:address)
-        #   # Add a column to 'address'.
-        #   add_composite_column(:address, :street, :string, {limit: 60})
-        #
-        # The +options+ hash can include the following keys:
-        # [<tt>:force</tt>]
-        #   Set to true to drop the type before creating it.
-        #   Set to +:cascade+ to drop dependent objects as well.
-        #   Defaults to false.
-        # [<tt>:as</tt>]
-        #   SQL to use to generate the composite type. When this option is used,
-        #   the block is ignored
-        #
-        # See also CompositeTypeDefinition#column for details on how to create
-        # columns.
-        def create_composite_type(type_name, **options)
-          td = create_composite_type_definition type_name, options, options[:as]
-
-          yield td if block_given?
-
-          if options[:force] && type_exists?(type_name)
-            drop_type(type_name, options)
-          end
-
-          execute schema_creation.accept td
-        end
-
         private
 
           def quote_enum_values(name, values, options)
@@ -137,14 +81,6 @@ module Torque
             values.map! do |value|
               quote([prefix, value, suffix].compact.join('_'))
             end
-          end
-
-          def create_composite_type_definition(*args)
-            CompositeTypeDefinition.new(*args)
-          end
-
-          def new_composite_column(*args) # :nodoc:
-            CompositeColumn.new(*args)
           end
 
       end

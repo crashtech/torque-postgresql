@@ -1,5 +1,4 @@
 require_relative 'oid/array'
-require_relative 'oid/composite'
 require_relative 'oid/enum'
 require_relative 'oid/interval'
 

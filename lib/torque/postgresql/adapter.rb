@@ -1,9 +1,7 @@
 
-require_relative 'adapter/composite_column'
 require_relative 'adapter/database_statements'
 require_relative 'adapter/oid'
 require_relative 'adapter/quoting'
-require_relative 'adapter/schema_creation'
 require_relative 'adapter/schema_definitions'
 require_relative 'adapter/schema_dumper'
 require_relative 'adapter/schema_statements'

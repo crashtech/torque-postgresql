@@ -23,16 +23,6 @@ module Torque
           [:drop_type, [args.first]]
         end
 
-        # Records the creation of the composition to be reverted.
-        def create_composite_type(*args, &block)
-          record(:create_composite_type, args, &block)
-        end
-
-        # Inverts the creation of the composite type.
-        def invert_create_composite_type(args)
-          [:drop_type, [args.first]]
-        end
-
       end
 
       ActiveRecord::Migration::CommandRecorder.include CommandRecorder

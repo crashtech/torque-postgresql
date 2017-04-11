@@ -22,7 +22,7 @@ module Torque
         private
 
           def schema_subtype(column)
-            column.sql_type.to_sym.inspect if [:enum, :composite].include? column.type
+            column.sql_type.to_sym.inspect if [:enum].include? column.type
           end
 
       end

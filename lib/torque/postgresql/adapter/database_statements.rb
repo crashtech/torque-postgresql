@@ -3,7 +3,7 @@ module Torque
     module Adapter
       module DatabaseStatements
 
-        EXTENDED_DATABASE_TYPES = %i(enum composite interval)
+        EXTENDED_DATABASE_TYPES = %i(enum interval)
 
         # Check if a given type is valid.
         def valid_type?(type)
@@ -25,19 +25,6 @@ module Torque
         def configure_connection
           super
           execute("SET SESSION IntervalStyle TO 'iso_8601'", 'SCHEMA')
-        end
-
-        # Returns the list of all column definitions for a composite type.
-        def composite_columns(type_name) # :nodoc:
-          type_name = type_name.to_s
-          column_definitions(type_name).map do |column_name, type, default, notnull, oid, fmod, collation, comment|
-            oid = oid.to_i
-            fmod = fmod.to_i
-            type_metadata = fetch_type_metadata(column_name, type, oid, fmod)
-            default_value = extract_value_from_default(default)
-            default_function = extract_default_function(default_value, default)
-            new_composite_column(column_name, default_value, type_metadata, !notnull, type_name, default_function, collation, comment: comment.presence)
-          end
         end
 
         # Change some of the types being mapped
@@ -77,7 +64,6 @@ module Torque
               type = begin
                 case
                 when typtype == 'e'.freeze then OID::Enum.create(row)
-                when typtype == 'c'.freeze then OID::Composite.create(row)
                 end
               end
 
@@ -94,7 +80,6 @@ module Torque
             SELECT      t.typname AS name,
                         CASE t.typtype
                         WHEN 'e' THEN 'enum'
-                        WHEN 'c' THEN 'composite'
                         END AS type
             FROM        pg_type t
             LEFT JOIN   pg_catalog.pg_namespace n ON n.oid = t.typnamespace

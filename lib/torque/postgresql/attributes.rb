@@ -4,7 +4,6 @@ require_relative 'attributes/lazy'
 
 require_relative 'attributes/builder'
 
-require_relative 'attributes/composite'
 require_relative 'attributes/enum'
 
 module Torque
@@ -26,22 +25,6 @@ module Torque
           end
 
       end
-
-      def init_with(*)
-        instance = super
-        aggregate_reflections.each { |name, _| composition_init(name) }
-        instance
-      end
-
-      private
-
-        # Force a build method if any value was loaded
-        def composition_init(name)
-          value = _read_attribute(name)
-          return if value.nil?
-          send("build_#{name}", *value)
-        end
-
     end
 
     ActiveRecord::Base.include Attributes

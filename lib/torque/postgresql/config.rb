@@ -46,22 +46,5 @@ module Torque
 
     end
 
-    # Configure Composite features
-    config.nested(:composite) do |composite|
-
-      # Indicates if the composite features on ActiveRecord::Base should be
-      # initiated automatically or not
-      composite.initializer = true
-
-      # Specify the namespace of composite ActiveRecord::Base auto-generated
-      # classes
-      composite.namespace = ::Object
-
-      # Specify the name of the constant where users can shortcut the Base class
-      # through ActiveRecord
-      composite.shortcut = 'Composite'
-
-    end
-
   end
 end

@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 6
+  version = 5
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -25,13 +25,6 @@ begin
     create_enum "specialties", ["books", "movies", "plays"], force: :cascade
     create_enum "roles", ["visitor", "assistant", "manager", "admin"], force: :cascade
     create_enum "conflicts", ["valid", "invalid", "untrusted"], force: :cascade
-
-    create_composite_type "published", force: :cascade do |t|
-      t.integer  "user_id"
-      t.datetime "datetime"
-      t.string   "url"
-      t.boolean  "status"
-    end
 
     create_table "authors", force: :cascade do |t|
       t.string   "name"
@@ -52,7 +45,6 @@ begin
       t.text      "content"
       t.enum      "status",    subtype: :content_status
       t.enum      "conflict",  subtype: :conflicts
-      t.composite "published"
       t.index ["author_id"], name: "index_posts_on_author_id", using: :btree
     end
 
