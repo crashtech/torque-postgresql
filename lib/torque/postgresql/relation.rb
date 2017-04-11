@@ -1,11 +1,13 @@
 
 require_relative 'relation/distinct_on'
+require_relative 'relation/auxiliary_statement'
 
 module Torque
   module PostgreSQL
     module Relation
 
       include DistinctOn
+      include AuxiliaryStatement
 
       # Resolve column definition up to second value.
       # For example, based on Post model:

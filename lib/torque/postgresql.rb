@@ -10,6 +10,7 @@ require 'torque/postgresql/version'
 
 require 'torque/postgresql/adapter'
 require 'torque/postgresql/attributes'
+require 'torque/postgresql/auxiliary_statement'
 require 'torque/postgresql/base'
 require 'torque/postgresql/coder'
 require 'torque/postgresql/migration'

@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 5
+  version = 6
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -36,6 +36,14 @@ begin
     create_table "authors", force: :cascade do |t|
       t.string   "name"
       t.enum     "specialty", subtype: :specialties
+    end
+
+    create_table "comments", force: :cascade do |t|
+      t.integer "user_id",    null: false
+      t.integer "comment_id"
+      t.text    "content",    null: false
+      t.index ["user_id"], name: "index_comments_on_user_id", using: :btree
+      t.index ["comment_id"], name: "index_comments_on_comment_id", using: :btree
     end
 
     create_table "posts", force: :cascade do |t|
