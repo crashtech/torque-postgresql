@@ -16,12 +16,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [x] Allow custom join type, besides the default InnerJoin
   - [x] Only provides the CTE fields when the main query doesn't select columns
   - [x] Create a exclusive class to hold all the generated auxiliary statements
-  - [ ] Try to identify join columns
-  - [ ] Recursive CTE queries
-    - [ ] Enables `path`
-    - [ ] Enables `depth`
-  - [ ] Tree CTE queries
-    - [ ] Provides an `acts_as_tree` method on models to activate this resource
+  - [x] Try to identify join columns
 - [x] Interval data type [DOCS](https://www.postgresql.org/docs/9.4/static/datatype-datetime.html#DATATYPE-INTERVAL-INPUT)
   - [x] Setup the interval style to the easier 'iso_8601' [DOCS](https://www.postgresql.org/docs/9.6/static/runtime-config-client.html#RUNTIME-CONFIG-CLIENT-FORMAT)
   - [x] On create table, interval column method
@@ -66,6 +61,9 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [ ] Accept Proc as query when configuring the CTE, but asks the source table Class or Name
     - [ ] Allows query to be a string too
     - [ ] Allows `with` to receive extra parameters and send to the Proc
+  - [ ] Recursive CTE queries
+    - [ ] Enables `path`
+    - [ ] Enables `depth`
 - [ ] Table Inheritance [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
   - [ ] FROM ONLY and FROM asterisk [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
 - [ ] 'Composite' type manager [DOCS](https://www.postgresql.org/docs/9.6/static/rowtypes.html)
@@ -96,6 +94,9 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 
 ## v0 3.0
 
+- [ ] CTE queries (auxiliary statements)
+  - [ ] Tree CTE queries
+    - [ ] Provides an `acts_as_tree` method on models to activate this resource
 - [ ] Enum
   - [ ] Allow generator to postgre cast enum to integer [DOCS](http://stackoverflow.com/a/12347716/7321983)
   - [ ] Accept `pluralize: true` and `singularize: true` to create the enum methods
