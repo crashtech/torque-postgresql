@@ -6,12 +6,12 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 
 ## v0.1.0
 
-- [ ] DOCS!!!
-  - [ ] Config
-  - [ ] Auxiliary Statements
-  - [ ] Interval
-  - [ ] Enum
-  - [ ] Distinct On
+- [x] DOCS!!!
+  - [x] Config
+  - [x] Auxiliary Statements
+  - [x] Interval
+  - [x] Enum
+  - [x] Distinct On
 - [x] CTE queries (auxiliary statements)
   - [x] Configure CTE queries on model, and enable using `with(:name)` on relations
   - [x] Allow custom join type, besides the default InnerJoin
@@ -44,11 +44,6 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [x] Static model method
   - [x] Relation method
   - [x] Where-like columns search for querying
-
-## v0.1.1
-
-- [ ] Enum
-  - [ ] Fix bug on Enum start before the model is instantiate, if you try to use 'User.roles' before any instance, it throws and error because the column roles wasn't defined
 
 ## v0.2.0
 
@@ -88,10 +83,6 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
     - [ ] Allow where conditions
   - [ ] Check how it works with `human_attribute_name`
     - [ ] It already works fine using dot syntax `'published.url'` *TEST*
-- [ ] Integrate resources with form for
-  - [ ] Interval input type
-  - [ ] Enum input type
-  - [ ] Nested form for composite input type
 
 ## v0 3.0
 
@@ -102,6 +93,10 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [ ] Allow generator to postgre cast enum to integer [DOCS](http://stackoverflow.com/a/12347716/7321983)
   - [ ] Accept `pluralize: true` and `singularize: true` to create the enum methods
   - [ ] Enum equivalences
+- [ ] Integrate resources with form for
+  - [ ] Interval input type
+  - [ ] Enum input type
+  - [ ] Nested form for composite input type
 
 ## Backend
 
@@ -144,7 +139,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 ## Desirable
 
 - [ ] Turn queries on 'database_statements' into Arel queries
-- [ ] Simple nested relation find (User -> has_many :groups should search for UserGroups then Groups)
+- [ ] Simple nested relation find (User -> has_many :groups should search for User::Groups, then UserGroups then Groups)
   - [ ] Configuration to enable and disable this feature
 - [ ] Replace the 'postgres_ext' gem
   - [ ] Rank windows function
