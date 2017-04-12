@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/crashtech/torque-postgresql.svg?branch=master)](https://travis-ci.org/crashtech/torque-postgresql)
 [![Code Climate](https://codeclimate.com/github/crashtech/torque-postgresql/badges/gpa.svg)](https://codeclimate.com/github/crashtech/torque-postgresql)
-[![GitHub version](https://badge.fury.io/gh/crashtech%2Ftorque-postgresql.svg)](https://badge.fury.io/gh/crashtech%2Ftorque-postgresql)
+[![Gem Version](https://badge.fury.io/rb/torque-postgresql.svg)](https://badge.fury.io/rb/torque-postgresql)
 <!--([![Test Coverage](https://codeclimate.com/github/crashtech/torque-postgresql/badges/coverage.svg)](https://codeclimate.com/github/crashtech/torque-postgresql/coverage))-->
 <!--([![Dependency Status](https://gemnasium.com/badges/github.com/crashtech/torque-postgresql.svg)](https://gemnasium.com/github.com/crashtech/torque-postgresql))-->
 
