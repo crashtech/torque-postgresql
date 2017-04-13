@@ -132,4 +132,31 @@ RSpec.describe 'Interval', type: :feature do
       end
     end
   end
+
+  context 'on I18n' do
+    it 'transforms the value into singular text' do
+      expect(I18n.l 1.year).to eql('1 year')
+      expect(I18n.l 1.months).to eql('1 month')
+      expect(I18n.l 1.weeks).to eql('1 week')
+      expect(I18n.l 1.days).to eql('1 day')
+      expect(I18n.l 1.hours).to eql('1 hour')
+      expect(I18n.l 1.minutes).to eql('1 minute')
+      expect(I18n.l 1.seconds).to eql('1 second')
+    end
+
+    it 'transforms the value into plural text' do
+      expect(I18n.l 2.year).to eql('2 years')
+      expect(I18n.l 2.months).to eql('2 months')
+      expect(I18n.l 2.weeks).to eql('2 weeks')
+      expect(I18n.l 2.days).to eql('2 days')
+      expect(I18n.l 2.hours).to eql('2 hours')
+      expect(I18n.l 2.minutes).to eql('2 minutes')
+      expect(I18n.l 2.seconds).to eql('2 seconds')
+    end
+
+    it 'transforms multiple values' do
+      value = 1.year + 2.months + 3.days + 4.hours + 5.minutes + 6.seconds
+      expect(I18n.l value).to eql('1 year, 2 months, 3 days, 4 hours, 5 minutes, and 6 seconds')
+    end
+  end
 end

@@ -1,3 +1,4 @@
+require 'i18n'
 require 'active_model'
 require 'active_record'
 require 'active_support'
@@ -9,6 +10,7 @@ require 'torque/postgresql/config'
 require 'torque/postgresql/version'
 require 'torque/postgresql/collector'
 
+require 'torque/postgresql/i18n'
 require 'torque/postgresql/adapter'
 require 'torque/postgresql/attributes'
 require 'torque/postgresql/auxiliary_statement'

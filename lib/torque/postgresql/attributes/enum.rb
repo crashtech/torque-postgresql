@@ -137,7 +137,7 @@ module Torque
         # Get a translated version of the value
         def text(attr = nil, model = nil)
           keys = i18n_keys(attr, model) << self.underscore.humanize
-          I18n.t(keys.shift, default: keys)
+          ::I18n.translate(keys.shift, default: keys)
         end
 
         # Change the string result for lazy value
