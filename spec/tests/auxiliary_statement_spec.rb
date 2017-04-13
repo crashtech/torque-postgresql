@@ -104,4 +104,32 @@ RSpec.describe 'AuxiliaryStatement' do
     end
   end
 
+  context 'on settings' do
+    let(:statement_klass) do
+      User.send(:auxiliary_statement, :statement)
+      User::Statement_AuxiliaryStatement
+    end
+
+    subject { Torque::PostgreSQL::AuxiliaryStatement::Settings.new(statement_klass) }
+
+    it 'has access to base' do
+      expect(subject.base).to eql(User)
+      expect(subject.base_table).to be_a(Arel::Table)
+    end
+
+    it 'has access to statement table' do
+      expect(subject.table_name).to eql('statement')
+      expect(subject.table).to be_a(Arel::Table)
+    end
+
+    it 'has access to the query arel table' do
+      subject.query Comment.all
+      expect(subject.query_table).to be_a(Arel::Table)
+    end
+
+    it 'raises an error when trying to access query table before defining the query' do
+      expect{ subject.with(:comments).to_sql }.to raise_error(StandardError)
+    end
+  end
+
 end

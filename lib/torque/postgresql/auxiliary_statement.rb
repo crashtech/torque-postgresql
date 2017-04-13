@@ -1,9 +1,8 @@
+require_relative 'auxiliary_statement/settings'
+
 module Torque
   module PostgreSQL
     class AuxiliaryStatement
-
-      # The settings collector class
-      Settings = Collector.new(:attributes, :join, :join_type, :query)
 
       class << self
         # These attributes require that the class is setup
@@ -12,7 +11,7 @@ module Torque
         # exposed_attributes -> Will be projected to the main query
         # selected_attributes -> Will be selected on the configurated query
         # join_attributes -> Will be used to join the the queries
-        [:exposed_attributes, :selected_attributes, :join_attributes, :table, :query,
+        [:exposed_attributes, :selected_attributes, :join_attributes, :query,
           :join_type].each do |attribute|
           define_method(attribute) do
             setup
@@ -31,7 +30,7 @@ module Torque
         # the query and wait it to be setup again
         def configurator(block)
           @config = block
-          @query = nil if setup?
+          @query = nil
         end
 
         # Get the base class associated to this statement
@@ -39,14 +38,24 @@ module Torque
           self.parent
         end
 
+        # Get the arel version of the statement table
+        def table
+          @table ||= Arel::Table.new(table_name)
+        end
+
+        # Get the name of the table of the configurated statement
+        def table_name
+          @table_name ||= self.name.demodulize.split('_').first.underscore
+        end
+
         # Get the arel table of the base class
         def base_table
-          base.arel_table
+          @base_table ||= base.arel_table
         end
 
         # Get the arel table of the query
         def query_table
-          query.arel_table
+          @query_table ||= query.arel_table
         end
 
         private
@@ -92,38 +101,42 @@ module Torque
             #
             # query key
             # Save the query command to be performand
-            settings = Settings.new
+            settings = Settings.new(self)
             @config.call(settings)
 
-            table_name = self.name.demodulize.split('_').first.underscore
             @join_type = settings.join_type || :inner
-            @table = Arel::Table.new(table_name)
             @query = settings.query
 
+            # Reset all the used attributes
             @selected_attributes = []
             @exposed_attributes = []
             @join_attributes = []
 
-            # Iterate the attributes settings
-            # Attributes (left => right)
-            #   left -> query.selected_attributes AS right
-            #   right -> table.exposed_attributes
-            settings.attributes.each do |left, right|
+            # Calculate all projections
+            attributes_projections(settings.attributes)
+            joins_projections(settings.join)
+          end
+
+          # Iterate the attributes settings
+          # Attributes (left => right)
+          #   left -> query.selected_attributes AS right
+          #   right -> table.exposed_attributes
+          def attributes_projections(list)
+            list.each do |left, right|
               @exposed_attributes << project(right)
               @selected_attributes << project(left, query_table).as(right.to_s)
             end
+          end
 
-            # Iterate the join settings
-            # Join (left => right)
-            #   left -> base.join_attributes.eq(right)
-            #   right -> table.selected_attributes
-            if settings.join.nil?
-              check_auto_join
-            else
-              settings.join.each do |left, right|
-                @selected_attributes << project(right, query_table)
-                @join_attributes << project(left, base_table).eq(project(right))
-              end
+          # Iterate the join settings
+          # Join (left => right)
+          #   left -> base.join_attributes.eq(right)
+          #   right -> table.selected_attributes
+          def joins_projections(list)
+            return check_auto_join if list.nil?
+            list.each do |left, right|
+              @selected_attributes << project(right, query_table)
+              @join_attributes << project(left, base_table).eq(project(right))
             end
           end
 
@@ -139,13 +152,14 @@ module Torque
           end
 
           # Project a column on a given table, or use the column table
-          def project(column, table = @table)
+          def project(column, arel_table = nil)
             if column.to_s.include?('.')
-              table, column = column.split('.')
-              table = Arel::Table.new(table)
+              table_name, column = column.split('.')
+              arel_table = Arel::Table.new(table_name)
             end
 
-            table[column]
+            arel_table ||= table
+            arel_table[column]
           end
       end
 
