@@ -5,6 +5,7 @@
 .config
 .yardoc
 .byebug_history
+.versions.conf
 Gemfile.lock
 coverage
 doc/
