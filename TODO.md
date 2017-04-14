@@ -52,7 +52,6 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [ ] Table Inheritance
   - [ ] Composite
 - [ ] CTE queries (auxiliary statements)
-  - [ ] Try to identify join columns through associations
   - [x] Improve performance by saving `@base_table ||= base_table` and `@query_table ||= query_table`
   - [x] Allow access to `table` and `table_name` from the class scope
     - [x] Allow those access on the settings too, *this is important for recursivity*
@@ -61,10 +60,11 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
     - [ ] Turn the dependent into a relation so it could be used on the query
   - [ ] Allows `select: {column: :expose}` extra option to `with` command
   - [ ] Allows `join: {column: :cte_column}` to do extra filters when using `with` command
-  - [ ] Allows `with` to accept an hash and identify statements from associations
+  - [ ] Allows `cte.polymorphic 'name'` so it can identify both id and type columns
   - [ ] Accept Proc as query when configuring the CTE, but asks the source table Class or Name
-    - [ ] Allows query to be a string too
+    - [ ] Create a `define_singleton_method` on query to return `arel_table`
     - [ ] Allows `with` to receive extra parameters and send to the Proc
+    - [ ] Allows query to be a string too, and format it with `%`
   - [ ] Recursive CTE queries
     - [ ] Enables `path`
     - [ ] Enables `depth`
@@ -163,6 +163,9 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 
 ## Future features
 
+- [ ] CTE queries (auxiliary statements)
+  - [ ] Connect relations with auxiliary statements
+    - [ ] Allows `with` to accept an hash and identify statements from associations
 - [ ] Composite
   - [ ] Accept array of composite (Act as `has_many`)
 - [ ] Enum
