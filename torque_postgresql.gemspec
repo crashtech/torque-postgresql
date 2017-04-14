@@ -10,14 +10,17 @@ Gem::Specification.new do |s|
   s.authors     = ['Carlos Silva']
   s.email       = ['carlinhus.fsilva@gmail.com']
   s.homepage    = 'https://github.com/crashtech/torque-postgresql'
-  s.summary     = 'ActiveRecord extension to reach PostgreSQL native resources'
-  s.description = 'Add support to complex resources of PostgreSQL, like data types, user-defined types and CTE with extensions for Arel and ActiveRecord'
+  s.summary     = 'ActiveRecord extension to access PostgreSQL advanced resources'
+  s.description = 'Add support to complex resources of PostgreSQL, like data types, user-defined types and auxiliary statements (CTE)'
   s.license     = 'MIT'
 
   s.require_paths = ['lib']
 
   s.files      = Dir['MIT-LICENSE', 'README.rdoc', 'lib/**/*', 'Rakefile']
   s.test_files = Dir['test/**/*']
+
+  s.required_ruby_version     = '>= 2.2.2'
+  s.required_rubygems_version = '>= 1.8.11'
 
   s.add_dependency 'rails', '~> 5.0', '>= 5.0.0'
   s.add_dependency 'pg', '~> 0.19', '>= 0.19.0'
