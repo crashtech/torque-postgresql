@@ -1,6 +1,9 @@
 require 'spec_helper'
 
 RSpec.describe 'AuxiliaryStatement' do
+  before :each do
+    User.auxiliary_statements_list = {}
+  end
 
   context 'on relation' do
     let(:klass) { User }
@@ -66,11 +69,55 @@ RSpec.describe 'AuxiliaryStatement' do
       expect(subject.with(:comments).to_sql).to eql(result)
     end
 
-    it 'raise an error when traying to use a statement that is not defined' do
+    context 'with dependency' do
+      before :each do
+        klass.send(:auxiliary_statement, :comments1) do |cte|
+          cte.query Comment.all
+          cte.attributes content: :comment_content1
+        end
+
+        klass.send(:auxiliary_statement, :comments2) do |cte|
+          cte.requires :comments1
+          cte.query Comment.all
+          cte.attributes content: :comment_content2
+        end
+      end
+
+      it 'can requires another statement as dependency' do
+        result = 'WITH '
+        result << '"comments1" AS (SELECT "comments"."content" AS comment_content1, "comments"."user_id" FROM "comments"), '
+        result << '"comments2" AS (SELECT "comments"."content" AS comment_content2, "comments"."user_id" FROM "comments")'
+        result << ' SELECT "users".*, "comments2"."comment_content2" FROM "users"'
+        result << ' INNER JOIN "comments1" ON "users"."id" = "comments1"."user_id"'
+        result << ' INNER JOIN "comments2" ON "users"."id" = "comments2"."user_id"'
+        expect(subject.with(:comments2).to_sql).to eql(result)
+      end
+
+      it 'can uses already already set dependent' do
+        result = 'WITH '
+        result << '"comments1" AS (SELECT "comments"."content" AS comment_content1, "comments"."user_id" FROM "comments"), '
+        result << '"comments2" AS (SELECT "comments"."content" AS comment_content2, "comments"."user_id" FROM "comments")'
+        result << ' SELECT "users".*, "comments1"."comment_content1", "comments2"."comment_content2" FROM "users"'
+        result << ' INNER JOIN "comments1" ON "users"."id" = "comments1"."user_id"'
+        result << ' INNER JOIN "comments2" ON "users"."id" = "comments2"."user_id"'
+        expect(subject.with(:comments1, :comments2).to_sql).to eql(result)
+      end
+
+      it 'raises an error if the dependent does not exist' do
+        klass.send(:auxiliary_statement, :comments2) do |cte|
+          cte.requires :comments3
+          cte.query Comment.all
+          cte.attributes content: :comment_content2
+        end
+        expect{ subject.with(:comments2).to_sql }.to raise_error(ArgumentError)
+      end
+    end
+
+    it 'raises an error when traying to use a statement that is not defined' do
       expect{ subject.with(:does_not_exist).to_sql }.to raise_error(ArgumentError)
     end
 
-    it 'raise an error when using an invalid type of join' do
+    it 'raises an error when using an invalid type of join' do
       klass.send(:auxiliary_statement, :comments) do |cte|
         cte.query Comment.all
         cte.attributes content: :comment_content
@@ -100,6 +147,7 @@ RSpec.describe 'AuxiliaryStatement' do
     end
 
     it 'returns a relation when using the method' do
+      subject.send(:auxiliary_statement, :last_comment)
       expect(subject.with(:last_comment)).to be_a(ActiveRecord::Relation)
     end
   end

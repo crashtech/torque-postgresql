@@ -48,15 +48,20 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 ## v0.2.0
 
 - [ ] DOCS!!!
+  - [ ] Auxiliary Statements
+  - [ ] Table Inheritance
   - [ ] Composite
 - [ ] CTE queries (auxiliary statements)
   - [ ] Try to identify join columns through associations
   - [x] Improve performance by saving `@base_table ||= base_table` and `@query_table ||= query_table`
   - [x] Allow access to `table` and `table_name` from the class scope
     - [x] Allow those access on the settings too, *this is important for recursivity*
-  - [ ] Allows `requires` setting to create dependecy between CTEs
+  - [x] Allows `requires` setting to create dependecy between CTEs
+    - [ ] Create a subclass from ActiveRecord::Relation for internal references
+    - [ ] Turn the dependent into a relation so it could be used on the query
   - [ ] Allows `select: {column: :expose}` extra option to `with` command
   - [ ] Allows `join: {column: :cte_column}` to do extra filters when using `with` command
+  - [ ] Allows `with` to accept an hash and identify statements from associations
   - [ ] Accept Proc as query when configuring the CTE, but asks the source table Class or Name
     - [ ] Allows query to be a string too
     - [ ] Allows `with` to receive extra parameters and send to the Proc

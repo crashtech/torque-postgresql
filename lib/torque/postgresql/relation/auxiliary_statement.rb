@@ -13,21 +13,16 @@ module Torque
         # Like #with, but modifies relation in place.
         def with!(*args)
           options = args.extract_options!
-          self.auxiliary_statements ||= []
+          self.auxiliary_statements ||= {}
           args.each do |table|
-            unless self.auxiliary_statements_list.key?(table)
-              raise ArgumentError, <<-MSG.gsub(/^ +| +$|\n/, '')
-                There's no '#{table}' auxiliary statement defined for #{self.class.name}.
-              MSG
-            end
-
-            klass = self.auxiliary_statements_list[table]
-            self.auxiliary_statements << klass.new(options)
+            self.auxiliary_statements[table] = instantiate(table, self)
           end
+
           self
         end
 
         private
+          delegate :instantiate, to: PostgreSQL::AuxiliaryStatement
 
           # Hook arel build to add the distinct on clause
           def build_arel
@@ -35,12 +30,12 @@ module Torque
 
             if self.auxiliary_statements.present?
               columns = []
-              subqueries = self.auxiliary_statements.map do |klass|
+              subqueries = self.auxiliary_statements.values.map do |klass|
                 columns << klass.columns
-                klass.build_arel(arel)
+                klass.build_arel(arel, self)
               end
 
-              arel.with(subqueries)
+              arel.with(subqueries.flatten)
               if select_values.empty? && columns.any?
                 columns.unshift table[Arel.sql('*')]
                 arel.projections = columns

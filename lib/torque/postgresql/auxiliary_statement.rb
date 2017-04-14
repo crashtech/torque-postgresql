@@ -11,8 +11,8 @@ module Torque
         # exposed_attributes -> Will be projected to the main query
         # selected_attributes -> Will be selected on the configurated query
         # join_attributes -> Will be used to join the the queries
-        [:exposed_attributes, :selected_attributes, :join_attributes, :query,
-          :join_type].each do |attribute|
+        [:exposed_attributes, :selected_attributes, :query, :join_attributes,
+          :join_type, :requires].each do |attribute|
           define_method(attribute) do
             setup
             instance_variable_get("@#{attribute}")
@@ -24,6 +24,15 @@ module Torque
           const = name.to_s.camelize << '_' << self.name.demodulize
           return base.const_get(const) if base.const_defined?(const)
           base.const_set(const, Class.new(AuxiliaryStatement))
+        end
+
+        # Create a new instance of an auxiliary statement
+        def instantiate(statement, base)
+          klass = base.auxiliary_statements_list[statement]
+          return klass.new unless klass.nil?
+          raise ArgumentError, <<-MSG.gsub(/^ +| +$|\n/, '')
+            There's no '#{statement}' auxiliary statement defined for #{base.class.name}.
+          MSG
         end
 
         # Set a configuration block, if the class is already set up, just clean
@@ -105,6 +114,7 @@ module Torque
             @config.call(settings)
 
             @join_type = settings.join_type || :inner
+            @requires = Array[settings.requires].flatten.compact
             @query = settings.query
 
             # Reset all the used attributes
@@ -174,15 +184,27 @@ module Torque
       end
 
       # Build the statement on the given arel and return the WITH statement
-      def build_arel(arel)
+      def build_arel(arel, base)
+        list = []
         klass = self.class
         query = klass.query.select(*klass.selected_attributes)
+
+        # Process dependencies
+        if klass.requires.present?
+          klass.requires.each do |dependent|
+            next if base.auxiliary_statements.key?(dependent)
+
+            instance = AuxiliaryStatement.instantiate(dependent, base)
+            base.auxiliary_statements[dependent] = instance
+            list << instance.build_arel(arel, base)
+          end
+        end
 
         # Build the join for this statement
         arel.join(klass.table, arel_join).on(*klass.join_attributes)
 
         # Return the subquery for this statement
-        Arel::Nodes::As.new(klass.table, query.send(:build_arel))
+        list << Arel::Nodes::As.new(klass.table, query.send(:build_arel))
       end
 
       private
