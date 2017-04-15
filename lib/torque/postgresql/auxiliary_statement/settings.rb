@@ -1,12 +1,13 @@
 module Torque
   module PostgreSQL
     class AuxiliaryStatement
-      class Settings < Collector.new(:attributes, :join, :join_type, :query, :requires)
+      class Settings < Collector.new(:attributes, :join, :join_type, :query, :requires,
+                                     :polymorphic)
 
         attr_reader :source
         alias cte source
 
-        delegate :base, :base_table, :table, :table_name, to: :@source
+        delegate :base, :base_name, :base_table, :table, :table_name, to: :@source
 
         def initialize(source)
           @source = source

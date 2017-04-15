@@ -113,6 +113,24 @@ RSpec.describe 'AuxiliaryStatement' do
       end
     end
 
+    it 'can uses join on polymorphic relations' do
+      Comment.columns_hash['source_id'] = true
+      klass.send(:auxiliary_statement, :comments) do |cte|
+        cte.query Comment.all
+        cte.attributes content: :comment
+        cte.polymorphic :source
+      end
+
+      result = 'WITH "comments" AS'
+      result << ' (SELECT "comments"."content" AS comment, "comments"."source_id",'
+      result << ' "comments"."source_type" FROM "comments")'
+      result << ' SELECT "users".*, "comments"."comment" FROM "users"'
+      result << ' INNER JOIN "comments" ON "users"."id" = "comments"."source_id"'
+      result << ' AND "comments"."source_type" = \'User\''
+      expect(subject.with(:comments).to_sql).to eql(result)
+      Comment.columns_hash.delete('source_id')
+    end
+
     it 'raises an error when traying to use a statement that is not defined' do
       expect{ subject.with(:does_not_exist).to_sql }.to raise_error(ArgumentError)
     end

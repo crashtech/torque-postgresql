@@ -47,6 +47,11 @@ module Torque
           self.parent
         end
 
+        # Get the name of the base class
+        def base_name
+          base.name
+        end
+
         # Get the arel version of the statement table
         def table
           @table ||= Arel::Table.new(table_name)
@@ -80,7 +85,7 @@ module Torque
 
           # Setup the class
           def setup!
-            # attributes key
+            # attributes key:
             # Provides a map of attributes to be exposed to the main query.
             #
             # For instace, if the statement query has an 'id' column that you
@@ -92,7 +97,7 @@ module Torque
             # fields, then:
             #   attributes 'table.name': :item_name
             #
-            # join_type key
+            # join_type key:
             # Changes the type of the join and set the constraints
             #
             # The left side of the hash is the source table column, the right
@@ -105,11 +110,18 @@ module Torque
             # It's possible to change the default type of join
             #   join :left, id: :user_id
             #
-            # join key
+            # join key:
             # Changes the type of the join
             #
-            # query key
+            # query key:
             # Save the query command to be performand
+            #
+            # requires key:
+            # Indicates dependencies with another statements
+            #
+            # polymorphic key:
+            # Indicates a polymorphic relationship, with will affect the way the
+            # auto join works, by giving a polymorphic connection
             settings = Settings.new(self)
             @config.call(settings)
 
@@ -122,9 +134,15 @@ module Torque
             @exposed_attributes = []
             @join_attributes = []
 
-            # Calculate all projections
+            # Generate attributes projections
             attributes_projections(settings.attributes)
-            joins_projections(settings.join)
+
+            # Generate join projections
+            if settings.join.present?
+              joins_projections(settings.join)
+            else
+              check_auto_join(settings.polymorphic)
+            end
           end
 
           # Iterate the attributes settings
@@ -143,7 +161,6 @@ module Torque
           #   left -> base.join_attributes.eq(right)
           #   right -> table.selected_attributes
           def joins_projections(list)
-            return check_auto_join if list.nil?
             list.each do |left, right|
               @selected_attributes << project(right, query_table)
               @join_attributes << project(left, base_table).eq(project(right))
@@ -152,12 +169,19 @@ module Torque
 
           # Check if it's possible to identify the connection between the main
           # query and the statement query
-          def check_auto_join
-            foreign_key = base.name.foreign_key
+          #
+          # First, identify the foreign key column name, then check if it exists
+          # on the query and then create the projections
+          def check_auto_join(polymorphic)
+            foreign_key = (polymorphic.present? ? polymorphic : base_name)
+            foreign_key = foreign_key.to_s.foreign_key
             if query.columns_hash.key?(foreign_key)
-              primary_key = project(base.primary_key, base_table)
-              @selected_attributes << project(foreign_key, query_table)
-              @join_attributes << primary_key.eq(project(foreign_key))
+              joins_projections(base.primary_key => foreign_key)
+              if polymorphic.present?
+                foreign_type = project(foreign_key.gsub(/_id$/, '_type'), query_table)
+                @selected_attributes << foreign_type
+                @join_attributes << foreign_type.eq(base_name)
+              end
             end
           end
 
