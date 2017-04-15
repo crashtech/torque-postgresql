@@ -61,10 +61,9 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [ ] Allows `select: {column: :expose}` extra option to `with` command
   - [ ] Allows `join: {column: :cte_column}` to do extra filters when using `with` command
   - [x] Allows `cte.polymorphic 'name'` so it can identify both id and type columns
-  - [ ] Accept Proc as query when configuring the CTE, but asks the source table Class or Name
-    - [ ] Create a `define_singleton_method` on query to return `arel_table`
-    - [ ] Allows `with` to receive extra parameters and send to the Proc
-    - [ ] Allows query to be a string too, and format it with `%`
+  - [x] Accept Proc as query when configuring the CTE, but asks the source table Class or Name
+    - [x] Allows query to be a string too
+    - [ ] Allows `with` to receive extra parameters and send to the Proc or format the string with `%`
   - [ ] Recursive CTE queries
     - [ ] Enables `path`
     - [ ] Enables `depth`

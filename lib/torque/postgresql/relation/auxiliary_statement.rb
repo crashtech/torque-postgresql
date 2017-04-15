@@ -48,9 +48,8 @@ module Torque
           # Throw an error showing that an auxiliary statement of the given
           # table name isn't defined
           def auxiliary_statement_error(name)
-            raise ArgumentError, <<-MSG.gsub(/^ +| +$|\n/, '')
-              There's no '#{name}' auxiliary statement defined for
-              #{self.class.name}.
+            raise ArgumentError, <<-MSG.strip
+              There's no '#{name}' auxiliary statement defined for #{self.class.name}.
             MSG
           end
 

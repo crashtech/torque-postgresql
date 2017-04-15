@@ -30,9 +30,15 @@ module Torque
         def instantiate(statement, base)
           klass = base.auxiliary_statements_list[statement]
           return klass.new unless klass.nil?
-          raise ArgumentError, <<-MSG.gsub(/^ +| +$|\n/, '')
+          raise ArgumentError, <<-MSG.strip
             There's no '#{statement}' auxiliary statement defined for #{base.class.name}.
           MSG
+        end
+
+        # Identify if the query set may be used as a relation
+        def relation_query?(obj)
+          !obj.nil? && obj.respond_to?(:ancestors) && \
+            obj.ancestors.include?(ActiveRecord::Base)
         end
 
         # Set a configuration block, if the class is already set up, just clean
@@ -129,6 +135,9 @@ module Torque
             @requires = Array[settings.requires].flatten.compact
             @query = settings.query
 
+            # Manually set the query table when it's not an relation query
+            @query_table = settings.query_table unless relation_query?(@query)
+
             # Reset all the used attributes
             @selected_attributes = []
             @exposed_attributes = []
@@ -140,8 +149,13 @@ module Torque
             # Generate join projections
             if settings.join.present?
               joins_projections(settings.join)
-            else
+            elsif relation_query?(@query)
               check_auto_join(settings.polymorphic)
+            else
+              raise ArgumentError, <<-MSG.strip.gsub(/\n +/, ' ')
+                You must provide the join columns when using '#{query.class.name}'
+                as a query object on #{self.class.name}.
+              MSG
             end
           end
 
@@ -211,7 +225,6 @@ module Torque
       def build_arel(arel, base)
         list = []
         klass = self.class
-        query = klass.query.select(*klass.selected_attributes)
 
         # Process dependencies
         if klass.requires.present?
@@ -228,7 +241,7 @@ module Torque
         arel.join(klass.table, arel_join).on(*klass.join_attributes)
 
         # Return the subquery for this statement
-        list << Arel::Nodes::As.new(klass.table, query.send(:build_arel))
+        list << Arel::Nodes::As.new(klass.table, mount_query)
       end
 
       private
@@ -241,8 +254,26 @@ module Torque
           when :right then Arel::Nodes::RightOuterJoin
           when :full then Arel::Nodes::FullOuterJoin
           else
-            raise ArgumentError, <<-MSG.gsub(/^ +| +$|\n/, '')
+            raise ArgumentError, <<-MSG.strip
               The '#{@join_type}' is not implemented as a join type.
+            MSG
+          end
+        end
+
+        # Mount the query base on it's class
+        def mount_query
+          klass = self.class
+          query = klass.query
+          query = query.call if query.respond_to?(:call)
+
+          if query.is_a?(String)
+            Arel::Nodes::SqlLiteral.new("(#{query})")
+          elsif klass.relation_query?(query)
+            query.select(*klass.selected_attributes).send(:build_arel)
+          else
+            raise ArgumentError, <<-MSG.strip
+              Only String and ActiveRecord::Base objects are accepted as query objects,
+              #{query.class.name} given for #{klass.name}.
             MSG
           end
         end

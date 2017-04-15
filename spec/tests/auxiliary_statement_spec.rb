@@ -19,10 +19,10 @@ RSpec.describe 'AuxiliaryStatement' do
         cte.attributes content: :comment_content
       end
 
-      result = 'WITH "comments" AS (SELECT "comments"."content" AS comment_content,'
-      result << ' "comments"."user_id" FROM "comments") SELECT "users".*,'
-      result << ' "comments"."comment_content" FROM "users" INNER JOIN "comments"'
-      result << ' ON "users"."id" = "comments"."user_id"'
+      result = 'WITH "comments" AS'
+      result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id" FROM "comments")'
+      result << ' SELECT "users".*, "comments"."comment_content" FROM "users"'
+      result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
       expect(subject.with(:comments).to_sql).to eql(result)
     end
 
@@ -113,6 +113,112 @@ RSpec.describe 'AuxiliaryStatement' do
       end
     end
 
+    context 'query as string' do
+      it 'performs correctly' do
+        klass.send(:auxiliary_statement, :comments) do |cte|
+          cte.query :comments, 'SELECT * FROM comments'
+          cte.attributes content: :comment
+          cte.join id: :user_id
+        end
+
+        result = 'WITH "comments" AS (SELECT * FROM comments)'
+        result << ' SELECT "users".*, "comments"."comment" FROM "users"'
+        result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+        expect(subject.with(:comments).to_sql).to eql(result)
+      end
+
+      it 'raises an error when join columns are not given' do
+        klass.send(:auxiliary_statement, :comments) do |cte|
+          cte.query :comments, 'SELECT * FROM comments'
+          cte.attributes content: :comment
+        end
+
+        expect{ subject.with(:comments).to_sql }.to raise_error(ArgumentError, /join columns/)
+      end
+
+      it 'raises an error when not given the table name as first argument' do
+        klass.send(:auxiliary_statement, :comments) do |cte|
+          cte.query 'SELECT * FROM comments'
+          cte.attributes content: :comment
+          cte.join id: :user_id
+        end
+
+        expect{ subject.with(:comments).to_sql }.to raise_error(ArgumentError, /table name/)
+      end
+    end
+
+    context 'query as proc' do
+      it 'performs correctly for result as relation' do
+        klass.send(:auxiliary_statement, :comments) do |cte|
+          cte.query :comments, -> { Comment.all }
+          cte.attributes content: :comment
+          cte.join id: :user_id
+        end
+
+        result = 'WITH "comments" AS'
+        result << ' (SELECT "comments"."content" AS comment, "comments"."user_id" FROM "comments")'
+        result << ' SELECT "users".*, "comments"."comment" FROM "users"'
+        result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+        expect(subject.with(:comments).to_sql).to eql(result)
+      end
+
+      it 'performs correctly for anything that has a call method' do
+        obj = Struct.new(:call).new('SELECT * FROM comments')
+        klass.send(:auxiliary_statement, :comments) do |cte|
+          cte.query :comments, obj
+          cte.attributes content: :comment
+          cte.join id: :user_id
+        end
+
+        result = 'WITH "comments" AS (SELECT * FROM comments)'
+        result << ' SELECT "users".*, "comments"."comment" FROM "users"'
+        result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+        expect(subject.with(:comments).to_sql).to eql(result)
+      end
+
+      it 'performs correctly for result as string' do
+        klass.send(:auxiliary_statement, :comments) do |cte|
+          cte.query :comments, -> { 'SELECT * FROM comments' }
+          cte.attributes content: :comment
+          cte.join id: :user_id
+        end
+
+        result = 'WITH "comments" AS (SELECT * FROM comments)'
+        result << ' SELECT "users".*, "comments"."comment" FROM "users"'
+        result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+        expect(subject.with(:comments).to_sql).to eql(result)
+      end
+
+      it 'raises an error when join columns are not given' do
+        klass.send(:auxiliary_statement, :comments) do |cte|
+          cte.query :comments, -> { Comment.all }
+          cte.attributes content: :comment
+        end
+
+        expect{ subject.with(:comments).to_sql }.to raise_error(ArgumentError, /join columns/)
+      end
+
+      it 'raises an error when not given the table name as first argument' do
+        klass.send(:auxiliary_statement, :comments) do |cte|
+          cte.query -> { Comment.all }
+          cte.attributes content: :comment
+          cte.join id: :user_id
+        end
+
+        expect{ subject.with(:comments).to_sql }.to raise_error(ArgumentError, /table name/)
+      end
+
+      it 'raises an error when the result of the proc is an invalid type' do
+        klass.send(:auxiliary_statement, :comments) do |cte|
+          cte.query :comments, -> { false }
+          cte.attributes content: :comment
+          cte.join id: :user_id
+        end
+
+        expect{ subject.with(:comments).to_sql }.to raise_error(ArgumentError, /query objects/)
+      end
+    end
+
     it 'can uses join on polymorphic relations' do
       Comment.columns_hash['source_id'] = true
       klass.send(:auxiliary_statement, :comments) do |cte|
@@ -129,6 +235,14 @@ RSpec.describe 'AuxiliaryStatement' do
       result << ' AND "comments"."source_type" = \'User\''
       expect(subject.with(:comments).to_sql).to eql(result)
       Comment.columns_hash.delete('source_id')
+    end
+
+    it 'raises an error when using an invalid type of object as query' do
+      klass.send(:auxiliary_statement, :comments) do |cte|
+        cte.query :string, String
+      end
+
+      expect{ subject.with(:comments).to_sql }.to raise_error(ArgumentError, /object types/)
     end
 
     it 'raises an error when traying to use a statement that is not defined' do
