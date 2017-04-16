@@ -58,8 +58,8 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [x] Allows `requires` setting to create dependecy between CTEs
     - [ ] Create a subclass from ActiveRecord::Relation for internal references
     - [ ] Turn the dependent into a relation so it could be used on the query
-  - [ ] Allows `select: {column: :expose}` extra option to `with` command
-  - [ ] Allows `join: {column: :cte_column}` to do extra filters when using `with` command
+  - [x] Allows `select: {column: :expose}` extra option to `with` command
+  - [x] Allows `join: {column: :cte_column}` to do extra filters when using `with` command
   - [x] Allows `cte.polymorphic 'name'` so it can identify both id and type columns
   - [x] Accept Proc as query when configuring the CTE, but asks the source table Class or Name
     - [x] Allows query to be a string too

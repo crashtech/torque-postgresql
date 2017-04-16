@@ -211,12 +211,13 @@ module Torque
           end
       end
 
-      delegate :exposed_attributes, :join_attributes, :selected_attributes, :table, :requires,
-               :query_table, :join_type, :project, :relation_query?, to: :class
+      delegate :exposed_attributes, :join_attributes, :selected_attributes, :join_type, :table,
+               :query_table, :base_table, :requires, :project, :relation_query?, to: :class
 
       # Start a new auxiliary statement giving extra options
       def initialize(*args)
         options = args.extract_options!
+        @join = options.fetch(:join, {})
         @select = options.fetch(:select, {})
         @join_type = options.fetch(:join_type, join_type)
       end
@@ -242,7 +243,7 @@ module Torque
         end
 
         # Build the join for this statement
-        arel.join(table, arel_join).on(*join_attributes)
+        arel.join(table, arel_join).on(*join_columns)
 
         # Return the subquery for this statement
         list << Arel::Nodes::As.new(table, mount_query)
@@ -281,10 +282,24 @@ module Torque
           end
         end
 
+        # Mount the list of join attributes with the additional ones
+        def join_columns
+          join_attributes + @join.map do |left, right|
+            if right.is_a?(Symbol)
+              project(left, base_table).eq(project(right))
+            else
+              project(left).eq(right)
+            end
+          end
+        end
+
         # Mount the list of selected attributes with the additional ones
         def select_columns
           selected_attributes + @select.map do |left, right|
             project(left, query_table).as(right.to_s)
+          end + @join.map do |left, right|
+            column = right.is_a?(Symbol) ? right : left
+            project(column, query_table)
           end
         end
 
