@@ -41,6 +41,19 @@ RSpec.describe 'AuxiliaryStatement' do
       expect(subject.with(:comments).to_sql).to eql(result)
     end
 
+    it 'accepts extra select columns' do
+      klass.send(:auxiliary_statement, :comments) do |cte|
+        cte.query Comment.all
+        cte.attributes content: :comment_content
+      end
+
+      result = 'WITH "comments" AS'
+      result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id", "comments"."slug" AS comment_slug FROM "comments")'
+      result << ' SELECT "users".*, "comments"."comment_content", "comments"."comment_slug" FROM "users"'
+      result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+      expect(subject.with(:comments, select: {slug: :comment_slug}).to_sql).to eql(result)
+    end
+
     it 'accepts custom join properties' do
       klass.send(:auxiliary_statement, :comments) do |cte|
         cte.query Comment.all
@@ -279,8 +292,11 @@ RSpec.describe 'AuxiliaryStatement' do
     end
 
     it 'returns a relation when using the method' do
-      subject.send(:auxiliary_statement, :last_comment)
-      expect(subject.with(:last_comment)).to be_a(ActiveRecord::Relation)
+      subject.send(:auxiliary_statement, :comments) do |cte|
+        cte.query Comment.all
+        cte.attributes content: :comment_content
+      end
+      expect(subject.with(:comments)).to be_a(ActiveRecord::Relation)
     end
   end
 

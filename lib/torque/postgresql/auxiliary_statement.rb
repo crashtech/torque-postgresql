@@ -27,9 +27,9 @@ module Torque
         end
 
         # Create a new instance of an auxiliary statement
-        def instantiate(statement, base)
+        def instantiate(statement, base, options = nil)
           klass = base.auxiliary_statements_list[statement]
-          return klass.new unless klass.nil?
+          return klass.new(options) unless klass.nil?
           raise ArgumentError, <<-MSG.strip
             There's no '#{statement}' auxiliary statement defined for #{base.class.name}.
           MSG
@@ -76,6 +76,17 @@ module Torque
         # Get the arel table of the query
         def query_table
           @query_table ||= query.arel_table
+        end
+
+        # Project a column on a given table, or use the column table
+        def project(column, arel_table = nil)
+          if column.to_s.include?('.')
+            table_name, column = column.to_s.split('.')
+            arel_table = Arel::Table.new(table_name)
+          end
+
+          arel_table ||= table
+          arel_table[column.to_s]
         end
 
         private
@@ -198,37 +209,30 @@ module Torque
               end
             end
           end
-
-          # Project a column on a given table, or use the column table
-          def project(column, arel_table = nil)
-            if column.to_s.include?('.')
-              table_name, column = column.split('.')
-              arel_table = Arel::Table.new(table_name)
-            end
-
-            arel_table ||= table
-            arel_table[column]
-          end
       end
+
+      delegate :exposed_attributes, :join_attributes, :selected_attributes, :table, :requires,
+               :query_table, :join_type, :project, :relation_query?, to: :class
 
       # Start a new auxiliary statement giving extra options
       def initialize(*args)
-        @options = args.extract_options!
+        options = args.extract_options!
+        @select = options.fetch(:select, {})
+        @join_type = options.fetch(:join_type, join_type)
       end
 
       # Get the columns that will be selected for this statement
       def columns
-        self.class.exposed_attributes
+        exposed_attributes + @select.values.map(&method(:project))
       end
 
       # Build the statement on the given arel and return the WITH statement
       def build_arel(arel, base)
         list = []
-        klass = self.class
 
         # Process dependencies
-        if klass.requires.present?
-          klass.requires.each do |dependent|
+        if requires.present?
+          requires.each do |dependent|
             next if base.auxiliary_statements.key?(dependent)
 
             instance = AuxiliaryStatement.instantiate(dependent, base)
@@ -238,17 +242,17 @@ module Torque
         end
 
         # Build the join for this statement
-        arel.join(klass.table, arel_join).on(*klass.join_attributes)
+        arel.join(table, arel_join).on(*join_attributes)
 
         # Return the subquery for this statement
-        list << Arel::Nodes::As.new(klass.table, mount_query)
+        list << Arel::Nodes::As.new(table, mount_query)
       end
 
       private
 
         # Get the class of the join on arel
         def arel_join
-          case @options.fetch(:join_type, self.class.join_type)
+          case @join_type
           when :inner then Arel::Nodes::InnerJoin
           when :left then Arel::Nodes::OuterJoin
           when :right then Arel::Nodes::RightOuterJoin
@@ -262,19 +266,25 @@ module Torque
 
         # Mount the query base on it's class
         def mount_query
-          klass = self.class
-          query = klass.query
+          query = self.class.query
           query = query.call if query.respond_to?(:call)
 
           if query.is_a?(String)
             Arel::Nodes::SqlLiteral.new("(#{query})")
-          elsif klass.relation_query?(query)
-            query.select(*klass.selected_attributes).send(:build_arel)
+          elsif relation_query?(query)
+            query.select(*select_columns).send(:build_arel)
           else
             raise ArgumentError, <<-MSG.strip
               Only String and ActiveRecord::Base objects are accepted as query objects,
-              #{query.class.name} given for #{klass.name}.
+              #{query.class.name} given for #{self.class.name}.
             MSG
+          end
+        end
+
+        # Mount the list of selected attributes with the additional ones
+        def select_columns
+          selected_attributes + @select.map do |left, right|
+            project(left, query_table).as(right.to_s)
           end
         end
 

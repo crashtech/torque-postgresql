@@ -15,7 +15,7 @@ module Torque
           options = args.extract_options!
           self.auxiliary_statements ||= {}
           args.each do |table|
-            self.auxiliary_statements[table] = instantiate(table, self)
+            self.auxiliary_statements[table] = instantiate(table, self, options)
           end
 
           self

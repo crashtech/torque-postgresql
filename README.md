@@ -60,4 +60,4 @@ Finally, fix and send a pull request.
 
 ## License
 
-Copyright (c) 2017- Carlos Silva. See [The MIT License](MIT-LICENSE) for further details.
+Copyright © 2017- Carlos Silva. See [The MIT License](MIT-LICENSE) for further details.
