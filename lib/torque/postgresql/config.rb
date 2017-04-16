@@ -46,5 +46,14 @@ module Torque
 
     end
 
+    # Configure auxiliary statement features
+    config.nested(:auxiliary_statement) do |cte|
+
+      # Define the key that is used on auxiliary statements to send extra
+      # arguments to format string or send on a proc
+      cte.send_arguments_key = :uses
+
+    end
+
   end
 end

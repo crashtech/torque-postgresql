@@ -63,7 +63,7 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [x] Allows `cte.polymorphic 'name'` so it can identify both id and type columns
   - [x] Accept Proc as query when configuring the CTE, but asks the source table Class or Name
     - [x] Allows query to be a string too
-    - [ ] Allows `with` to receive extra parameters and send to the Proc or format the string with `%`
+    - [x] Allows `with` to receive extra parameters and send to the Proc or format the string with `%`
   - [ ] Recursive CTE queries
     - [ ] Enables `path`
     - [ ] Enables `depth`

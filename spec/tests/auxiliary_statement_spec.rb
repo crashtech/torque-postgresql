@@ -153,6 +153,19 @@ RSpec.describe 'AuxiliaryStatement' do
         expect(subject.with(:comments).to_sql).to eql(result)
       end
 
+      it 'accepts arguments to format the query' do
+        klass.send(:auxiliary_statement, :comments) do |cte|
+          cte.query :comments, 'SELECT * FROM comments WHERE active = %s'
+          cte.attributes content: :comment
+          cte.join id: :user_id
+        end
+
+        result = 'WITH "comments" AS (SELECT * FROM comments WHERE active = \'t\')'
+        result << ' SELECT "users".*, "comments"."comment" FROM "users"'
+        result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+        expect(subject.with(:comments, uses: [true]).to_sql).to eql(result)
+      end
+
       it 'raises an error when join columns are not given' do
         klass.send(:auxiliary_statement, :comments) do |cte|
           cte.query :comments, 'SELECT * FROM comments'
@@ -213,6 +226,20 @@ RSpec.describe 'AuxiliaryStatement' do
         result << ' SELECT "users".*, "comments"."comment" FROM "users"'
         result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
         expect(subject.with(:comments).to_sql).to eql(result)
+      end
+
+      it 'performs correctly when the proc requires arguments' do
+        klass.send(:auxiliary_statement, :comments) do |cte|
+          cte.query :comments, -> (status) { Comment.where(active: status) }
+          cte.attributes content: :comment
+          cte.join id: :user_id
+        end
+
+        result = 'WITH "comments" AS'
+        result << ' (SELECT "comments"."content" AS comment, "comments"."user_id" FROM "comments" WHERE "comments"."active" = $1)'
+        result << ' SELECT "users".*, "comments"."comment" FROM "users"'
+        result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+        expect(subject.with(:comments, uses: [true]).to_sql).to eql(result)
       end
 
       it 'raises an error when join columns are not given' do
