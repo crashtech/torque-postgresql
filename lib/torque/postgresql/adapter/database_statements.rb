@@ -46,7 +46,7 @@ module Torque
             INNER JOIN  pg_type a ON (a.oid = t.typarray)
             LEFT JOIN   pg_catalog.pg_namespace n ON n.oid = t.typnamespace
             WHERE       n.nspname NOT IN ('pg_catalog', 'information_schema')
-            AND     t.typtype IN ( 'c','e' )
+            AND     t.typtype IN ( 'e' )
             #{filter}
             AND     NOT EXISTS(
                       SELECT 1 FROM pg_catalog.pg_type el
