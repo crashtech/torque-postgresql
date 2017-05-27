@@ -69,6 +69,20 @@ module Torque
           select_values("SELECT unnest(enum_range(NULL::#{name}))")
         end
 
+        # Adds the inherits option
+        def create_table(table_name, **options)
+          if options.key?(:inherits)
+            inherits = Array[options.delete(:inherits)]
+            inherits = inherits.flatten.map(&method(:quote_table_name))
+
+            options[:options] ||= ''
+            options[:options] << " INHERITS ( #{inherits.join(' , ')} )"
+            options[:id] = false
+          end
+
+          super(table_name, options)
+        end
+
         private
 
           def quote_enum_values(name, values, options)

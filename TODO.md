@@ -69,7 +69,10 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
     - [ ] Enables `path`
     - [ ] Enables `depth`
 - [ ] Table Inheritance [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
-  - [ ] FROM ONLY and FROM asterisk [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
+  - [x] `inherits` option while creating a table
+  - [ ] Keep `inherits` às an option on schema dump
+  - [ ] FROM ONLY [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
+    - [ ] Relation method `only` to affect the from operator
 - [ ] 'Composite' type manager [DOCS](https://www.postgresql.org/docs/9.6/static/rowtypes.html)
   - [ ] Configurations
   - [ ] Allow schema option for database statements

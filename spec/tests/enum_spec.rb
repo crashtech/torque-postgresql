@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'Enum', type: :feature do
+RSpec.describe 'Enum' do
   let(:connection) { ActiveRecord::Base.connection }
 
   context 'on migration' do

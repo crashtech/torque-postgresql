@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'Interval', type: :feature do
+RSpec.describe 'Interval' do
   let(:connection) { ActiveRecord::Base.connection }
 
   context 'on settings' do
