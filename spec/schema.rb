@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 5
+  version = 7
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -26,6 +26,13 @@ begin
     create_enum "roles", ["visitor", "assistant", "manager", "admin"], force: :cascade
     create_enum "conflicts", ["valid", "invalid", "untrusted"], force: :cascade
 
+    create_table "activities", force: :cascade do |t|
+      t.string   "title"
+      t.boolean  "active"
+      t.datetime "created_at", null: false
+      t.datetime "updated_at", null: false
+    end
+
     create_table "authors", force: :cascade do |t|
       t.string   "name"
       t.enum     "specialty", subtype: :specialties
@@ -39,25 +46,29 @@ begin
       t.index ["comment_id"], name: "index_comments_on_comment_id", using: :btree
     end
 
+    create_table "courses", force: :cascade do |t|
+      t.string   "title",    null: false
+      t.interval "duration"
+    end
+
     create_table "posts", force: :cascade do |t|
-      t.integer   "author_id"
-      t.string    "title"
-      t.text      "content"
-      t.enum      "status",    subtype: :content_status
-      t.enum      "conflict",  subtype: :conflicts
+      t.integer  "author_id"
+      t.string   "title"
+      t.text     "content"
+      t.enum     "status",    subtype: :content_status
+      t.enum     "conflict",  subtype: :conflicts
       t.index ["author_id"], name: "index_posts_on_author_id", using: :btree
     end
 
     create_table "users", force: :cascade do |t|
-      t.string "name",         null: false
-      t.enum   "role",                      subtype: :roles
+      t.string   "name",       null: false
+      t.enum     "role",                    subtype: :roles
       t.datetime "created_at", null: false
       t.datetime "updated_at", null: false
     end
 
-    create_table "courses", force: :cascade do |t|
-      t.string   "title",    null: false
-      t.interval "duration"
+    create_table "activity_videos", force: :cascade, inherits: :activities do |t|
+      t.string   "url"
     end
 
     add_foreign_key "posts", "authors"

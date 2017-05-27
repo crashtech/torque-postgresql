@@ -77,6 +77,18 @@ RSpec.describe 'TableInheritance' do
       result << ')  INHERITS ( "activities" , "tests" )'
       expect(sql).to eql(result)
     end
+  end
 
+  context 'on schema' do
+    it 'dumps when has it' do
+      dump_io = StringIO.new
+      ActiveRecord::SchemaDumper.dump(connection, dump_io)
+
+      parts = '"activity_videos"'
+      parts << ', id: false'
+      parts << ', force: :cascade'
+      parts << ', options: "INHERITS ( \\"activities\\" )"'
+      expect(dump_io.string).to match(/create_table #{parts} do /)
+    end
   end
 end

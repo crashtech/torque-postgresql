@@ -70,7 +70,10 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
     - [ ] Enables `depth`
 - [ ] Table Inheritance [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
   - [x] `inherits` option while creating a table
-  - [ ] Keep `inherits` às an option on schema dump
+  - [ ] Allow table creation without columns when having inheritance
+  - [ ] Create a method `type` that can identify the model that created that entry
+  - [ ] Create a method `typed` that gets the entry as the model that created it
+  - [ ] Keep `inherits` as an option on schema dump
   - [ ] FROM ONLY [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
     - [ ] Relation method `only` to affect the from operator
 - [ ] 'Composite' type manager [DOCS](https://www.postgresql.org/docs/9.6/static/rowtypes.html)
