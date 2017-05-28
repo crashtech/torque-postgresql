@@ -16,13 +16,16 @@ module Torque
 
       end
 
-      module ColumnDefinition
-        attr_accessor :subtype
-      end
-
       ActiveRecord::ConnectionAdapters::PostgreSQL::Table.include ColumnMethods
       ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition.include ColumnMethods
-      ActiveRecord::ConnectionAdapters::PostgreSQL::ColumnDefinition.include ColumnDefinition
+
+      if ActiveRecord::ConnectionAdapters::PostgreSQL.const_defined?('ColumnDefinition')
+        module ColumnDefinition
+          attr_accessor :subtype
+        end
+
+        ActiveRecord::ConnectionAdapters::PostgreSQL::ColumnDefinition.include ColumnDefinition
+      end
     end
   end
 end

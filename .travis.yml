@@ -2,11 +2,13 @@ sudo: false
 language: ruby
 cache: bundler
 rvm:
-- 2.2.2
-- 2.3.1
+- 2.2.7
+- 2.3.4
+- 2.4.1
 
 gemfile:
   - Gemfile
+  - gemfiles/Gemfile.rails-5.0-stable
 
 env: DATABASE_URL=postgres://postgres@localhost/torque_postgresql_test
 
