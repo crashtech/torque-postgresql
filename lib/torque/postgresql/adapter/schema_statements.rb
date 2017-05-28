@@ -3,6 +3,8 @@ module Torque
     module Adapter
       module SchemaStatements
 
+        TableDefinition = ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition
+
         # Drops a type.
         def drop_type(name, options = {})
           force = options.fetch(:force, '').upcase
@@ -69,21 +71,25 @@ module Torque
           select_values("SELECT unnest(enum_range(NULL::#{name}))")
         end
 
-        # Adds the inherits option
-        def create_table(table_name, **options)
-          if options.key?(:inherits)
-            inherits = Array[options.delete(:inherits)]
-            inherits = inherits.flatten.map(&method(:quote_table_name))
+        # Rewrite the method that creates tables to easily accept extra options
+        def create_table(table_name, **options, &block)
+          td = create_table_definition(table_name, **options)
+          options[:id] = false if td.inherited_id?
+          options[:temporary] = td
 
-            options[:options] ||= ''
-            options[:options] << " INHERITS ( #{inherits.join(' , ')} )"
-            options[:id] = false
-          end
-
-          super(table_name, options)
+          super table_name, **options, &block
         end
 
         private
+
+          # This waits for the second call to really return the table definition
+          def create_table_definition(*args, **options) # :nodoc:
+            if !args.second.kind_of?(TableDefinition)
+              TableDefinition.new(*args, **options)
+            else
+              args.second
+            end
+          end
 
           def quote_enum_values(name, values, options)
             prefix = options[:prefix]

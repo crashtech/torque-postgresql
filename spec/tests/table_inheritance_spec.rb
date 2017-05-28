@@ -4,39 +4,15 @@ RSpec.describe 'TableInheritance' do
   let(:connection) { ActiveRecord::Base.connection }
 
   context 'on migration' do
-    before :all do
-      module ActiveRecord
-        module ConnectionAdapters
-          module SchemaStatements
-            # Mock original create table so we can check SQL
-            def create_table(table_name, **options)
-              args = []
-              args << options.fetch(:temporary, false)
-              args << options.fetch(:options, nil)
-              args << options.fetch(:as, nil)
-              td = create_table_definition(table_name, *args)
+    mock_create_table
 
-              # Does things as the same as schema statements
-              if options[:id] != false && !options[:as]
-                pk = options.fetch(:primary_key) do
-                  ActiveRecord::Base.get_primary_key table_name.to_s.singularize
-                end
-
-                if pk.is_a?(Array)
-                  td.primary_keys pk
-                else
-                  td.primary_key pk, options.fetch(:id, :primary_key), options
-                end
-              end
-
-              yield td if block_given?
-
-              # Now generate the SQL and return it
-              schema_creation.accept td
-            end
-          end
-        end
+    it 'does not affect some basic forms of table creation' do
+      sql = connection.create_table('schema_migrations', id: false) do |t|
+        t.string :version, connection.internal_string_options_for_primary_key
       end
+
+      result = 'CREATE TABLE "schema_migrations" ("version" character varying PRIMARY KEY)'
+      expect(sql).to eql(result)
     end
 
     it 'does not affect simple table creation' do
@@ -56,6 +32,15 @@ RSpec.describe 'TableInheritance' do
       expect(sql).to eql(result)
     end
 
+    it 'does not affect temporary table creation based on a query' do
+      query = 'SELECT * FROM "authors"'
+      sql = connection.create_table(:test, temporary: true, as: query)
+
+      result = 'CREATE TEMPORARY TABLE "test"'
+      result << " AS #{query}"
+      expect(sql).to eql(result)
+    end
+
     it 'adds the inherits statement for a single inheritance' do
       sql = connection.create_table(:activity_videos, inherits: :activities) do |t|
         t.string :url
@@ -63,7 +48,7 @@ RSpec.describe 'TableInheritance' do
 
       result = 'CREATE TABLE "activity_videos" ('
       result << '"url" character varying'
-      result << ')  INHERITS ( "activities" )'
+      result << ') INHERITS ( "activities" )'
       expect(sql).to eql(result)
     end
 
@@ -74,13 +59,20 @@ RSpec.describe 'TableInheritance' do
 
       result = 'CREATE TABLE "activity_tests" ('
       result << '"grade" character varying'
-      result << ')  INHERITS ( "activities" , "tests" )'
+      result << ') INHERITS ( "activities" , "tests" )'
+      expect(sql).to eql(result)
+    end
+
+    it 'allows empty-body create table operation' do
+      sql = connection.create_table(:activity_posts, inherits: :activities)
+      result = 'CREATE TABLE "activity_posts" ()'
+      result << ' INHERITS ( "activities" )'
       expect(sql).to eql(result)
     end
   end
 
   context 'on schema' do
-    it 'dumps when has it' do
+    xit 'dumps when has it' do
       dump_io = StringIO.new
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
 

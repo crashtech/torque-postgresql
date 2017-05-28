@@ -9,7 +9,7 @@ require 'byebug'
 Dotenv.load
 
 ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'])
-Dir.glob(File.join('spec', '{models,factories}', '*.rb')) do |file|
+Dir.glob(File.join('spec', '{models,factories,mocks}', '*.rb')) do |file|
   require file[5..-4]
 end
 
@@ -17,6 +17,8 @@ I18n.load_path << Pathname.pwd.join('spec', 'en.yml')
 
 load File.join('schema.rb')
 RSpec.configure do |config|
+  config.extend Mocks::CreateTable
+
   config.formatter = :documentation
   config.color     = true
   config.tty       = true
