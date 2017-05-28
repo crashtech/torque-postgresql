@@ -5,6 +5,11 @@ module Torque
 
         EXTENDED_DATABASE_TYPES = %i(enum interval)
 
+        # Switch between dump mode or not
+        def dump_mode!
+          @_dump_mode = !!!@_dump_mode
+        end
+
         # Check if a given type is valid.
         def valid_type?(type)
           super || extended_types.include?(type)
@@ -94,6 +99,43 @@ module Torque
                         WHERE c.oid = t.typrelid
                       ))
             ORDER BY    t.typtype DESC
+          SQL
+        end
+
+        # Get the list of inherited tables associated with their parent tables
+        def inherited_tables
+          tables = select_all(<<-SQL).rows
+            SELECT child.relname             AS table_name,
+                   array_agg(parent.relname) AS inheritances
+            FROM pg_inherits
+            JOIN pg_class parent ON pg_inherits.inhparent = parent.oid
+            JOIN pg_class child  ON pg_inherits.inhrelid  = child.oid
+            GROUP BY child.relname, pg_inherits.inhrelid
+            ORDER BY pg_inherits.inhrelid
+          SQL
+
+          tables.map do |(table, refs)|
+            [table, Coder.decode(refs)]
+          end.to_h
+        end
+
+        # Get the list of columns, and their definition, but only from the
+        # actual table, does not include columns that comes from inherited table
+        def column_definitions(table_name) # :nodoc:
+          local_condition = 'AND a.attislocal IS TRUE' if @_dump_mode
+          query(<<-SQL, 'SCHEMA')
+              SELECT a.attname, format_type(a.atttypid, a.atttypmod),
+                     pg_get_expr(d.adbin, d.adrelid), a.attnotnull, a.atttypid, a.atttypmod,
+             (SELECT c.collname FROM pg_collation c, pg_type t
+               WHERE c.oid = a.attcollation AND t.oid = a.atttypid AND a.attcollation <> t.typcollation),
+                     col_description(a.attrelid, a.attnum) AS comment
+                FROM pg_attribute a
+           LEFT JOIN pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum
+               WHERE a.attrelid = '#{quote_table_name(table_name)}'::regclass
+                 AND a.attnum > 0
+                 AND a.attisdropped IS FALSE
+                 #{local_condition}
+               ORDER BY a.attnum
           SQL
         end
 

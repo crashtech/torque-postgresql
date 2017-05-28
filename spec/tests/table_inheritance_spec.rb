@@ -72,15 +72,38 @@ RSpec.describe 'TableInheritance' do
   end
 
   context 'on schema' do
-    xit 'dumps when has it' do
+    it 'dumps single inheritance with body' do
       dump_io = StringIO.new
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
 
       parts = '"activity_videos"'
       parts << ', id: false'
       parts << ', force: :cascade'
-      parts << ', options: "INHERITS ( \\"activities\\" )"'
+      parts << ', inherits: :activities'
       expect(dump_io.string).to match(/create_table #{parts} do /)
+      expect(dump_io.string).to match(/inherits: :activities do \|t\|\n +t\.string/)
+    end
+
+    it 'dumps single inheritance without body' do
+      dump_io = StringIO.new
+      ActiveRecord::SchemaDumper.dump(connection, dump_io)
+
+      parts = '"youtube_videos"'
+      parts << ', id: false'
+      parts << ', force: :cascade'
+      parts << ', inherits: :activity_videos'
+      expect(dump_io.string).to match(/create_table #{parts}(?! do \|t\|)/)
+    end
+
+    it 'dumps multiple inheritance' do
+      dump_io = StringIO.new
+      ActiveRecord::SchemaDumper.dump(connection, dump_io)
+
+      parts = '"activity_images"'
+      parts << ', id: false'
+      parts << ', force: :cascade'
+      parts << ', inherits: \[:activities, :images\]'
+      expect(dump_io.string).to match(/create_table #{parts}/)
     end
   end
 end

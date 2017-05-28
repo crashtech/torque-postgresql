@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 8
+  version = 10
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -51,6 +51,10 @@ begin
       t.interval "duration"
     end
 
+    create_table "images", force: :cascade, id: false do |t|
+      t.string "file"
+    end
+
     create_table "posts", force: :cascade do |t|
       t.integer  "author_id"
       t.string   "title"
@@ -70,6 +74,10 @@ begin
     create_table "activity_videos", force: :cascade, inherits: :activities do |t|
       t.string   "url"
     end
+
+    create_table "activity_images", force: :cascade, inherits: [:activities, :images]
+
+    create_table "youtube_videos", force: :cascade, inherits: :activity_videos
 
     add_foreign_key "posts", "authors"
   end
