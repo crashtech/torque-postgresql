@@ -12,7 +12,7 @@ RSpec.describe 'TableInheritance' do
       end
 
       result = 'CREATE TABLE "schema_migrations"'
-      result << ' \("version" character varying (NOT NULL)? PRIMARY KEY\)'
+      result << ' \("version" character varying( NOT NULL)? PRIMARY KEY\)'
       expect(sql).to match(/#{result}/)
     end
 
