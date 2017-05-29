@@ -68,14 +68,12 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [ ] Recursive CTE queries
     - [ ] Enables `path`
     - [ ] Enables `depth`
-- [ ] Table Inheritance [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
+- [x] Table Inheritance [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
   - [x] `inherits` option while creating a table
   - [x] Allow table creation without columns when having inheritance
-  - [ ] Create a method `type` that can identify the model that created that entry
-  - [ ] Create a method `typed` that gets the entry as the model that created it
   - [x] Keep `inherits` as an option on schema dump
-  - [ ] FROM ONLY [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
-    - [ ] Relation method `only` to affect the from operator
+  - [x] FROM ONLY [DOCS](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html)
+    - [x] Relation method `only` to affect the from operator
 - [ ] 'Composite' type manager [DOCS](https://www.postgresql.org/docs/9.6/static/rowtypes.html)
   - [ ] Configurations
   - [ ] Allow schema option for database statements
@@ -103,6 +101,9 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
 - [ ] CTE queries (auxiliary statements)
   - [ ] Tree CTE queries
     - [ ] Provides an `acts_as_tree` method on models to activate this resource
+- [ ] Table Inheritance
+  - [ ] Create a method `type` that can identify the model that created that entry
+  - [ ] Create a method `typed` that gets the entry as the model that created it
 - [ ] Enum
   - [ ] Allow generator to postgre cast enum to integer [DOCS](http://stackoverflow.com/a/12347716/7321983)
   - [ ] Accept `pluralize: true` and `singularize: true` to create the enum methods

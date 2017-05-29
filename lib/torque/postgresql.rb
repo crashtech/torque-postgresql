@@ -11,6 +11,7 @@ require 'torque/postgresql/version'
 require 'torque/postgresql/collector'
 
 require 'torque/postgresql/i18n'
+require 'torque/postgresql/arel'
 require 'torque/postgresql/adapter'
 require 'torque/postgresql/attributes'
 require 'torque/postgresql/auxiliary_statement'

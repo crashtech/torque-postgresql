@@ -11,8 +11,9 @@ RSpec.describe 'TableInheritance' do
         t.string :version, connection.internal_string_options_for_primary_key
       end
 
-      result = 'CREATE TABLE "schema_migrations" ("version" character varying PRIMARY KEY)'
-      expect(sql).to eql(result)
+      result = 'CREATE TABLE "schema_migrations"'
+      result << ' \("version" character varying (NOT NULL)? PRIMARY KEY\)'
+      expect(sql).to match(/#{result}/)
     end
 
     it 'does not affect simple table creation' do
@@ -22,14 +23,14 @@ RSpec.describe 'TableInheritance' do
         t.timestamps
       end
 
-      result = 'CREATE TABLE "activities" ('
-      result << '"id" serial primary key'
+      result = 'CREATE TABLE "activities" \('
+      result << '"id" (big)?serial primary key'
       result << ', "title" character varying'
       result << ', "active" boolean'
       result << ', "created_at" timestamp NOT NULL'
       result << ', "updated_at" timestamp NOT NULL'
-      result << ')'
-      expect(sql).to eql(result)
+      result << '\)'
+      expect(sql).to match(/#{result}/)
     end
 
     it 'does not affect temporary table creation based on a query' do
@@ -104,6 +105,34 @@ RSpec.describe 'TableInheritance' do
       parts << ', force: :cascade'
       parts << ', inherits: \[:activities, :images\]'
       expect(dump_io.string).to match(/create_table #{parts}/)
+    end
+  end
+
+  context 'on relation' do
+    let(:base) { Activity }
+    let(:child) { ActivityVideo }
+
+    it 'has its method' do
+      expect(base).to respond_to(:only)
+    end
+
+    it 'does not mess with original queries' do
+      expect(base.all.to_sql).to \
+        eql('SELECT "activities".* FROM "activities"')
+    end
+
+    it 'adds the only condition to the query' do
+      expect(base.only.to_sql).to \
+        eql('SELECT "activities".* FROM ONLY "activities"')
+    end
+
+    it 'returns the right ammount of entries' do
+      base.create(title: 'Activity only')
+      child.create(title: 'Activity video')
+
+      expect(base.all.size).to eql(2)
+      expect(base.only.size).to eql(1)
+      expect(child.all.size).to eql(1)
     end
   end
 end

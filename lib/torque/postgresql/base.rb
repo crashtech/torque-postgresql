@@ -4,7 +4,7 @@ module Torque
       extend ActiveSupport::Concern
 
       module ClassMethods
-        delegate :distinct_on, :with, to: :all
+        delegate :distinct_on, :with, :only, to: :all
 
         private
 

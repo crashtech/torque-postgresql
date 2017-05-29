@@ -17,7 +17,7 @@ module Torque
             end)
           end
 
-          if supports_foreign_keys?
+          if supports_foreign_keys_in_create?
             statements.concat(o.foreign_keys.map do |to_table, options|
               foreign_key_in_create(o.name, to_table, options)
             end)
@@ -36,6 +36,15 @@ module Torque
           end
 
           create_sql
+        end
+
+        # Keep rails 5.0 and 5.1 compatibility
+        def supports_foreign_keys_in_create?
+          if defined?(super)
+            super
+          else
+            supports_foreign_keys?
+          end
         end
 
       end

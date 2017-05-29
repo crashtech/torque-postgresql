@@ -9,12 +9,12 @@ RSpec.describe 'DistinctOn' do
       expect(subject).to respond_to(:distinct_on)
     end
 
-    it 'doesn\'t mess with original distinct form without select' do
+    it 'does not mess with original distinct form without select' do
       expect(subject.distinct.to_sql).to \
         eql('SELECT DISTINCT "posts".* FROM "posts"')
     end
 
-    it 'doesn\'t mess with original distinct form with select' do
+    it 'does not mess with original distinct form with select' do
       expect(subject.select(:name).distinct.to_sql).to \
         eql('SELECT DISTINCT "name" FROM "posts"')
     end
