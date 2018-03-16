@@ -15,10 +15,20 @@ module Torque
           options = args.extract_options!
           self.auxiliary_statements ||= {}
           args.each do |table|
-            self.auxiliary_statements[table] = instantiate(table, self, options)
+            instance = instantiate(table, self, options)
+            instance.ensure_dependencies!(self)
+            self.auxiliary_statements[table] = instance
           end
 
           self
+        end
+
+        # Get all auxiliary statements bound attributes and the base bound
+        # attributes as well
+        def bound_attributes
+          return super unless self.auxiliary_statements.present?
+          bindings = self.auxiliary_statements.values.map(&:bound_attributes)
+          (bindings + super).flatten
         end
 
         private

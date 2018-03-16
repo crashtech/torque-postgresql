@@ -110,7 +110,8 @@ module Torque
             # For instace, if the statement query has an 'id' column that you
             # want it to be accessed on the main query as 'item_id',
             # you can use:
-            #   attributes id: :item_id
+            #   attributes id: :item_id, 'MAX(id)' => :max_id,
+            #     col(:id).minimum => :min_id
             #
             # If its statement has more tables, and you want to expose those
             # fields, then:
@@ -234,24 +235,28 @@ module Torque
 
       # Build the statement on the given arel and return the WITH statement
       def build_arel(arel, base)
-        list = []
-
-        # Process dependencies
-        if requires.present?
-          requires.each do |dependent|
-            next if base.auxiliary_statements.key?(dependent)
-
-            instance = AuxiliaryStatement.instantiate(dependent, base)
-            base.auxiliary_statements[dependent] = instance
-            list << instance.build_arel(arel, base)
-          end
-        end
-
         # Build the join for this statement
         arel.join(table, arel_join).on(*join_columns)
 
         # Return the subquery for this statement
-        list << Arel::Nodes::As.new(table, mount_query)
+        Arel::Nodes::As.new(table, mount_query)
+      end
+
+      # Get the bound attributes from statement qeury
+      def bound_attributes
+        return [] unless relation_query?(self.class.query)
+        self.class.query.send(:bound_attributes)
+      end
+
+      # Ensure that all the dependencies are loaded in the base relation
+      def ensure_dependencies!(base)
+        requires.each do |dependent|
+          next if base.auxiliary_statements.key?(dependent)
+
+          instance = AuxiliaryStatement.instantiate(dependent, base)
+          instance.ensure_dependencies!(base)
+          base.auxiliary_statements[dependent] = instance
+        end
       end
 
       private

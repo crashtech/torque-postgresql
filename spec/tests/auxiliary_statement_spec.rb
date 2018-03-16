@@ -67,6 +67,24 @@ RSpec.describe 'AuxiliaryStatement' do
       expect(subject.with(:comments, join: {active: true}).to_sql).to eql(result)
     end
 
+    it 'accepts scopes from both sides' do
+      klass.send(:auxiliary_statement, :comments) do |cte|
+        cte.query Comment.where(id: 1).all
+        cte.attributes content: :comment_content
+      end
+
+      query = subject.where(id: 2).with(:comments)
+
+      result = 'WITH "comments" AS'
+      result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id" FROM "comments"'
+      result << ' WHERE "comments"."comment_id" = $1)'
+      result << ' SELECT "users".*, "comments"."comment_content" FROM "users"'
+      result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+      result << ' WHERE "users"."role" = $2'
+      # expect(query.arel.to_sql).to eql(result)
+      expect(query.send(:bound_attributes).map(&:value_before_type_cast)).to eql([1, 2])
+    end
+
     it 'accepts string as attributes' do
       klass.send(:auxiliary_statement, :comments) do |cte|
         cte.query Comment.all
@@ -121,6 +139,32 @@ RSpec.describe 'AuxiliaryStatement' do
       expect(subject.with(:comments).to_sql).to eql(result)
     end
 
+    it 'accepts complex scopes from dependencies' do
+      klass.send(:auxiliary_statement, :comments1) do |cte|
+        cte.query Comment.where(id: 1).all
+        cte.attributes content: :comment_content1
+      end
+
+      klass.send(:auxiliary_statement, :comments2) do |cte|
+        cte.requires :comments1
+        cte.query Comment.where(id: 2).all
+        cte.attributes content: :comment_content2
+      end
+
+      query = subject.where(id: 3).with(:comments2)
+
+      result = 'WITH '
+      result << '"comments1" AS (SELECT "comments"."content" AS comment_content1, "comments"."user_id" FROM "comments" WHERE "comments"."id" = $1), '
+      result << '"comments2" AS (SELECT "comments"."content" AS comment_content2, "comments"."user_id" FROM "comments" WHERE "comments"."id" = $2)'
+      result << ' SELECT "users".*, "comments2"."comment_content2" FROM "users"'
+      result << ' INNER JOIN "comments1" ON "users"."id" = "comments1"."user_id"'
+      result << ' INNER JOIN "comments2" ON "users"."id" = "comments2"."user_id"'
+      result << ' WHERE "users"."id" = $3'
+      # query.arel.to_sql
+      # expect(query.arel.to_sql).to eql(result)
+      expect(query.send(:bound_attributes).map(&:value_before_type_cast)).to eql([1, 2, 3])
+    end
+
     context 'with dependency' do
       before :each do
         klass.send(:auxiliary_statement, :comments1) do |cte|
@@ -139,7 +183,7 @@ RSpec.describe 'AuxiliaryStatement' do
         result = 'WITH '
         result << '"comments1" AS (SELECT "comments"."content" AS comment_content1, "comments"."user_id" FROM "comments"), '
         result << '"comments2" AS (SELECT "comments"."content" AS comment_content2, "comments"."user_id" FROM "comments")'
-        result << ' SELECT "users".*, "comments2"."comment_content2" FROM "users"'
+        result << ' SELECT "users".*, "comments1"."comment_content1", "comments2"."comment_content2" FROM "users"'
         result << ' INNER JOIN "comments1" ON "users"."id" = "comments1"."user_id"'
         result << ' INNER JOIN "comments2" ON "users"."id" = "comments2"."user_id"'
         expect(subject.with(:comments2).to_sql).to eql(result)
