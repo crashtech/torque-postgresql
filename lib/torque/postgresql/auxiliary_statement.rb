@@ -80,13 +80,19 @@ module Torque
 
         # Project a column on a given table, or use the column table
         def project(column, arel_table = nil)
-          if column.to_s.include?('.')
-            table_name, column = column.to_s.split('.')
-            arel_table = Arel::Table.new(table_name)
+          case column
+          when Arel::Attributes::Attribute
+            column
+          when String
+            if column.to_s.include?('.')
+              table_name, column = column.to_s.split('.')
+              Arel::Table.new(table_name)[column.to_s]
+            elsif /^[a-z]+$/ =~ column
+              arel_table[column.to_s]
+            else
+              Arel::Nodes::SqlLiteral.new(column)
+            end
           end
-
-          arel_table ||= table
-          arel_table[column.to_s]
         end
 
         private

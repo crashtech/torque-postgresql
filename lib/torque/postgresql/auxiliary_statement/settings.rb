@@ -21,8 +21,15 @@ module Torque
           @query_table
         end
 
+        # Grant an easy access to arel table columns
+        def col(name)
+          query_table[name.to_s]
+        end
+
+        alias column col
+
         # There are two ways of setting the query:
-        # - A simple relation based on a modle
+        # - A simple relation based on a Model
         # - A string or a proc that requires the table name as first argument
         def query(value = nil, command = nil)
           return @query if value.nil?
