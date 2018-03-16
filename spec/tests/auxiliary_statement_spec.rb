@@ -67,6 +67,32 @@ RSpec.describe 'AuxiliaryStatement' do
       expect(subject.with(:comments, join: {active: true}).to_sql).to eql(result)
     end
 
+    it 'accepts string as attributes' do
+      klass.send(:auxiliary_statement, :comments) do |cte|
+        cte.query Comment.all
+        cte.attributes sql('MAX(id)') => :comment_id
+      end
+
+      result = 'WITH "comments" AS'
+      result << ' (SELECT MAX(id) AS comment_id, "comments"."user_id" FROM "comments")'
+      result << ' SELECT "users".*, "comments"."comment_id" FROM "users"'
+      result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+      expect(subject.with(:comments).to_sql).to eql(result)
+    end
+
+    it 'accepts arel attribute as attributes' do
+      klass.send(:auxiliary_statement, :comments) do |cte|
+        cte.query Comment.all
+        cte.attributes col(:id).minimum => :comment_id
+      end
+
+      result = 'WITH "comments" AS'
+      result << ' (SELECT MIN("comments"."id") AS comment_id, "comments"."user_id" FROM "comments")'
+      result << ' SELECT "users".*, "comments"."comment_id" FROM "users"'
+      result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+      expect(subject.with(:comments).to_sql).to eql(result)
+    end
+
     it 'accepts custom join properties' do
       klass.send(:auxiliary_statement, :comments) do |cte|
         cte.query Comment.all

@@ -80,19 +80,15 @@ module Torque
 
         # Project a column on a given table, or use the column table
         def project(column, arel_table = nil)
-          case column
-          when Arel::Attributes::Attribute
-            column
-          when String
-            if column.to_s.include?('.')
-              table_name, column = column.to_s.split('.')
-              Arel::Table.new(table_name)[column.to_s]
-            elsif /^[a-z]+$/ =~ column
-              arel_table[column.to_s]
-            else
-              Arel::Nodes::SqlLiteral.new(column)
-            end
+          if column.respond_to?(:as)
+            return column
+          elsif column.to_s.include?('.')
+            table_name, column = column.to_s.split('.')
+            arel_table = Arel::Table.new(table_name)
           end
+
+          arel_table ||= table
+          arel_table[column.to_s]
         end
 
         private
@@ -146,7 +142,7 @@ module Torque
             # Indicates a polymorphic relationship, with will affect the way the
             # auto join works, by giving a polymorphic connection
             settings = Settings.new(self)
-            @config.call(settings)
+            settings.instance_eval(&@config)
 
             @join_type = settings.join_type || :inner
             @requires = Array[settings.requires].flatten.compact

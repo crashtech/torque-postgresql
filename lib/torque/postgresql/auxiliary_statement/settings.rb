@@ -28,6 +28,11 @@ module Torque
 
         alias column col
 
+        # Grant an easy access to arel sql literal
+        def sql(string)
+          ::Arel::Nodes::SqlLiteral.new(string)
+        end
+
         # There are two ways of setting the query:
         # - A simple relation based on a Model
         # - A string or a proc that requires the table name as first argument
