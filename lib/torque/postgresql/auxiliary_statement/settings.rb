@@ -51,7 +51,7 @@ module Torque
           MSG
 
           @query = command
-          @query_table = Arel::Table.new(value)
+          @query_table = ::Arel::Table.new(value)
         end
 
       end

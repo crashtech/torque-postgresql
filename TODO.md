@@ -18,6 +18,16 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [x] Only provides the CTE fields when the main query doesn't select columns
   - [x] Create a exclusive class to hold all the generated auxiliary statements
   - [x] Try to identify join columns
+  - [x] Improve performance by saving `@base_table ||= base_table` and `@query_table ||= query_table`
+  - [x] Allow access to `table` and `table_name` from the class scope
+    - [x] Allow those access on the settings too, *this is important for recursivity*
+    - [x] Allow easy access to SQL access and columns on setting
+  - [x] Allows `select: {column: :expose}` extra option to `with` command
+  - [x] Allows `join: {column: :cte_column}` to do extra filters when using `with` command
+  - [x] Allows `cte.polymorphic 'name'` so it can identify both id and type columns
+  - [x] Accept Proc as query when configuring the CTE, but asks the source table Class or Name
+    - [x] Allows query to be a string too
+    - [x] Allows `with` to receive extra parameters and send to the Proc or format the string with `%`
 - [x] Interval data type [DOCS](https://www.postgresql.org/docs/9.4/static/datatype-datetime.html#DATATYPE-INTERVAL-INPUT)
   - [x] Setup the interval style to the easier 'iso_8601' [DOCS](https://www.postgresql.org/docs/9.6/static/runtime-config-client.html#RUNTIME-CONFIG-CLIENT-FORMAT)
   - [x] On create table, interval column method
@@ -52,18 +62,9 @@ Following the PostgreSQL features list on [this page](https://www.postgresql.org
   - [ ] Table Inheritance
   - [ ] Composite
 - [ ] CTE queries (auxiliary statements)
-  - [x] Improve performance by saving `@base_table ||= base_table` and `@query_table ||= query_table`
-  - [x] Allow access to `table` and `table_name` from the class scope
-    - [x] Allow those access on the settings too, *this is important for recursivity*
   - [x] Allows `requires` setting to create dependecy between CTEs
     - [ ] Create a subclass from ActiveRecord::Relation for internal references
     - [ ] Turn the dependent into a relation so it could be used on the query
-  - [x] Allows `select: {column: :expose}` extra option to `with` command
-  - [x] Allows `join: {column: :cte_column}` to do extra filters when using `with` command
-  - [x] Allows `cte.polymorphic 'name'` so it can identify both id and type columns
-  - [x] Accept Proc as query when configuring the CTE, but asks the source table Class or Name
-    - [x] Allows query to be a string too
-    - [x] Allows `with` to receive extra parameters and send to the Proc or format the string with `%`
   - [ ] Recursive CTE queries
     - [ ] Enables `path`
     - [ ] Enables `depth`

@@ -60,7 +60,7 @@ module Torque
 
         # Get the arel version of the statement table
         def table
-          @table ||= Arel::Table.new(table_name)
+          @table ||= ::Arel::Table.new(table_name)
         end
 
         # Get the name of the table of the configurated statement
@@ -84,7 +84,7 @@ module Torque
             return column
           elsif column.to_s.include?('.')
             table_name, column = column.to_s.split('.')
-            arel_table = Arel::Table.new(table_name)
+            arel_table = ::Arel::Table.new(table_name)
           end
 
           arel_table ||= table
@@ -104,46 +104,8 @@ module Torque
 
           # Setup the class
           def setup!
-            # attributes key:
-            # Provides a map of attributes to be exposed to the main query.
-            #
-            # For instace, if the statement query has an 'id' column that you
-            # want it to be accessed on the main query as 'item_id',
-            # you can use:
-            #   attributes id: :item_id, 'MAX(id)' => :max_id,
-            #     col(:id).minimum => :min_id
-            #
-            # If its statement has more tables, and you want to expose those
-            # fields, then:
-            #   attributes 'table.name': :item_name
-            #
-            # join_type key:
-            # Changes the type of the join and set the constraints
-            #
-            # The left side of the hash is the source table column, the right
-            # side is the statement table column, now it's only accepting '='
-            # constraints
-            #   join id: :user_id
-            #   join id: :'user.id'
-            #   join 'post.id': :'user.last_post_id'
-            #
-            # It's possible to change the default type of join
-            #   join :left, id: :user_id
-            #
-            # join key:
-            # Changes the type of the join
-            #
-            # query key:
-            # Save the query command to be performand
-            #
-            # requires key:
-            # Indicates dependencies with another statements
-            #
-            # polymorphic key:
-            # Indicates a polymorphic relationship, with will affect the way the
-            # auto join works, by giving a polymorphic connection
             settings = Settings.new(self)
-            settings.instance_eval(&@config)
+            settings.instance_exec(settings, &@config)
 
             @join_type = settings.join_type || :inner
             @requires = Array[settings.requires].flatten.compact
@@ -239,7 +201,7 @@ module Torque
         arel.join(table, arel_join).on(*join_columns)
 
         # Return the subquery for this statement
-        Arel::Nodes::As.new(table, mount_query)
+        ::Arel::Nodes::As.new(table, mount_query)
       end
 
       # Get the bound attributes from statement qeury
@@ -264,10 +226,10 @@ module Torque
         # Get the class of the join on arel
         def arel_join
           case @join_type
-          when :inner then Arel::Nodes::InnerJoin
-          when :left then Arel::Nodes::OuterJoin
-          when :right then Arel::Nodes::RightOuterJoin
-          when :full then Arel::Nodes::FullOuterJoin
+          when :inner then ::Arel::Nodes::InnerJoin
+          when :left  then ::Arel::Nodes::OuterJoin
+          when :right then ::Arel::Nodes::RightOuterJoin
+          when :full  then ::Arel::Nodes::FullOuterJoin
           else
             raise ArgumentError, <<-MSG.strip
               The '#{@join_type}' is not implemented as a join type.
@@ -279,7 +241,7 @@ module Torque
         def mount_query
           klass = self.class
           query = klass.query
-          uses = @uses.map(&klass.parent.connection.method(:quote))
+          uses = @uses
 
           # Call a proc to get the query
           if query.respond_to?(:call)
@@ -289,9 +251,10 @@ module Torque
 
           # Prepare the query depending on its type
           if query.is_a?(String)
-            Arel::Nodes::SqlLiteral.new("(#{query})" % uses)
+            uses.map!(&klass.parent.connection.method(:quote))
+            ::Arel::Nodes::SqlLiteral.new("(#{query})" % uses)
           elsif relation_query?(query)
-            query.select(*select_columns).send(:build_arel)
+            query.select(*select_columns).arel
           else
             raise ArgumentError, <<-MSG.strip
               Only String and ActiveRecord::Base objects are accepted as query objects,

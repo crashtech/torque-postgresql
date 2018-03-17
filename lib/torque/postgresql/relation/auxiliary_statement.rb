@@ -47,7 +47,7 @@ module Torque
 
               arel.with(subqueries.flatten)
               if select_values.empty? && columns.any?
-                columns.unshift table[Arel.sql('*')]
+                columns.unshift table[::Arel.star]
                 arel.projections = columns
               end
             end

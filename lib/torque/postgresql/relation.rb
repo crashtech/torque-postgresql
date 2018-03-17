@@ -26,7 +26,7 @@ module Torque
         list.map do |item|
           case item
           when String
-            Arel::Nodes::SqlLiteral.new(klass.send(:sanitize_sql, item.to_s))
+            ::Arel::Nodes::SqlLiteral.new(klass.send(:sanitize_sql, item.to_s))
           when Symbol
             base ? base.arel_attribute(item) : klass.arel_attribute(item)
           when Array
