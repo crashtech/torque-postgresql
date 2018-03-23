@@ -169,9 +169,9 @@ module Torque
             if query.columns_hash.key?(foreign_key)
               joins_projections(base.primary_key => foreign_key)
               if polymorphic.present?
-                foreign_type = project(foreign_key.gsub(/_id$/, '_type'), query_table)
-                @selected_attributes << foreign_type
-                @join_attributes << foreign_type.eq(base_name)
+                foreign_type = foreign_key.gsub(/_id$/, '_type')
+                @selected_attributes << project(foreign_type, query_table)
+                @join_attributes << project(foreign_type).eq(base_name)
               end
             end
           end

@@ -374,6 +374,24 @@ RSpec.describe 'AuxiliaryStatement' do
       Comment.columns_hash.delete('source_id')
     end
 
+    it 'can uses join on polymorphic relations with custom names' do
+      Comment.columns_hash['source_id'] = true
+      klass.send(:auxiliary_statement, :all_comments) do |cte|
+        cte.query Comment.all
+        cte.attributes content: :comment
+        cte.polymorphic :source
+      end
+
+      result = 'WITH "all_comments" AS'
+      result << ' (SELECT "comments"."content" AS comment, "comments"."source_id",'
+      result << ' "comments"."source_type" FROM "comments")'
+      result << ' SELECT "users".*, "all_comments"."comment" FROM "users"'
+      result << ' INNER JOIN "all_comments" ON "users"."id" = "all_comments"."source_id"'
+      result << ' AND "all_comments"."source_type" = \'User\''
+      expect(subject.with(:all_comments).arel.to_sql).to eql(result)
+      Comment.columns_hash.delete('source_id')
+    end
+
     it 'raises an error when using an invalid type of object as query' do
       klass.send(:auxiliary_statement, :comments) do |cte|
         cte.query :string, String
