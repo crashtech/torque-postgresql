@@ -3,13 +3,18 @@ module Torque
     module Base
       extend ActiveSupport::Concern
 
-      included do
-        class_attribute :auxiliary_statements_list, instance_accessor: true
-        self.auxiliary_statements_list = {}
-      end
-
       module ClassMethods
         delegate :distinct_on, :with, to: :all
+
+        private
+
+          # Wenever it's inherited, add a new list of auxiliary statements
+          def inherited(subclass)
+            subclass.class_eval do
+              class_attribute :auxiliary_statements_list, instance_accessor: true
+              self.auxiliary_statements_list = Hash.new
+            end
+          end
 
         protected
 

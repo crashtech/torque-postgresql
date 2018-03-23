@@ -9,11 +9,11 @@ module Torque
         LAZY_VALUE = 0.chr
 
         class << self
-          delegate :each, to: :values
+          delegate :each, :sample, to: :values
 
           # Find or create the class that will handle the value
           def lookup(name)
-            const     = name.camelize
+            const     = name.to_s.camelize
             namespace = Torque::PostgreSQL.config.enum.namespace
 
             return namespace.const_get(const) if namespace.const_defined?(const)
@@ -71,7 +71,7 @@ module Torque
             # Allow fast creation of values
             def method_missing(method_name, *arguments)
               return super if self == Enum
-              self.valid?(method_name) ? new(method_name.to_s) : super
+              valid?(method_name) ? new(method_name.to_s) : super
             end
 
             # Get a connection based on its name
@@ -225,6 +225,10 @@ module Torque
 
         # Mark the enum as defined
         defined_enums[attribute] = subtype.klass
+      end
+
+      Torque::PostgreSQL.config.enum.namespace.define_singleton_method(:const_missing) do |name|
+        Enum.lookup(name)
       end
     end
   end
