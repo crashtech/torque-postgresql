@@ -3,6 +3,7 @@ require_relative 'auxiliary_statement/settings'
 module Torque
   module PostgreSQL
     class AuxiliaryStatement
+      TABLE_COLUMN_AS_STRING = /\A(?:"?(\w+)"?\.)?"?(\w+)"?\z/.freeze
 
       class << self
         # These attributes require that the class is setup
@@ -82,9 +83,9 @@ module Torque
         def project(column, arel_table = nil)
           if column.respond_to?(:as)
             return column
-          elsif column.to_s.include?('.')
-            table_name, column = column.to_s.split('.')
-            arel_table = ::Arel::Table.new(table_name)
+          elsif (as_string = TABLE_COLUMN_AS_STRING.match(column.to_s))
+            column = as_string[2]
+            arel_table = ::Arel::Table.new(as_string[1]) unless as_string[1].nil?
           end
 
           arel_table ||= table

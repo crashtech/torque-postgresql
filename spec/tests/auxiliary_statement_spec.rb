@@ -99,6 +99,19 @@ RSpec.describe 'AuxiliaryStatement' do
       expect(subject.with(:comments).arel.to_sql).to eql(result)
     end
 
+    it 'accepts complex string as attributes' do
+      klass.send(:auxiliary_statement, :comments) do |cte|
+        cte.query Comment.all
+        cte.attributes sql('ROW_NUMBER() OVER (PARTITION BY ORDER BY "comments"."id")') => :comment_id
+      end
+
+      result = 'WITH "comments" AS'
+      result << ' (SELECT ROW_NUMBER() OVER (PARTITION BY ORDER BY "comments"."id") AS comment_id, "comments"."user_id" FROM "comments")'
+      result << ' SELECT "users".*, "comments"."comment_id" FROM "users"'
+      result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+      expect(subject.with(:comments).arel.to_sql).to eql(result)
+    end
+
     it 'accepts arel attribute as attributes' do
       klass.send(:auxiliary_statement, :comments) do |cte|
         cte.query Comment.all
