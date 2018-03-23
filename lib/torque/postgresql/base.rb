@@ -10,10 +10,9 @@ module Torque
 
           # Wenever it's inherited, add a new list of auxiliary statements
           def inherited(subclass)
-            subclass.class_eval do
-              class_attribute :auxiliary_statements_list, instance_accessor: true
-              self.auxiliary_statements_list = Hash.new
-            end
+            subclass.class_attribute(:auxiliary_statements_list)
+            subclass.auxiliary_statements_list = Hash.new
+            super
           end
 
         protected
