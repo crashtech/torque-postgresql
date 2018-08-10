@@ -202,7 +202,6 @@ module Torque
         arel.join(table, arel_join).on(*join_columns)
 
         # Return the subquery for this statement
-<<<<<<< HEAD
         ::Arel::Nodes::As.new(table, mount_query)
       end
 
@@ -221,9 +220,6 @@ module Torque
           instance.ensure_dependencies!(base)
           base.auxiliary_statements[dependent] = instance
         end
-=======
-        list << ::Arel::Nodes::As.new(table, mount_query)
->>>>>>> Fix name of classes related to Arel
       end
 
       private
@@ -232,15 +228,9 @@ module Torque
         def arel_join
           case @join_type
           when :inner then ::Arel::Nodes::InnerJoin
-<<<<<<< HEAD
           when :left  then ::Arel::Nodes::OuterJoin
           when :right then ::Arel::Nodes::RightOuterJoin
           when :full  then ::Arel::Nodes::FullOuterJoin
-=======
-          when :left then ::Arel::Nodes::OuterJoin
-          when :right then ::Arel::Nodes::RightOuterJoin
-          when :full then ::Arel::Nodes::FullOuterJoin
->>>>>>> Fix name of classes related to Arel
           else
             raise ArgumentError, <<-MSG.strip
               The '#{@join_type}' is not implemented as a join type.
@@ -262,10 +252,7 @@ module Torque
 
           # Prepare the query depending on its type
           if query.is_a?(String)
-<<<<<<< HEAD
             uses.map!(&klass.parent.connection.method(:quote))
-=======
->>>>>>> Fix name of classes related to Arel
             ::Arel::Nodes::SqlLiteral.new("(#{query})" % uses)
           elsif relation_query?(query)
             query.select(*select_columns).arel

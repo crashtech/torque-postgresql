@@ -9,10 +9,17 @@ module Torque
         private
 
           # Wenever it's inherited, add a new list of auxiliary statements
+          # It also adds an auxiliary statement to load inherited records' relname
           def inherited(subclass)
+            super
+
             subclass.class_attribute(:auxiliary_statements_list)
             subclass.auxiliary_statements_list = Hash.new
-            super
+            subclass.auxiliary_statement :_record_class do |cte|
+              cte.query :pg_class, 'SELECT "oid", "relname" AS "_record_class" FROM "pg_class"'
+              cte.attributes col(:_record_class) => :_record_class
+              cte.join tableoid: :oid
+            end
           end
 
         protected

@@ -11,6 +11,14 @@ module Torque
           )
         end
 
+        def inheritance_dependents
+          connection.schema_cache.associations[table_name]
+        end
+
+        def physically_inheritances?
+          inheritance_dependents.present?
+        end
+
         private
 
           def decorated_table_name

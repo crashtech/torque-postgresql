@@ -32,8 +32,8 @@ module Torque
         def reload!
           return unless @cached_data_sources_size != data_sources_size
           @cached_data_sources_size = data_sources_size
-          @inheritance_dependencies = connection.inherited_tables
-          @inheritance_associations = generate_associations
+          @inheritance_dependencies = connection.inherited_tables.freeze
+          @inheritance_associations = generate_associations.freeze
         end
 
         def generate_associations
