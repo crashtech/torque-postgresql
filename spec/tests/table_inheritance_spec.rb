@@ -103,7 +103,7 @@ RSpec.describe 'TableInheritance' do
       parts = '"activity_images"'
       parts << ', id: false'
       parts << ', force: :cascade'
-      parts << ', inherits: \[:images, :activities\]'
+      parts << ', inherits: (\[:images, :activities\]|\[:activities, :images\])'
       expect(dump_io.string).to match(/create_table #{parts}/)
     end
   end
