@@ -2,13 +2,14 @@ sudo: false
 language: ruby
 cache: bundler
 rvm:
-- 2.2.7
 - 2.3.4
-- 2.4.1
+- 2.4.4
+- 2.5.1
 
 gemfile:
   - Gemfile
-  - gemfiles/Gemfile.rails-5.0-stable
+  - gemfiles/Gemfile.rails-5.0
+  - gemfiles/Gemfile.rails-5.1
 
 env: DATABASE_URL=postgres://postgres@localhost/torque_postgresql_test
 
@@ -19,6 +20,6 @@ before_script:
 #   email:
 #   - git@danmcclain.net
 addons:
-  postgresql: '9.3'
+  postgresql: '9.6'
   code_climate:
     repo_token: d21c4c9d0d7ba6a27368b8e25edad911eb1daa03202e69fe2bc2e42a3ed21de3

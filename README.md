@@ -8,7 +8,7 @@
 
 * [Wiki](https://github.com/crashtech/torque-postgresql/wiki)
 * [Bugs](https://github.com/crashtech/torque-postgresql/issues)
-* [TODO](https://github.com/crashtech/torque-postgresql/blob/master/TODO.md)
+* [TODO](https://github.com/crashtech/torque-postgresql/wiki/TODO)
 
 # Description
 `torque-postgresql` is a plugin that enhance Ruby on Rails enabling easy access to existing PostgreSQL advanced resources, such as data types and queries statements. Its features are design to be as similar as Rails architecture and they work as smooth as possible.
