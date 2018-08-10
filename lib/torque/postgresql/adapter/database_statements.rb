@@ -68,7 +68,7 @@ module Torque
               typtype = row['typtype']
               type = begin
                 case
-                when typtype == 'e'.freeze then OID::Enum.create(row)
+                when typtype == 'e' then OID::Enum.create(row)
                 end
               end
 
@@ -78,7 +78,7 @@ module Torque
         end
 
         # Gets a list of user defined types.
-        # You can even choose the +typcategory+ filter
+        # You can even choose the +category+ filter
         def user_defined_types(category = nil)
           category_condition = "AND     typtype = '#{category}'" unless category.nil?
           select_all(<<-SQL).rows.to_h

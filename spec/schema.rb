@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 10
+  version = 15
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -26,13 +26,6 @@ begin
     create_enum "roles", ["visitor", "assistant", "manager", "admin"], force: :cascade
     create_enum "conflicts", ["valid", "invalid", "untrusted"], force: :cascade
 
-    create_table "activities", force: :cascade do |t|
-      t.string   "title"
-      t.boolean  "active"
-      t.datetime "created_at", null: false
-      t.datetime "updated_at", null: false
-    end
-
     create_table "authors", force: :cascade do |t|
       t.string   "name"
       t.enum     "specialty", subtype: :specialties
@@ -42,6 +35,7 @@ begin
       t.integer "user_id",    null: false
       t.integer "comment_id"
       t.text    "content",    null: false
+      t.string  "type"
       t.index ["user_id"], name: "index_comments_on_user_id", using: :btree
       t.index ["comment_id"], name: "index_comments_on_comment_id", using: :btree
     end
@@ -71,13 +65,31 @@ begin
       t.datetime "updated_at", null: false
     end
 
-    create_table "activity_videos", force: :cascade, inherits: :activities do |t|
+    create_table "activities", force: :cascade do |t|
+      t.integer  "author_id"
+      t.string   "title"
+      t.boolean  "active"
+      t.datetime "created_at", null: false
+      t.datetime "updated_at", null: false
+    end
+
+    create_table "activity_books", force: :cascade, inherits: :activities do |t|
+      t.string   "title"
+      t.text     "description"
       t.string   "url"
     end
 
-    create_table "activity_images", force: :cascade, inherits: [:activities, :images]
+    create_table "activity_posters", force: :cascade, inherits: :activities do |t|
+      t.integer  "post_id"
+    end
 
-    create_table "youtube_videos", force: :cascade, inherits: :activity_videos
+    create_table "activity_poster_samples", force: :cascade, inherits: :activity_posters do |t|
+      t.text     "sample"
+    end
+
+    create_table "activity_blanks", force: :cascade, inherits: :activities
+
+    create_table "activity_images", force: :cascade, inherits: [:activities, :images]
 
     add_foreign_key "posts", "authors"
   end

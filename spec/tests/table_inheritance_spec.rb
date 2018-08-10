@@ -77,7 +77,7 @@ RSpec.describe 'TableInheritance' do
       dump_io = StringIO.new
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
 
-      parts = '"activity_videos"'
+      parts = '"activity_books"'
       parts << ', id: false'
       parts << ', force: :cascade'
       parts << ', inherits: :activities'
@@ -89,10 +89,10 @@ RSpec.describe 'TableInheritance' do
       dump_io = StringIO.new
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
 
-      parts = '"youtube_videos"'
+      parts = '"activity_blanks"'
       parts << ', id: false'
       parts << ', force: :cascade'
-      parts << ', inherits: :activity_videos'
+      parts << ', inherits: :activities'
       expect(dump_io.string).to match(/create_table #{parts}(?! do \|t\|)/)
     end
 
@@ -103,14 +103,49 @@ RSpec.describe 'TableInheritance' do
       parts = '"activity_images"'
       parts << ', id: false'
       parts << ', force: :cascade'
-      parts << ', inherits: \[:activities, :images\]'
+      parts << ', inherits: \[:images, :activities\]'
       expect(dump_io.string).to match(/create_table #{parts}/)
+    end
+  end
+
+  context 'on inheritance' do
+    subject { Torque::PostgreSQL::Inheritance }
+    let(:scenario) { {
+      'M' => %w(N),
+      'N' => %w(C),
+      'C' => %w(B),
+      'B' => %w(A),
+      'D' => %w(A),
+      'F' => %w(E),
+      'G' => %w(E H),
+    } }
+
+    before do
+      subject.instance_variable_set(:@dependencies, scenario)
+      subject.instance_variable_set(:@associations, subject.send(:generate_associations))
+    end
+
+    after do
+      subject.instance_variable_set(:@sources_loaded, nil)
+      subject.instance_variable_set(:@dependencies, nil)
+      subject.instance_variable_set(:@associations, nil)
+    end
+
+    it 'correctly defines the associations' do
+      expect(subject.associations).to eql({
+        'A' => %w(B D C N M),
+        'B' => %w(C N M),
+        'C' => %w(N M),
+        'N' => %w(M),
+        'E' => %w(F G),
+        'H' => %w(G),
+      })
     end
   end
 
   context 'on relation' do
     let(:base) { Activity }
-    let(:child) { ActivityVideo }
+    let(:child) { ActivityBook }
 
     it 'has its method' do
       expect(base).to respond_to(:only)
@@ -128,11 +163,31 @@ RSpec.describe 'TableInheritance' do
 
     it 'returns the right ammount of entries' do
       base.create(title: 'Activity only')
-      child.create(title: 'Activity video')
+      child.create(title: 'Activity book')
 
       expect(base.all.size).to eql(2)
       expect(base.only.size).to eql(1)
       expect(child.all.size).to eql(1)
+    end
+
+    it 'correctly identify physical inheritances' do
+      expect(Activity.physically_inherited?).to be_falsey
+      expect(Comment.physically_inherited?).to be_falsey
+      expect(GuestComment.physically_inherited?).to be_falsey
+
+      expect(ActivityBook.physically_inherited?).to be_truthy
+      expect(ActivityPost.physically_inherited?).to be_truthy
+      expect(ActivityPost::Sample.physically_inherited?).to be_truthy
+    end
+
+    it 'correctly generates the tables name' do
+      expect(Activity.table_name).to eql('activities')
+      expect(Comment.table_name).to eql('comments')
+      expect(GuestComment.table_name).to eql('comments')
+
+      expect(ActivityBook.table_name).to eql('activity_books')
+      expect(ActivityPost.table_name).to eql('activity_posters')
+      expect(ActivityPost::Sample.table_name).to eql('activity_poster_samples')
     end
   end
 end

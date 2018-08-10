@@ -1,0 +1,2 @@
+class GuestComment < Comment
+end

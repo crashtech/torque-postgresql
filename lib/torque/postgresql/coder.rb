@@ -107,7 +107,7 @@ module Torque
               end
             end
 
-            result = is_record ? '(%s)'.freeze : '{%s}'.freeze
+            result = is_record ? '(%s)' : '{%s}'
             result % list.join(DELIMITER)
           end
 

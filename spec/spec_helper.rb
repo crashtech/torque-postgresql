@@ -9,7 +9,7 @@ require 'byebug'
 Dotenv.load
 
 ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'])
-Dir.glob(File.join('spec', '{models,factories,mocks}', '*.rb')) do |file|
+Dir.glob(File.join('spec', '{models,factories,mocks}', '**', '*.rb')) do |file|
   require file[5..-4]
 end
 
