@@ -109,7 +109,7 @@ RSpec.describe 'TableInheritance' do
   end
 
   context 'on inheritance' do
-    subject { Torque::PostgreSQL::Inheritance }
+    subject { ActiveRecord::Base.connection.schema_cache }
     let(:scenario) { {
       'M' => %w(N),
       'N' => %w(C),
@@ -121,14 +121,14 @@ RSpec.describe 'TableInheritance' do
     } }
 
     before do
-      subject.instance_variable_set(:@dependencies, scenario)
-      subject.instance_variable_set(:@associations, subject.send(:generate_associations))
+      subject.instance_variable_set(:@inheritance_dependencies, scenario)
+      subject.instance_variable_set(:@inheritance_associations, subject.send(:generate_associations))
     end
 
     after do
-      subject.instance_variable_set(:@sources_loaded, nil)
-      subject.instance_variable_set(:@dependencies, nil)
-      subject.instance_variable_set(:@associations, nil)
+      subject.instance_variable_set(:@cached_data_sources_size, nil)
+      subject.instance_variable_set(:@inheritance_dependencies, nil)
+      subject.instance_variable_set(:@inheritance_associations, nil)
     end
 
     it 'correctly defines the associations' do
