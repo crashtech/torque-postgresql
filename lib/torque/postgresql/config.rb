@@ -9,6 +9,14 @@ module Torque
       send("#{name}=", klass)
     end
 
+    # Set a list of irregular model name when associated with table names
+    config.irregular_models = {}
+    def config.irregular_models=(hash)
+      PostgreSQL.config[:irregular_models] = hash.map do |(table, model)|
+        [table.to_s, model.to_s]
+      end.to_h
+    end
+
     # Configure ENUM features
     config.nested(:enum) do |enum|
 
