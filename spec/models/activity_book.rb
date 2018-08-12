@@ -1,2 +1,2 @@
-class ActivityBook < ActiveRecord::Base
+class ActivityBook < Activity
 end

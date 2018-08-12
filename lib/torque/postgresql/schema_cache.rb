@@ -1,5 +1,6 @@
 module Torque
   module PostgreSQL
+    # :TODO: Create the `add` to load inheritance info
     module SchemaCache
 
       def initialize(*) # :nodoc:
@@ -60,6 +61,13 @@ module Torque
         super
       end
 
+      # A way to manually add models name so it doesn't need the lookup method
+      def add_model_name(table_name, model)
+        return unless data_source_exists?(table_name)
+        model = model.name if model.is_a?(Module)
+        @data_sources_model_names[table_name] = model
+      end
+
       # Get all the tables that the given one inherits from
       def dependencies(table_name)
         reload_inheritance_data!
@@ -108,17 +116,16 @@ module Torque
 
           # Generate all possible combinarions
           conditions = []
-          ns_places.size.downto(1) do |size|
+          range = Torque::PostgreSQL.config.inheritance.inverse_lookup \
+            ? 0.upto(ns_places.size) \
+            : ns_places.size.downto(0)
+          range.each do |size|
             conditions.concat(ns_places.combination(size).to_a)
           end
-
-          # Always add an additional blank condition
-          conditions << []
 
           # Now iterate over
           while (condition = conditions.shift)
             ns_places.each{ |i| pieces[i] = condition.include?(i) ? '::' : '' }
-            puts "#{scope.name}::#{pieces.join}"
             next unless scope.const_defined?(pieces.join)
 
             # Check if the class match the table name

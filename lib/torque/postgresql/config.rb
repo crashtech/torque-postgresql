@@ -3,11 +3,17 @@ module Torque
     include ActiveSupport::Configurable
 
     # Allow nested configurations
+    # :TODO: Rely on `inheritable_copy` to make nested configurations
     config.define_singleton_method(:nested) do |name, &block|
       klass = Class.new(ActiveSupport::Configurable::Configuration).new
       block.call(klass) if block
       send("#{name}=", klass)
     end
+
+    # Set if any information that requires querying and searching or collectiong
+    # information shuld be eager loaded. This automatically changes when rails
+    # same configuration is set to true
+    config.eager_load = false
 
     # Set a list of irregular model name when associated with table names
     config.irregular_models = {}
@@ -60,6 +66,16 @@ module Torque
       # Define the key that is used on auxiliary statements to send extra
       # arguments to format string or send on a proc
       cte.send_arguments_key = :uses
+
+    end
+
+    # Configure inheritance features
+    config.nested(:inheritance) do |inheritance|
+
+      # Define the lookup of models from their given name to be inverted, which
+      # means that they are going to be form the last namespaced one to the
+      # most namespaced one
+      inheritance.inverse_lookup = true
 
     end
 

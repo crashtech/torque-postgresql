@@ -1,28 +1,27 @@
 module Torque
   module PostgreSQL
+    InheritanceError = Class.new(ArgumentError)
+
     module Inheritance
       extend ActiveSupport::Concern
 
-      Error = Class.new(ArgumentError)
-
       # Cast the given object to its correct class
-      # :TODO: gems/activerecord-5.1.6/lib/active_record/persistence.rb
+      # :TODO: gems/activerecord-5.1.6/lib/active_record/persistence.rb:66
       def cast_inheritance
         return self unless self.class.table_name != _record_class
         klass = self.class.casted_dependents[_record_class]
 
         # Raises an error when the record class is not an inheritance of the
         # current class
-        raise Error.new(<<~MSG.squish) if klass.nil?
+        raise InheritanceError.new(<<~MSG.squish) if klass.nil?
           The instance '#{self.inspect}' was not able to be casted to type '#{_record_class}'.
           If this table name doesn't represent a guessable model, please use
           'Torque::PostgreSQL.conf.irregular_models = { '#{_record_class}' => 'ModelName' }'.
         MSG
 
         # The record need to be re-queried to have its attributes loaded
-        # :TODO: Make this work with `find`, this will need the primary key ro be figured out correctly
         # :TODO: Improve this by only loading the necessary extra columns
-        klass.where(id: self.id).first
+        klass.find(self.id)
       end
 
       private
@@ -32,6 +31,17 @@ module Torque
         end
 
       module ClassMethods
+
+        # Manually set the model name associated with tables name in order to
+        # facilitates the identification of inherited records
+        def inherited(subclass)
+          super
+
+          return unless Torque::PostgreSQL.config.eager_load &&
+            !subclass.abstract_class?
+
+          connection.schema_cache.add_model_name(table_name, subclass)
+        end
 
         # Check if the model's table depends on any inheritance
         def physically_inherited?
