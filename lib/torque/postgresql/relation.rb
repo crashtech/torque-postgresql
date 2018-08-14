@@ -1,6 +1,8 @@
-
 require_relative 'relation/distinct_on'
 require_relative 'relation/auxiliary_statement'
+require_relative 'relation/inheritance'
+
+require_relative 'relation/merger'
 
 module Torque
   module PostgreSQL
@@ -8,6 +10,11 @@ module Torque
 
       include DistinctOn
       include AuxiliaryStatement
+      include Inheritance
+
+      SINGLE_VALUE_METHODS = [:cast_records, :from_only]
+      MULTI_VALUE_METHODS = [:distinct_on, :auxiliary_statements]
+      VALUE_METHODS = SINGLE_VALUE_METHODS + MULTI_VALUE_METHODS
 
       # Resolve column definition up to second value.
       # For example, based on Post model:
@@ -23,7 +30,7 @@ module Torque
       def resolve_column(list, base = false)
         base = resolve_base_table(base)
 
-        list.map do |item|
+        Array.wrap(list).map do |item|
           case item
           when String
             ::Arel::Nodes::SqlLiteral.new(klass.send(:sanitize_sql, item.to_s))
@@ -58,5 +65,26 @@ module Torque
     end
 
     ActiveRecord::Relation.include Relation
+
+    warn_level = $VERBOSE
+    $VERBOSE = nil
+
+    ActiveRecord::Relation::SINGLE_VALUE_METHODS  += Relation::SINGLE_VALUE_METHODS
+    ActiveRecord::Relation::MULTI_VALUE_METHODS   += Relation::MULTI_VALUE_METHODS
+    ActiveRecord::Relation::VALUE_METHODS         += Relation::VALUE_METHODS
+    ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES += [:cast_records, :from_only,
+      :distinct_on, :auxiliary_statements]
+
+    Relation::SINGLE_VALUE_METHODS.each do |value|
+      ActiveRecord::QueryMethods::DEFAULT_VALUES[value] = nil \
+        if ActiveRecord::QueryMethods::DEFAULT_VALUES[value].nil?
+    end
+
+    Relation::MULTI_VALUE_METHODS.each do |value|
+      ActiveRecord::QueryMethods::DEFAULT_VALUES[value] ||= \
+        ActiveRecord::QueryMethods::FROZEN_EMPTY_ARRAY
+    end
+
+    $VERBOSE = warn_level
   end
 end

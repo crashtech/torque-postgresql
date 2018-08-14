@@ -3,7 +3,8 @@ module Torque
     module Relation
       module DistinctOn
 
-        attr_accessor :distinct_on_value, :from_only
+        def distinct_on_values; get_value(:distinct_on); end
+        def distinct_on_values=(value); set_value(:distinct_on, value); end
 
         # Specifies whether the records should be unique or not by a given set
         # of fields. For example:
@@ -22,22 +23,7 @@ module Torque
 
         # Like #distinct_on, but modifies relation in place.
         def distinct_on!(*value)
-          self.distinct_on_value = value
-          self
-        end
-
-        # Specify that the results should come only from the table that the
-        # entries were created on. For example:
-        #
-        #   Activity.only
-        #   # Does not return entries for inherited tables
-        def only
-          spawn.only!
-        end
-
-        # Like #only, but modifies relation in place.
-        def only!
-          self.from_only = true
+          self.distinct_on_values = value
           self
         end
 
@@ -46,10 +32,8 @@ module Torque
           # Hook arel build to add the distinct on clause
           def build_arel
             arel = super
-            arel.only if self.from_only
-
-            value = self.distinct_on_value
-            arel.distinct_on(resolve_column(value)) unless value.nil?
+            value = self.distinct_on_values
+            arel.distinct_on(resolve_column(value)) if value.present?
             arel
           end
 

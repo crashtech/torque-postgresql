@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 17
+  version = 18
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -87,9 +87,9 @@ begin
       t.text     "sample"
     end
 
-    create_table "activity_blanks", force: :cascade, inherits: :activities
+    # create_table "activity_blanks", force: :cascade, inherits: :activities
 
-    create_table "activity_images", force: :cascade, inherits: [:activities, :images]
+    # create_table "activity_images", force: :cascade, inherits: [:activities, :images]
 
     add_foreign_key "posts", "authors"
   end

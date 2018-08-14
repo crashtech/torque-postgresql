@@ -77,6 +77,16 @@ module Torque
       # most namespaced one
       inheritance.inverse_lookup = true
 
+      # Determines the name of the column used to collect the table of each
+      # record. When the table has inheritance tables, this column will return
+      # the name of the table that actually holds the record
+      inheritance.record_class_column_name = :_record_class
+
+      # Determines the name of the column used when identifying that the loaded
+      # records should be casted the its correctly model. This will always be
+      # TRUE when used with `cast_records`
+      inheritance.auto_cast_column_name = :_auto_cast
+
     end
 
   end

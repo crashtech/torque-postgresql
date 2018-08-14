@@ -23,9 +23,4 @@ require 'torque/postgresql/relation'
 require 'torque/postgresql/schema_cache'
 require 'torque/postgresql/schema_dumper'
 
-gdep = Gem::Dependency.new('arel', '~> 9.0.0')
-unless gdep.matching_specs.sort_by(&:version).last
-  require 'torque/postgresql/arel/visitors'
-end
-
 require 'torque/postgresql/railtie' if defined?(Rails)

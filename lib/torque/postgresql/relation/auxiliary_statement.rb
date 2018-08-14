@@ -3,7 +3,8 @@ module Torque
     module Relation
       module AuxiliaryStatement
 
-        attr_accessor :auxiliary_statements
+        def auxiliary_statements_values; get_value(:auxiliary_statements); end
+        def auxiliary_statements_values=(value); set_value(:auxiliary_statements, value); end
 
         # Set use of an auxiliary statement already configurated on the model
         def with(*args)
@@ -13,46 +14,50 @@ module Torque
         # Like #with, but modifies relation in place.
         def with!(*args)
           options = args.extract_options!
-          self.auxiliary_statements ||= {}
           args.each do |table|
-            instance = instantiate(table, self, options)
+            instance = table.is_a?(PostgreSQL::AuxiliaryStatement) \
+              ? table.class.new(options) \
+              : PostgreSQL::AuxiliaryStatement.instantiate(table, self, options)
             instance.ensure_dependencies!(self)
-            self.auxiliary_statements[table] = instance
+            self.auxiliary_statements_values |= [instance]
           end
 
           self
         end
 
+        alias_method :auxiliary_statements, :with
+        alias_method :auxiliary_statements!, :with!
+
         # Get all auxiliary statements bound attributes and the base bound
         # attributes as well
         def bound_attributes
-          return super unless self.auxiliary_statements.present?
-          bindings = self.auxiliary_statements.values.map(&:bound_attributes)
+          return super unless self.auxiliary_statements_values.present?
+          bindings = self.auxiliary_statements_values.map(&:bound_attributes)
           (bindings + super).flatten
         end
 
         private
-          delegate :instantiate, to: PostgreSQL::AuxiliaryStatement
 
           # Hook arel build to add the distinct on clause
           def build_arel
             arel = super
+            build_auxiliary_statements(arel)
+            arel
+          end
 
-            if self.auxiliary_statements.present?
-              columns = []
-              subqueries = self.auxiliary_statements.values.map do |klass|
-                columns << klass.columns
-                klass.build_arel(arel, self)
-              end
+          # Build all necessary data for auxiliary statements
+          def build_auxiliary_statements(arel)
+            return unless self.auxiliary_statements_values.present?
 
-              arel.with(subqueries.flatten)
-              if select_values.empty? && columns.any?
-                columns.unshift table[::Arel.star]
-                arel.projections = columns
-              end
+            columns = []
+            subqueries = self.auxiliary_statements_values.map do |klass|
+              columns << klass.columns
+              klass.build_arel(arel, self)
             end
 
-            arel
+            columns.flatten!
+            arel.with(subqueries.flatten)
+            arel.project(*columns) if columns.any?
           end
 
           # Throw an error showing that an auxiliary statement of the given

@@ -4,7 +4,7 @@ module Torque
       extend ActiveSupport::Concern
 
       module ClassMethods
-        delegate :distinct_on, :with, :only, to: :all
+        delegate :distinct_on, :with, :from_only, :cast_records, to: :all
 
         # Wenever it's inherited, add a new list of auxiliary statements
         # It also adds an auxiliary statement to load inherited records' relname
@@ -14,20 +14,33 @@ module Torque
           subclass.class_attribute(:auxiliary_statements_list)
           subclass.auxiliary_statements_list = Hash.new
 
+          record_class = Torque::PostgreSQL.config.inheritance.record_class_column_name
+
           # Define helper methods to return the class of the given records
-          subclass.auxiliary_statement :_record_class do |cte|
-            cte.query :pg_class, 'SELECT "oid", "relname" AS "_record_class" FROM "pg_class"'
-            cte.attributes col(:_record_class) => :_record_class
+          subclass.auxiliary_statement record_class do |cte|
+            pg_class = ::Arel::Table.new('pg_class')
+            arel_query = ::Arel::SelectManager.new(pg_class)
+            arel_query.project(pg_class['oid'], pg_class['relname'].as(record_class.to_s))
+
+            cte.query 'pg_class', arel_query.to_sql
+            cte.attributes col(record_class) => record_class
             cte.join tableoid: :oid
           end
 
-          subclass.dynamic_attribute(:_record_class) do
-            self.class.connection.query_value(<<~SQL)
-              SELECT "relname" FROM "pg_class"
-              INNER JOIN "#{subclass.table_name}" "source"
-                ON ("pg_class"."oid" = "source"."tableoid")
-              WHERE "source"."#{subclass.primary_key}" = '#{id}'
-            SQL
+          # Define the dynamic attribute that returns the same information as
+          # the one provided by the auxiliary statement
+          subclass.dynamic_attribute(record_class) do
+            next self.class.table_name unless self.class.physically_inheritances?
+
+            pg_class = ::Arel::Table.new('pg_class')
+            source = ::Arel::Table.new(subclass.table_name, as: 'source')
+
+            query = ::Arel::SelectManager.new(pg_class)
+            query.join(source).on(pg_class['oid'].eq(source['tableoid']))
+            query.where(source[subclass.primary_key].eq(id))
+            query.project(pg_class['relname'])
+
+            self.class.connection.query_value(query.to_sql)
           end
         end
 

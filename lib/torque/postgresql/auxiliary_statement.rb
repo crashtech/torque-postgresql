@@ -42,6 +42,11 @@ module Torque
             obj.ancestors.include?(ActiveRecord::Base)
         end
 
+        # Identify if the query set may be used as arel
+        def arel_query?(obj)
+          !obj.nil? && obj.is_a?(::Arel::SelectManager)
+        end
+
         # Set a configuration block, if the class is already set up, just clean
         # the query and wait it to be setup again
         def configurator(block)
@@ -214,11 +219,14 @@ module Torque
       # Ensure that all the dependencies are loaded in the base relation
       def ensure_dependencies!(base)
         requires.each do |dependent|
-          next if base.auxiliary_statements.key?(dependent)
+          dependent_klass = base.model.auxiliary_statements_list[dependent]
+          next if base.auxiliary_statements_values.any? do |cte|
+            cte.is_a?(dependent_klass)
+          end
 
           instance = AuxiliaryStatement.instantiate(dependent, base)
           instance.ensure_dependencies!(base)
-          base.auxiliary_statements[dependent] = instance
+          base.auxiliary_statements_values += [instance]
         end
       end
 
@@ -245,7 +253,7 @@ module Torque
           uses = @uses
 
           # Call a proc to get the query
-          if query.respond_to?(:call)
+          if query.methods.include?(:call)
             query = query.call(*uses)
             uses = []
           end

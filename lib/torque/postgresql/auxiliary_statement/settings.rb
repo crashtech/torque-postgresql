@@ -35,10 +35,17 @@ module Torque
 
         # There are two ways of setting the query:
         # - A simple relation based on a Model
+        # - A Arel-based select manager
         # - A string or a proc that requires the table name as first argument
         def query(value = nil, command = nil)
           return @query if value.nil?
           return @query = value if relation_query?(value)
+
+          if value.is_a?(::Arel::SelectManager)
+            @query = value
+            @query_table = value.source.left.name
+            return
+          end
 
           valid_type = command.respond_to?(:call) || command.is_a?(String)
           raise ArgumentError, <<-MSG.strip.gsub(/\n +/, ' ') if command.nil?
