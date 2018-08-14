@@ -72,7 +72,7 @@ RSpec.describe 'TableInheritance' do
     end
   end
 
-  context 'on schema' do
+  xcontext 'on schema' do
     it 'dumps single inheritance with body' do
       dump_io = StringIO.new
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
@@ -108,7 +108,7 @@ RSpec.describe 'TableInheritance' do
     end
   end
 
-  context 'on inheritance' do
+  xcontext 'on inheritance' do
     subject { ActiveRecord::Base.connection.schema_cache }
     let(:scenario) { {
       'M' => %w(N),
@@ -143,7 +143,7 @@ RSpec.describe 'TableInheritance' do
     end
   end
 
-  context 'on relation' do
+  xcontext 'on relation' do
     let(:base) { Activity }
     let(:child) { ActivityBook }
 
