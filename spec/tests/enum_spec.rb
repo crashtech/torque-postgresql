@@ -340,6 +340,23 @@ RSpec.describe 'Enum' do
     end
   end
 
+  context 'on uninitialized model' do
+    before(:all) do
+      Torque::PostgreSQL.config.enum.initializer = true
+    end
+
+    subject { User }
+    it 'has no roles method' do
+      expect(subject).to_not respond_to(:roles)
+    end
+
+    it 'can load roles on the fly' do
+      result = subject.roles
+      expect(result).to be_a(Array)
+      expect(result).to be_eql(Enum::Roles.values)
+    end
+  end
+
   context 'on model' do
     before(:all) do
       Torque::PostgreSQL.config.enum.initializer = true

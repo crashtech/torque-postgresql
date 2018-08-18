@@ -18,11 +18,13 @@ module Torque
 
       module ClassMethods
 
-        def textxxx
-          "Here!"
-        end
-
         private
+
+          # If the attributes are not loaded,
+          def method_missing(method_name, *args, &block)
+            return super unless define_attribute_methods
+            self.send(method_name, *args, &block)
+          end
 
           # Use local type map to identify attribute decorator
           def define_attribute_method(attribute)

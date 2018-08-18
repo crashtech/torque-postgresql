@@ -36,7 +36,7 @@ module Torque
             @values ||= self == Enum ? nil : begin
               conn_name = connection_specification_name
               conn = connection(conn_name)
-              conn.enum_values(type_name)
+              conn.enum_values(type_name).freeze
             end
           end
 
