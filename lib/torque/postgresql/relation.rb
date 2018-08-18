@@ -62,6 +62,22 @@ module Torque
         end
       end
 
+      private
+
+        # Compatibility method with 5.0
+        unless ActiveRecord::Relation.method_defined?(:get_value)
+          def get_value(name)
+            @values[name] || ActiveRecord::QueryMethods::FROZEN_EMPTY_ARRAY
+          end
+        end
+
+        # Compatibility method with 5.0
+        unless ActiveRecord::Relation.method_defined?(:set_value)
+          def set_value(name, value)
+            assert_mutability!
+            @values[name] = value
+          end
+        end
     end
 
     # Include the methos here provided and then change the constants to ensure

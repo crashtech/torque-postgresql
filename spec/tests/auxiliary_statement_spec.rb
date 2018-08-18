@@ -23,6 +23,10 @@ RSpec.describe 'AuxiliaryStatement' do
       result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id" FROM "comments")'
       result << ' SELECT "users".*, "comments"."comment_content" FROM "users"'
       result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+
+      puts subject.with(:comments).arel.to_sql
+      puts result
+
       expect(subject.with(:comments).arel.to_sql).to eql(result)
     end
 

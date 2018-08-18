@@ -52,14 +52,14 @@ module Torque
           # Hook arel build to add any necessary table
           def build_arel
             arel = super
-            arel.only if self.from_only_value
+            arel.only if self.from_only_value === true
             build_inheritances(arel)
             arel
           end
 
           # Build all necessary data for inheritances
           def build_inheritances(arel)
-            return unless self.cast_records_value
+            return unless self.cast_records_value === true
 
             columns = build_inheritances_joins(arel)
             columns = columns.map do |column, arel_tables|

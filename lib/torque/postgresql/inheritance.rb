@@ -67,7 +67,7 @@ module Torque
         # Get the list of all tables directly or indirectly dependent of the
         # current one
         def inheritance_dependents
-          connection.schema_cache.associations(table_name)
+          connection.schema_cache.associations(table_name) || []
         end
 
         # Check whether the model's table has directly or indirectly dependents
