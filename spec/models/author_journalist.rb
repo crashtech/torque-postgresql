@@ -1,0 +1,2 @@
+class AuthorJournalist < Author
+end

@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 18
+  version = 22
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -28,6 +28,7 @@ begin
 
     create_table "authors", force: :cascade do |t|
       t.string   "name"
+      t.string   "type"
       t.enum     "specialty", subtype: :specialties
     end
 
@@ -74,18 +75,16 @@ begin
     end
 
     create_table "activity_books", force: :cascade, inherits: :activities do |t|
-      t.string   "title"
       t.text     "description"
       t.string   "url"
     end
 
-    create_table "activity_posts", force: :cascade, inherits: :activities do |t|
+    create_table "activity_posts", force: :cascade, inherits: [:activities, :images] do |t|
       t.integer  "post_id"
+      t.string   "url"
     end
 
-    create_table "activity_post_samples", force: :cascade, inherits: :activity_posts do |t|
-      t.text     "sample"
-    end
+    create_table "activity_post_samples", force: :cascade, inherits: :activity_posts
 
     # create_table "activity_blanks", force: :cascade, inherits: :activities
 

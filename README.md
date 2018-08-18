@@ -11,9 +11,9 @@
 * [TODO](https://github.com/crashtech/torque-postgresql/wiki/TODO)
 
 # Description
-`torque-postgresql` is a plugin that enhance Ruby on Rails enabling easy access to existing PostgreSQL advanced resources, such as data types and queries statements. Its features are design to be as similar as Rails architecture and they work as smooth as possible.
+`torque-postgresql` is a plugin that enhances Ruby on Rails enabling easy access to existing PostgreSQL advanced resources, such as data types and queries statements. Its features are designed to be as similar as Rails architecture and they work as smooth as possible.
 
-100% plug-and-play, with optional configurations so that can be adapted to your's project design pattern.
+100% plug-and-play, with optional configurations, so that can be adapted to your project's design pattern.
 
 # Installation
 
@@ -28,6 +28,12 @@ Also, run:
 $ bundle
 ```
 
+Or for non-Gemfile related usage, simply:
+
+```
+gem intall orque-postgresql
+```
+
 # Usage
 These are the currently available features:
 
@@ -40,8 +46,10 @@ These are the currently available features:
 
 ## Querying
 
+* [Dynamic Attributes](https://github.com/crashtech/torque-postgresql/wiki/Dynamic-Attributes)
 * [Distinct On](https://github.com/crashtech/torque-postgresql/wiki/Distinct-On)
 * [Auxiliary Statements](https://github.com/crashtech/torque-postgresql/wiki/Auxiliary-Statements)
+* [Inherited Tables](https://github.com/crashtech/torque-postgresql/wiki/Inherited-Tables)
 
 # How to Contribute
 

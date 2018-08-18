@@ -188,10 +188,10 @@ module Torque
       # Start a new auxiliary statement giving extra options
       def initialize(*args)
         options = args.extract_options!
-        uses_key = Torque::PostgreSQL.config.auxiliary_statement.send_arguments_key
+        args_key = Torque::PostgreSQL.config.auxiliary_statement.send_arguments_key
 
         @join = options.fetch(:join, {})
-        @uses = options.fetch(uses_key, [])
+        @args = options.fetch(args_key, {})
         @select = options.fetch(:select, {})
         @join_type = options.fetch(:join_type, join_type)
       end
@@ -250,18 +250,19 @@ module Torque
         def mount_query
           klass = self.class
           query = klass.query
-          uses = @uses
+          args = @args
 
           # Call a proc to get the query
           if query.methods.include?(:call)
-            query = query.call(*uses)
-            uses = []
+            call_args = query.try(:arity) === 0 ? [] : [OpenStruct.new(args)]
+            query = query.call(*call_args)
+            args = []
           end
 
           # Prepare the query depending on its type
           if query.is_a?(String)
-            uses.map!(&klass.parent.connection.method(:quote))
-            ::Arel::Nodes::SqlLiteral.new("(#{query})" % uses)
+            args = args.map{ |k, v| [k, klass.parent.connection.quote(v)] }.to_h
+            ::Arel::Nodes::SqlLiteral.new("(#{query})" % args)
           elsif relation_query?(query)
             query.select(*select_columns).arel
           else

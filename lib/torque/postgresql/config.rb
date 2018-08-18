@@ -65,7 +65,7 @@ module Torque
 
       # Define the key that is used on auxiliary statements to send extra
       # arguments to format string or send on a proc
-      cte.send_arguments_key = :uses
+      cte.send_arguments_key = :args
 
     end
 
@@ -83,8 +83,8 @@ module Torque
       inheritance.record_class_column_name = :_record_class
 
       # Determines the name of the column used when identifying that the loaded
-      # records should be casted the its correctly model. This will always be
-      # TRUE when used with +cast_records+
+      # records should be casted to its correctly model. This will be TRUE for
+      # the records mentioned on `cast_records`
       inheritance.auto_cast_column_name = :_auto_cast
 
     end

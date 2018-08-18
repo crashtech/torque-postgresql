@@ -7,13 +7,14 @@ require_relative 'relation/merger'
 module Torque
   module PostgreSQL
     module Relation
+      extend ActiveSupport::Concern
 
       include DistinctOn
       include AuxiliaryStatement
       include Inheritance
 
-      SINGLE_VALUE_METHODS = [:cast_records, :from_only]
-      MULTI_VALUE_METHODS = [:distinct_on, :auxiliary_statements]
+      SINGLE_VALUE_METHODS = [:itself_only]
+      MULTI_VALUE_METHODS = [:distinct_on, :auxiliary_statements, :cast_records]
       VALUE_METHODS = SINGLE_VALUE_METHODS + MULTI_VALUE_METHODS
 
       # Resolve column definition up to second value.
@@ -78,6 +79,22 @@ module Torque
             @values[name] = value
           end
         end
+
+      module ClassMethods
+        # Easy and storable way to access the name used to get the record table
+        # name when using inheritance tables
+        def _record_class_attribute
+          @@record_class ||= Torque::PostgreSQL.config
+            .inheritance.record_class_column_name.to_sym
+        end
+
+        # Easy and storable way to access the name used to get the indicater of
+        # auto casting inherited records
+        def _auto_cast_attribute
+          @@auto_cast ||= Torque::PostgreSQL.config
+            .inheritance.auto_cast_column_name.to_sym
+        end
+      end
     end
 
     # Include the methos here provided and then change the constants to ensure
@@ -90,7 +107,7 @@ module Torque
     ActiveRecord::Relation::SINGLE_VALUE_METHODS  += Relation::SINGLE_VALUE_METHODS
     ActiveRecord::Relation::MULTI_VALUE_METHODS   += Relation::MULTI_VALUE_METHODS
     ActiveRecord::Relation::VALUE_METHODS         += Relation::VALUE_METHODS
-    ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES += [:cast_records, :from_only,
+    ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES += [:cast_records, :itself_only,
       :distinct_on, :auxiliary_statements]
 
     if ActiveRecord::QueryMethods.const_defined?('DEFAULT_VALUES')

@@ -23,10 +23,6 @@ RSpec.describe 'AuxiliaryStatement' do
       result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id" FROM "comments")'
       result << ' SELECT "users".*, "comments"."comment_content" FROM "users"'
       result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
-
-      puts subject.with(:comments).arel.to_sql
-      puts result
-
       expect(subject.with(:comments).arel.to_sql).to eql(result)
     end
 
@@ -242,7 +238,7 @@ RSpec.describe 'AuxiliaryStatement' do
 
       it 'accepts arguments to format the query' do
         klass.send(:auxiliary_statement, :comments) do |cte|
-          cte.query :comments, 'SELECT * FROM comments WHERE active = %s'
+          cte.query :comments, 'SELECT * FROM comments WHERE active = %{active}'
           cte.attributes content: :comment
           cte.join id: :user_id
         end
@@ -250,7 +246,7 @@ RSpec.describe 'AuxiliaryStatement' do
         result = 'WITH "comments" AS (SELECT * FROM comments WHERE active = \'t\')'
         result << ' SELECT "users".*, "comments"."comment" FROM "users"'
         result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
-        expect(subject.with(:comments, uses: [true]).arel.to_sql).to eql(result)
+        expect(subject.with(:comments, args: {active: true}).arel.to_sql).to eql(result)
       end
 
       it 'raises an error when join columns are not given' do
@@ -289,7 +285,7 @@ RSpec.describe 'AuxiliaryStatement' do
       end
 
       it 'performs correctly for anything that has a call method' do
-        obj = Struct.new(:call).new('SELECT * FROM comments')
+        obj = Struct.new(:call, :arity).new('SELECT * FROM comments', 0)
         klass.send(:auxiliary_statement, :comments) do |cte|
           cte.query :comments, obj
           cte.attributes content: :comment
@@ -317,7 +313,7 @@ RSpec.describe 'AuxiliaryStatement' do
 
       it 'performs correctly when the proc requires arguments' do
         klass.send(:auxiliary_statement, :comments) do |cte|
-          cte.query :comments, -> (id) { Comment.where(id: id) }
+          cte.query :comments, -> (args) { Comment.where(id: args.id) }
           cte.attributes content: :comment
           cte.join id: :user_id
         end
@@ -327,7 +323,7 @@ RSpec.describe 'AuxiliaryStatement' do
         result << ' FROM "comments" WHERE "comments"."id" = $1)'
         result << ' SELECT "users".*, "comments"."comment" FROM "users"'
         result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
-        expect(subject.with(:comments, uses: [1]).arel.to_sql).to eql(result)
+        expect(subject.with(:comments, args: {id: 1}).arel.to_sql).to eql(result)
       end
 
       it 'raises an error when join columns are not given' do

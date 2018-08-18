@@ -4,7 +4,7 @@ module Torque
       extend ActiveSupport::Concern
 
       module ClassMethods
-        delegate :distinct_on, :with, :from_only, :cast_records, to: :all
+        delegate :distinct_on, :with, :itself_only, :cast_records, to: :all
 
         # Wenever it's inherited, add a new list of auxiliary statements
         # It also adds an auxiliary statement to load inherited records' relname
@@ -13,8 +13,7 @@ module Torque
 
           subclass.class_attribute(:auxiliary_statements_list)
           subclass.auxiliary_statements_list = Hash.new
-
-          record_class = Torque::PostgreSQL.config.inheritance.record_class_column_name
+          record_class = ActiveRecord::Relation._record_class_attribute
 
           # Define helper methods to return the class of the given records
           subclass.auxiliary_statement record_class do |cte|
@@ -34,13 +33,14 @@ module Torque
 
             pg_class = ::Arel::Table.new('pg_class')
             source = ::Arel::Table.new(subclass.table_name, as: 'source')
+            quoted_id = ::Arel::Nodes::Quoted.new(self.class.connection.quote(id))
 
             query = ::Arel::SelectManager.new(pg_class)
             query.join(source).on(pg_class['oid'].eq(source['tableoid']))
-            query.where(source[subclass.primary_key].eq(id))
+            query.where(source[subclass.primary_key].eq(quoted_id))
             query.project(pg_class['relname'])
 
-            self.class.connection.query_value(query.to_sql)
+            self.class.connection.select_value(query)
           end
         end
 
@@ -74,8 +74,12 @@ module Torque
               return read_attribute(name) if has_attribute?(name)
               result = self.instance_exec(&block)
 
+              type_klass = ActiveRecord::Type.respond_to?(:default_value) \
+                ? ActiveRecord::Type.default_value \
+                : self.class.connection.type_map.send(:default_value)
+
               @attributes[name.to_s] = ActiveRecord::Relation::QueryAttribute.new(
-                name.to_s, result, ActiveRecord::Type.default_value,
+                name.to_s, result, type_klass,
               )
 
               read_attribute(name)

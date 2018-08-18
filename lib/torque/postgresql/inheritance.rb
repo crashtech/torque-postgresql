@@ -6,8 +6,8 @@ module Torque
       extend ActiveSupport::Concern
 
       # Cast the given object to its correct class
-      def cast_inheritance
-        record_class_value = send(self.class.record_class)
+      def cast_record
+        record_class_value = send(self.class._record_class_attribute)
 
         return self unless self.class.table_name != record_class_value
         klass = self.class.casted_dependents[record_class_value]
@@ -26,25 +26,7 @@ module Torque
 
       module ClassMethods
 
-        # Easy and storable way to access the name used to get the record table
-        # name when using inheritance tables
-        def record_class
-          @@record_class ||= Torque::PostgreSQL.config
-            .inheritance.record_class_column_name.to_sym
-        end
-
-        # Easy and storable way to access the name used to get the indicater of
-        # auto casting inherited records
-        def auto_cast
-          @@auto_cast ||= Torque::PostgreSQL.config
-            .inheritance.auto_cast_column_name.to_sym
-        end
-
-        # Easy ans storable way have the arel column that identifies autp cast
-        def auto_caster_marker
-          @@auto_caster_marker ||= ::Arel::Nodes::SqlLiteral.new('TRUE')
-            .as(auto_cast.to_s)
-        end
+        delegate :_auto_cast_attribute, :_record_class_attribute, to: ActiveRecord::Relation
 
         # Manually set the model name associated with tables name in order to
         # facilitates the identification of inherited records
@@ -55,6 +37,15 @@ module Torque
             !subclass.abstract_class?
 
           connection.schema_cache.add_model_name(table_name, subclass)
+        end
+
+        # Get a full list of all attributes from a model and all its dependents
+        def inheritance_merged_attributes
+          @inheritance_merged_attributes ||= begin
+            list = attribute_names
+            list += casted_dependents.values.map(&:attribute_names)
+            list.flatten.to_set.freeze
+          end
         end
 
         # Check if the model's table depends on any inheritance
@@ -104,7 +95,7 @@ module Torque
         # Raises an error message saying that the giver record class was not
         # able to be casted since the model was not identified
         def raise_unable_to_cast(record_class_value)
-          raise InheritanceError.new(<<~MSG.squish) if klass.nil?
+          raise InheritanceError.new(<<~MSG.squish)
             An record was not able to be casted to type '#{record_class_value}'.
             If this table name doesn't represent a guessable model,
             please use 'Torque::PostgreSQL.conf.irregular_models =
@@ -115,12 +106,23 @@ module Torque
         private
 
           def discriminate_class_for_record(record) # :nodoc:
-            return super unless record.key?(record_class.to_s) &&
-              record.key?(auto_cast.to_s) && record[record_class.to_s] != table_name
+            auto_cast = _auto_cast_attribute.to_s
+            record_class = _record_class_attribute.to_s
 
-            klass = casted_dependents[record[record_class.to_s]]
-            raise_unable_to_cast(record[record_class.to_s]) if klass.nil?
+            return super unless record.key?(record_class) &&
+              record[auto_cast] === true && record[record_class] != table_name
+
+            klass = casted_dependents[record[record_class]]
+            raise_unable_to_cast(record[record_class]) if klass.nil?
+            filter_attributes_for_cast(record, klass)
             klass
+          end
+
+          # Filter the record attributes to be loaded to not included those from
+          # another inherited dependent
+          def filter_attributes_for_cast(record, klass)
+            remove_attrs = (inheritance_merged_attributes - klass.attribute_names)
+            record.reject!{ |attribute| remove_attrs.include?(attribute) }
           end
 
       end

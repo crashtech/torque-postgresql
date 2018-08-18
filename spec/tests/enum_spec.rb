@@ -348,9 +348,7 @@ RSpec.describe 'Enum' do
   end
 
   context 'on uninitialized model' do
-    before(:all) do
-      Torque::PostgreSQL.config.enum.initializer = true
-    end
+    before(:each) { Torque::PostgreSQL.config.enum.initializer = true }
 
     subject { User }
     it 'has no roles method' do
@@ -365,7 +363,7 @@ RSpec.describe 'Enum' do
   end
 
   context 'on model' do
-    before(:all) do
+    before :each do
       Torque::PostgreSQL.config.enum.initializer = true
       User.send(:define_attribute_method, 'role')
       Torque::PostgreSQL.config.enum.initializer = false
@@ -464,7 +462,7 @@ RSpec.describe 'Enum' do
     end
 
     context 'with prefix' do
-      before(:all) { Author.enum :specialty, prefix: 'in' }
+      before(:each) { Author.enum :specialty, prefix: 'in' }
       subject { Author }
       let(:instance) { FactoryGirl.build(:author) }
 
@@ -481,7 +479,7 @@ RSpec.describe 'Enum' do
     end
 
     context 'with suffix, only, and except' do
-      before(:all) { Author.enum :specialty, suffix: 'expert', only: %w(books movies), except: 'books' }
+      before(:each) { Author.enum :specialty, suffix: 'expert', only: %w(books movies), except: 'books' }
       subject { Author }
       let(:instance) { FactoryGirl.build(:author) }
 

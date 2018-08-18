@@ -63,8 +63,7 @@ module Torque
 
       # A way to manually add models name so it doesn't need the lookup method
       def add_model_name(table_name, model)
-        return unless data_source_exists?(table_name)
-        model = model.name if model.is_a?(Module)
+        return unless data_source_exists?(table_name) && model.is_a?(Class)
         @data_sources_model_names[table_name] = model
       end
 
@@ -179,9 +178,11 @@ module Torque
         # Use this method to also load any irregular model name. This is smart
         # enought to only load the sources present on this instance
         def prepare_data_sources
-          @data_sources_model_names = begin
-            Torque::PostgreSQL.config.irregular_models.slice(@data_sources.keys)
-          end
+          super
+          @data_sources_model_names = Torque::PostgreSQL.config
+            .irregular_models.slice(*@data_sources.keys).map do |table_name, model_name|
+            [table_name, model_name.constantize]
+          end.to_h
         end
 
     end
