@@ -142,6 +142,13 @@ RSpec.describe 'Enum' do
       expect(subject.values).to be_eql(values)
     end
 
+    it 'can return a sample value' do
+      expect(Enum).to respond_to(:sample)
+      expect(Enum::ContentStatus).to respond_to(:sample)
+      expect(Enum::ContentStatus.sample).to satisfy { |v| values.include?(v) }
+      expect(Enum.sample(:content_status)).to satisfy { |v| values.include?(v) }
+    end
+
     it 'values can be iterated by using each direct on class' do
       expect(subject).to respond_to(:each)
       expect(subject.each).to be_a(Enumerator)

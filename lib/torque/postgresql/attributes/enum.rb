@@ -227,8 +227,14 @@ module Torque
         defined_enums[attribute] = subtype.klass
       end
 
+      # Define a method to find yet to define constants
       Torque::PostgreSQL.config.enum.namespace.define_singleton_method(:const_missing) do |name|
         Enum.lookup(name)
+      end
+
+      # Define a helper method to get a sample value
+      Torque::PostgreSQL.config.enum.namespace.define_singleton_method(:sample) do |name|
+        Enum.lookup(name).sample
       end
     end
   end
