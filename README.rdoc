@@ -1,0 +1,74 @@
+= Torque PostgreSQL -- Add support to complex resources of PostgreSQL, like data
+types, user-defined types and auxiliary statements (CTE)
+
+This is a plugin that enhance Ruby on Rails enabling easy access to existing
+PostgreSQL advanced resources, such as data types and queries statements. Its
+features are design to be as similar as Rails architecture and they work as
+smooth as possible.
+
+100% plug-and-play, with optional configurations so that can be adapted to
+your's project design pattern.
+
+A short rundown of some of the major features:
+
+* Enum type manager
+
+It creates a separated class to hold each enum set that can be used by multiple
+models, it also keeps the database consistent. The enum type is known to have
+better performance against string- and integer-like enums.
+{PostgreSQL Docs}[https://www.postgresql.org/docs/9.2/static/datatype-enum.html]
+
+   create_enum :roles, %i(visitor manager admin)
+
+   add_column :users, :role, :roles
+
+   Enum::Roles.admin
+
+   Users.roles
+
+  {Learn more}[link:classes/Torque/PostgreSQL/Attributes/Enum.html]
+
+* Distinct On
+
+MySQL-like group by statement on queries. It keeps only the first row of each
+set of rows where the given expressions evaluate to equal.
+{PostgreSQL Docs}[https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT]
+
+   User.distinct_on(:name).all
+
+  {Learn more}[link:classes/Torque/PostgreSQL/Relation/DistinctOn.html]
+
+* Auxiliary Statements
+
+Provides a way to write auxiliary statements for use in a larger query. It's
+reconfigured on the model, and then can be used during querying process.
+{PostgreSQL Docs}[https://www.postgresql.org/docs/9.1/static/queries-with.html]
+
+   class User < ActiveRecord::Base
+     auxiliary_statement :last_comment do |cte|
+       cte.query Comment.distinct_on(:user_id).order(:user_id, id: :desc)
+       cte.attributes content: :last_comment_content
+     end
+   end
+
+   user = User.with(:last_comment).first
+
+  {Learn more}[link:classes/Torque/PostgreSQL/AuxiliaryStatement.html]
+
+
+== Download and installation
+
+The latest version of Torque PostgreSQL can be installed with RubyGems:
+
+  $ gem install torque-postgresql
+
+Source code can be downloaded direct from the GitHub repository:
+
+* https://github.com/crashtech/torque-postgresql
+
+
+== License
+
+Torque PostgreSQL is released under the MIT license:
+
+* http://www.opensource.org/licenses/MIT

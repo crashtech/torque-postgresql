@@ -3,7 +3,9 @@ module Torque
     module Relation
       module DistinctOn
 
+        # :nodoc:
         def distinct_on_values; get_value(:distinct_on); end
+        # :nodoc:
         def distinct_on_values=(value); set_value(:distinct_on, value); end
 
         # Specifies whether the records should be unique or not by a given set

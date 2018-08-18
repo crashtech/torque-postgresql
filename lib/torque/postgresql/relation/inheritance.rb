@@ -3,10 +3,14 @@ module Torque
     module Relation
       module Inheritance
 
+        # :nodoc:
         def cast_records_value; get_value(:cast_records); end
+        # :nodoc:
         def cast_records_value=(value); set_value(:cast_records, value); end
 
+        # :nodoc:
         def from_only_value; get_value(:from_only); end
+        # :nodoc:
         def from_only_value=(value); set_value(:from_only, value); end
 
         delegate :quote_table_name, :quote_column_name, to: :connection

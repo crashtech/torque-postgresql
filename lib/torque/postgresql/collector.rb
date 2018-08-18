@@ -2,6 +2,8 @@ module Torque
   module PostgreSQL
     module Collector
 
+      # This classe helps to collect data in different ways. Used to configure
+      # auxiliary statements
       def self.new(*args)
         klass = Class.new
 

@@ -2,7 +2,7 @@ module Torque
   module PostgreSQL
     module SchemaDumper
 
-      def dump(stream)
+      def dump(stream) # :nodoc:
         @connection.dump_mode!
         super
 
@@ -10,14 +10,14 @@ module Torque
         stream
       end
 
-      def extensions(stream)
+      def extensions(stream) # :nodoc:
         super
         user_defined_types(stream)
       end
 
       private
 
-        def tables(stream)
+        def tables(stream) # :nodoc:
           inherited_tables = @connection.inherited_tables
           sorted_tables = @connection.data_sources.sort - @connection.views
 
@@ -55,6 +55,7 @@ module Torque
           end
         end
 
+        # Dump user defined types like enum
         def user_defined_types(stream)
           types = @connection.user_defined_types
           return unless types.any?
@@ -71,6 +72,7 @@ module Torque
           stream.puts
         end
 
+        # Dump enum custom type
         def enum(name, stream)
           values = @connection.enum_values(name).map { |v| "\"#{v}\"" }
           stream.puts "  create_enum \"#{name}\", [#{values.join(', ')}], force: :cascade"

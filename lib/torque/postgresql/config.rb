@@ -3,7 +3,7 @@ module Torque
     include ActiveSupport::Configurable
 
     # Allow nested configurations
-    # :TODO: Rely on `inheritable_copy` to make nested configurations
+    # :TODO: Rely on +inheritable_copy+ to make nested configurations
     config.define_singleton_method(:nested) do |name, &block|
       klass = Class.new(ActiveSupport::Configurable::Configuration).new
       block.call(klass) if block
@@ -84,7 +84,7 @@ module Torque
 
       # Determines the name of the column used when identifying that the loaded
       # records should be casted the its correctly model. This will always be
-      # TRUE when used with `cast_records`
+      # TRUE when used with +cast_records+
       inheritance.auto_cast_column_name = :_auto_cast
 
     end

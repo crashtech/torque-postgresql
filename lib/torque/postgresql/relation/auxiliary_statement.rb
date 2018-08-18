@@ -3,7 +3,9 @@ module Torque
     module Relation
       module AuxiliaryStatement
 
+        # :nodoc:
         def auxiliary_statements_values; get_value(:auxiliary_statements); end
+        # :nodoc:
         def auxiliary_statements_values=(value); set_value(:auxiliary_statements, value); end
 
         # Set use of an auxiliary statement already configurated on the model

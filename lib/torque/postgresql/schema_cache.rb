@@ -1,6 +1,6 @@
 module Torque
   module PostgreSQL
-    # :TODO: Create the `add` to load inheritance info
+    # :TODO: Create the +add+ to load inheritance info
     module SchemaCache
 
       def initialize(*) # :nodoc:

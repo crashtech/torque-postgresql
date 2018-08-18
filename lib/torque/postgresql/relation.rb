@@ -64,6 +64,8 @@ module Torque
 
     end
 
+    # Include the methos here provided and then change the constants to ensure
+    # the operation of ActiveRecord Relation
     ActiveRecord::Relation.include Relation
 
     warn_level = $VERBOSE

@@ -3,7 +3,7 @@ module Torque
     module Relation
       module Merger
 
-        def merge
+        def merge # :nodoc:
           super
 
           merge_distinct_on
@@ -15,11 +15,13 @@ module Torque
 
         private
 
+          # Merge distinct on columns
           def merge_distinct_on
             return if other.distinct_on_values.blank?
             relation.distinct_on_values += other.distinct_on_values
           end
 
+          # Merge auxiliary statements activated by +with+
           def merge_auxiliary_statements
             return if other.auxiliary_statements_values.blank?
 
@@ -31,6 +33,7 @@ module Torque
             end
           end
 
+          # Merge settings related to inheritance tables
           def merge_inheritance
             relation.cast_records_value = true if other.cast_records_value
             relation.from_only_value = true if other.from_only_value
