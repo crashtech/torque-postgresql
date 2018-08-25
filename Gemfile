@@ -15,3 +15,6 @@ gem 'pg', '0.20'
 
 # To use a debugger
 gem 'byebug', group: [:development, :test]
+
+# Optional dependencies
+gem 'annotate'

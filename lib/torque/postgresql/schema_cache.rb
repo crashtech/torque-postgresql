@@ -1,5 +1,7 @@
 module Torque
   module PostgreSQL
+    LookupError = Class.new(ArgumentError)
+
     # :TODO: Create the +add+ to load inheritance info
     module SchemaCache
 
@@ -41,7 +43,7 @@ module Torque
         @data_sources_model_names.delete name
         @inheritance_dependencies.delete name
         @inheritance_associations.delete name
-        @inheritance_cache -= 1
+        @inheritance_cache = inheritance_cache_key
       end
 
       def marshal_dump # :nodoc:
@@ -102,7 +104,11 @@ module Torque
           scopes.pop
         end
 
-        nil
+        # If this part is reach, no model name was found
+        raise LookupError.new(<<~MSG.squish)
+          Unable to find a valid model that is associated with the '#{table_name}' table.
+          Please, check if they correctly inherit from ActiveRecord::Base
+        MSG
       end
 
       private
@@ -125,10 +131,14 @@ module Torque
           # Now iterate over
           while (condition = conditions.shift)
             ns_places.each{ |i| pieces[i] = condition.include?(i) ? '::' : '' }
-            next unless scope.const_defined?(pieces.join)
+
+            candidate = pieces.join
+            candidate.prepend("#{scope.name}::") unless scope === Object
+
+            klass = candidate.safe_constantize
+            next if klass.nil?
 
             # Check if the class match the table name
-            klass = scope.const_get(pieces.join)
             return klass if klass < ::ActiveRecord::Base && klass.table_name == table_name
           end
         end
@@ -146,8 +156,8 @@ module Torque
           return unless @inheritance_cache != cache_key
           @inheritance_cache = cache_key
 
-          @inheritance_dependencies = connection.inherited_tables.freeze
-          @inheritance_associations = generate_associations.freeze
+          @inheritance_dependencies = connection.inherited_tables
+          @inheritance_associations = generate_associations
         end
 
         # Calculates the inverted dependency (association), where even indirect
