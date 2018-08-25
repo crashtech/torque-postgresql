@@ -28,10 +28,10 @@ Also, run:
 $ bundle
 ```
 
-Or for non-Gemfile related usage, simply:
+Or, for non-Gemfile related usage, simply:
 
 ```
-gem intall orque-postgresql
+gem intall torque-postgresql
 ```
 
 # Usage
