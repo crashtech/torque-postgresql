@@ -81,7 +81,7 @@ module Torque
         # You can even choose the +category+ filter
         def user_defined_types(category = nil)
           category_condition = "AND     typtype = '#{category}'" unless category.nil?
-          select_all(<<-SQL).rows.to_h
+          select_all(<<-SQL, 'SCHEMA').rows.to_h
             SELECT      t.typname AS name,
                         CASE t.typtype
                         WHEN 'e' THEN 'enum'
@@ -104,7 +104,7 @@ module Torque
 
         # Get the list of inherited tables associated with their parent tables
         def inherited_tables
-          tables = select_all(<<-SQL).rows
+          tables = query(<<-SQL, 'SCHEMA')
             SELECT child.relname             AS table_name,
                    array_agg(parent.relname) AS inheritances
             FROM pg_inherits
