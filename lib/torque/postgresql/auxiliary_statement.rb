@@ -23,7 +23,7 @@ module Torque
         # Find or create the class that will handle statement
         def lookup(name, base)
           const = name.to_s.camelize << '_' << self.name.demodulize
-          return base.const_get(const) if base.const_defined?(const)
+          return base.const_get(const, false) if base.const_defined?(const, false)
           base.const_set(const, Class.new(AuxiliaryStatement))
         end
 
