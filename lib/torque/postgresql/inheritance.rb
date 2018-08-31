@@ -28,17 +28,6 @@ module Torque
 
         delegate :_auto_cast_attribute, :_record_class_attribute, to: ActiveRecord::Relation
 
-        # Manually set the model name associated with tables name in order to
-        # facilitates the identification of inherited records
-        def inherited(subclass)
-          super
-
-          return unless Torque::PostgreSQL.config.eager_load &&
-            !subclass.abstract_class?
-
-          connection.schema_cache.add_model_name(table_name, subclass)
-        end
-
         # Get a full list of all attributes from a model and all its dependents
         def inheritance_merged_attributes
           @inheritance_merged_attributes ||= begin
@@ -72,6 +61,19 @@ module Torque
           @casted_dependents ||= inheritance_dependents.map do |table_name|
             [table_name, connection.schema_cache.lookup_model(table_name)]
           end.to_h
+        end
+
+        # Manually set the model name associated with tables name in order to
+        # facilitates the identification of inherited records
+        def reset_table_name
+          table = super
+
+          adapter = ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
+          if Torque::PostgreSQL.config.eager_load && connection.is_a?(adapter)
+            connection.schema_cache.add_model_name(table, self)
+          end
+
+          table
         end
 
         # Get the final decorated table, regardless of any special condition
