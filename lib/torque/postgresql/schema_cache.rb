@@ -145,7 +145,7 @@ module Torque
 
         # Generates the cache key for inheitance information
         def inheritance_cache_key
-          @data_sources.keys.sort.join(',')
+          @data_sources.keys.compact.sort.join(',')
         end
 
         # Reload information about tables inheritance and dependencies, uses a
