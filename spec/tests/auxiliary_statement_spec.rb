@@ -469,5 +469,4 @@ RSpec.describe 'AuxiliaryStatement' do
       expect{ subject.with(:comments).arel.to_sql }.to raise_error(StandardError)
     end
   end
-
 end
