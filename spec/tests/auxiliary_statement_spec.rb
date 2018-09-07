@@ -392,6 +392,36 @@ RSpec.describe 'AuxiliaryStatement' do
       Comment.columns_hash.delete('source_id')
     end
 
+    it 'works with count and does not add extra columns' do
+      klass.send(:auxiliary_statement, :comments) do |cte|
+        cte.query Comment.all
+        cte.attributes content: :comment_content
+      end
+
+      result = 'WITH "comments" AS'
+      result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id" FROM "comments")'
+      result << ' SELECT COUNT(*) FROM "users"'
+      result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+
+      query = get_last_executed_query{ subject.with(:comments).count }
+      expect(query).to eql(result)
+    end
+
+    it 'works with sum and does not add extra columns' do
+      klass.send(:auxiliary_statement, :comments) do |cte|
+        cte.query Comment.all
+        cte.attributes id: :value
+      end
+
+      result = 'WITH "comments" AS'
+      result << ' (SELECT "comments"."id" AS value, "comments"."user_id" FROM "comments")'
+      result << ' SELECT SUM("comments"."value") FROM "users"'
+      result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
+
+      query = get_last_executed_query{ subject.with(:comments).sum(comments: :value) }
+      expect(query).to eql(result)
+    end
+
     it 'raises an error when using an invalid type of object as query' do
       klass.send(:auxiliary_statement, :comments) do |cte|
         cte.query :string, String
