@@ -18,6 +18,7 @@ I18n.load_path << Pathname.pwd.join('spec', 'en.yml')
 load File.join('schema.rb')
 RSpec.configure do |config|
   config.extend Mocks::CreateTable
+  config.include Mocks::CacheQuery
 
   config.formatter = :documentation
   config.color     = true

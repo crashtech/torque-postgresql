@@ -16,13 +16,6 @@ module Torque
           super
         end
 
-        # Add USING modifier to query
-        def visit_Torque_PostgreSQL_Arel_Using(o, collector)
-          collector << 'USING ( '
-          collector << o.expr
-          collector << ' )'
-        end
-
       end
 
       ::Arel::Visitors::PostgreSQL.include Visitors

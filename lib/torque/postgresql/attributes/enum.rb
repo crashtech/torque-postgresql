@@ -9,7 +9,9 @@ module Torque
         LAZY_VALUE = 0.chr
 
         class << self
-          delegate :each, :sample, to: :values
+          include Enumerable
+
+          delegate :each, :sample, to: :members
 
           # Find or create the class that will handle the value
           def lookup(name)
@@ -38,6 +40,11 @@ module Torque
               conn = connection(conn_name)
               conn.enum_values(type_name).freeze
             end
+          end
+
+          # Different from values, it returns the list of items already casted
+          def members
+            values.dup.map(&method(:new))
           end
 
           # Fetch a value from the list

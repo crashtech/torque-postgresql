@@ -276,6 +276,44 @@ RSpec.describe 'Enum' do
       expect(mock_value.to_i).to_not be_eql(15)
       expect(mock_value.to_i).to be_eql(4)
     end
+
+    context 'on members' do
+      it 'has enumerable operations' do
+        expect(subject).to respond_to(:all?)
+        expect(subject).to respond_to(:any?)
+        expect(subject).to respond_to(:collect)
+        expect(subject).to respond_to(:count)
+        expect(subject).to respond_to(:cycle)
+        expect(subject).to respond_to(:detect)
+        expect(subject).to respond_to(:drop)
+        expect(subject).to respond_to(:drop_while)
+        expect(subject).to respond_to(:each)
+        expect(subject).to respond_to(:each_with_index)
+        expect(subject).to respond_to(:entries)
+        expect(subject).to respond_to(:find)
+        expect(subject).to respond_to(:find_all)
+        expect(subject).to respond_to(:find_index)
+        expect(subject).to respond_to(:first)
+        expect(subject).to respond_to(:flat_map)
+        expect(subject).to respond_to(:include?)
+        expect(subject).to respond_to(:inject)
+        expect(subject).to respond_to(:lazy)
+        expect(subject).to respond_to(:map)
+        expect(subject).to respond_to(:member?)
+        expect(subject).to respond_to(:one?)
+        expect(subject).to respond_to(:reduce)
+        expect(subject).to respond_to(:reject)
+        expect(subject).to respond_to(:reverse_each)
+        expect(subject).to respond_to(:select)
+        expect(subject).to respond_to(:sort)
+        expect(subject).to respond_to(:zip)
+      end
+
+      it 'works with map' do
+        result = subject.map(&:to_i)
+        expect(result).to be_eql([0, 1, 2, 3])
+      end
+    end
   end
 
   context 'on OID' do

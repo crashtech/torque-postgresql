@@ -73,19 +73,19 @@ module Torque
             end
 
             columns.push(build_auto_caster_marker(arel, self.cast_records_value))
-            arel.project(*columns) if columns.any?
+            dynamic_selection.concat(columns) if columns.any?
           end
 
           # Build as many left outer join as necessary for each dependent table
           def build_inheritances_joins(arel, types)
             columns = Hash.new{ |h, k| h[k] = [] }
-            primary_key = quoted_primary_key
+            base_on_key = model.arel_table[primary_key]
             base_attributes = model.attribute_names
 
             # Iterate over each casted dependent calculating the columns
             types.each.with_index do |model, idx|
               join_table = model.arel_table.alias("\"i_#{idx}\"")
-              arel.outer_join(join_table).using(primary_key)
+              arel.outer_join(join_table).on(base_on_key.eq(join_table[primary_key]))
               (model.attribute_names - base_attributes).each do |column|
                 columns[column] << join_table
               end

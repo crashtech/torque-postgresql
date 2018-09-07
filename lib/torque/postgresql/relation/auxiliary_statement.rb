@@ -59,7 +59,7 @@ module Torque
 
             columns.flatten!
             arel.with(subqueries.flatten)
-            arel.project(*columns) if columns.any?
+            dynamic_selection.concat(columns) if columns.any?
           end
 
           # Throw an error showing that an auxiliary statement of the given

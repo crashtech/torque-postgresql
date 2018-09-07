@@ -6,6 +6,7 @@ module Torque
         def merge # :nodoc:
           super
 
+          merge_dynamic_selection
           merge_distinct_on
           merge_auxiliary_statements
           merge_inheritance
@@ -14,6 +15,11 @@ module Torque
         end
 
         private
+
+          # Merge dynamic selection columns
+          def merge_dynamic_selection
+            relation.dynamic_selection_values.concat(other.dynamic_selection_values)
+          end
 
           # Merge distinct on columns
           def merge_distinct_on
