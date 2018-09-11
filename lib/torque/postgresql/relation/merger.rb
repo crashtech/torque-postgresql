@@ -18,7 +18,7 @@ module Torque
 
           # Merge dynamic selection columns
           def merge_dynamic_selection
-            relation.dynamic_selection_values.concat(other.dynamic_selection_values)
+            relation.send(:dynamic_selection).concat(other.send(:dynamic_selection))
           end
 
           # Merge distinct on columns

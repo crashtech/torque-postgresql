@@ -14,14 +14,8 @@ module Torque
       include Inheritance
 
       SINGLE_VALUE_METHODS = [:itself_only]
-      MULTI_VALUE_METHODS = [:distinct_on, :auxiliary_statements, :cast_records,
-        :dynamic_selection]
+      MULTI_VALUE_METHODS = [:distinct_on, :auxiliary_statements, :cast_records]
       VALUE_METHODS = SINGLE_VALUE_METHODS + MULTI_VALUE_METHODS
-
-      # :nodoc:
-      def dynamic_selection_values; get_value(:dynamic_selection); end
-      # :nodoc:
-      def dynamic_selection_values=(value); set_value(:dynamic_selection, value); end
 
       # Resolve column name when calculating models, allowing the column name to
       # be more complex while keeping the query selection quality
@@ -131,7 +125,7 @@ module Torque
     ActiveRecord::Relation::MULTI_VALUE_METHODS   += Relation::MULTI_VALUE_METHODS
     ActiveRecord::Relation::VALUE_METHODS         += Relation::VALUE_METHODS
     ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES += [:cast_records, :itself_only,
-      :distinct_on, :auxiliary_statements, :dynamic_selection]
+      :distinct_on, :auxiliary_statements]
 
     if ActiveRecord::QueryMethods.const_defined?('DEFAULT_VALUES')
       Relation::SINGLE_VALUE_METHODS.each do |value|
