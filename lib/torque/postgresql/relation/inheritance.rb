@@ -57,7 +57,7 @@ module Torque
         private
 
           # Hook arel build to add any necessary table
-          def build_arel
+          def build_arel(aliases = nil)
             arel = super
             arel.only if self.itself_only_value === true
             build_inheritances(arel)

@@ -33,15 +33,25 @@ module Torque
         end
 
         # Change some of the types being mapped
-        def initialize_type_map(m)
+        def initialize_type_map(m = type_map)
           super
           m.register_type 'interval', OID::Interval.new
         end
 
         # Add the composite types to be loaded too.
-        def load_additional_types(type_map, oids = nil)
-          super
+        if ActiveRecord.gem_version >= Gem::Version.new('5.2.1')
+          def load_additional_types(oids = nil)
+            super
+            load_additional_types_imp(oids)
+          end
+        else
+          def load_additional_types(type_map, oids = nil)
+            super
+            load_additional_types_imp(oids)
+          end
+        end
 
+        def load_additional_types_imp(oids = nil)
           filter = "AND     a.typelem::integer IN (%s)" % oids.join(", ") if oids
 
           query = <<-SQL

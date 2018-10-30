@@ -10,6 +10,7 @@ gemfile:
   - Gemfile
   - gemfiles/Gemfile.rails-5.0
   - gemfiles/Gemfile.rails-5.1
+  - gemfiles/Gemfile.rails-5.2
 
 env: DATABASE_URL=postgres://postgres@localhost/torque_postgresql_test
 
