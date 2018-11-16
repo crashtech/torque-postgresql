@@ -6,7 +6,6 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'rails', '~> 5.1.6'
-gem 'pg', '0.20'
 
 # Declare any dependencies that are still in development here instead of in
 # your gemspec. These might include edge Rails or gems from your path or
