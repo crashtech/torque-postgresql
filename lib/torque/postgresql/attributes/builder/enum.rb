@@ -123,8 +123,8 @@ module Torque
             # attribute value
             def all_values
               values_methods.each do |val, list|
-                klass.singleton_class.module_eval <<-STR, __FILE__, __LINE__ + 1
-                  def #{list[0]}                            # def disabled
+                klass.module_eval <<-STR, __FILE__, __LINE__ + 1
+                  scope :#{list[0]}, -> do                  # scope :disabled, -> do
                     where(#{attribute}: '#{val}')           #   where(status: 'disabled')
                   end                                       # end
                 STR
