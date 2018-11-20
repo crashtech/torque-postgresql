@@ -116,6 +116,12 @@ RSpec.describe 'Enum' do
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
       expect(dump_io.string).to match /t\.enum +"status", +subtype: :content_status/
     end
+
+    it 'can have a default value as symbol' do
+      dump_io = StringIO.new
+      ActiveRecord::SchemaDumper.dump(connection, dump_io)
+      expect(dump_io.string).to match /t\.enum +"role", +default: :visitor, +subtype: :roles/
+    end
   end
 
   context 'on value' do

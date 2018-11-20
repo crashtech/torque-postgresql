@@ -29,6 +29,11 @@ module Torque
             cast_value(value)
           end
 
+          # Always use symbol value for schema dumper
+          def type_cast_for_schema(value)
+            cast_value(value).to_sym.inspect
+          end
+
           private
 
             def cast_value(value)

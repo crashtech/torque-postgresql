@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 22
+  version = 25
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -25,6 +25,7 @@ begin
     create_enum "specialties", ["books", "movies", "plays"], force: :cascade
     create_enum "roles", ["visitor", "assistant", "manager", "admin"], force: :cascade
     create_enum "conflicts", ["valid", "invalid", "untrusted"], force: :cascade
+    create_enum "types", ["A", "B", "C", "D"], force: :cascade
 
     create_table "authors", force: :cascade do |t|
       t.string   "name"
@@ -42,8 +43,10 @@ begin
     end
 
     create_table "courses", force: :cascade do |t|
-      t.string   "title",    null: false
+      t.string   "title",      null: false
       t.interval "duration"
+      t.integer  "author_ids", array: true
+      t.enum     "types", subtype: :types, array: true
     end
 
     create_table "images", force: :cascade, id: false do |t|
@@ -61,7 +64,7 @@ begin
 
     create_table "users", force: :cascade do |t|
       t.string   "name",       null: false
-      t.enum     "role",                    subtype: :roles
+      t.enum     "role",                    subtype: :roles, default: :visitor
       t.datetime "created_at", null: false
       t.datetime "updated_at", null: false
     end
