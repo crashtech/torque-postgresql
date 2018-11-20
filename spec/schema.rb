@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 25
+  version = 26
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -45,8 +45,6 @@ begin
     create_table "courses", force: :cascade do |t|
       t.string   "title",      null: false
       t.interval "duration"
-      t.integer  "author_ids", array: true
-      t.enum     "types", subtype: :types, array: true
     end
 
     create_table "images", force: :cascade, id: false do |t|
