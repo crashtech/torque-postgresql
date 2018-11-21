@@ -45,7 +45,10 @@ module Torque
           record_class = self.class._record_class_attribute
 
           with!(record_class)
-          where!(record_class => types.map(&:table_name)) if options[:filter]
+          if options[:filter]
+            table = record_class.to_s.camelize.underscore
+            where!(table => { record_class => types.map(&:table_name) })
+          end
 
           self.cast_records_value = (types.present? ? types : model.casted_dependents.values)
           self

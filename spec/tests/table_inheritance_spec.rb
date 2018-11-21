@@ -309,7 +309,7 @@ RSpec.describe 'TableInheritance' do
         result << ' FROM "activities"'
         result << ' INNER JOIN "record_class" ON "activities"."tableoid" = "record_class"."oid"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
-        result << " WHERE \"activities\".\"_record_class\" = 'activity_books'"
+        result << " WHERE \"record_class\".\"_record_class\" = 'activity_books'"
         expect(base.cast_records(child, filter: true).all.to_sql).to eql(result)
       end
 
