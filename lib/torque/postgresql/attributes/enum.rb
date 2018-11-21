@@ -222,12 +222,12 @@ module Torque
 
       # Create the methods related to the attribute to handle the enum type
       TypeMap.register_type Adapter::OID::Enum do |subtype, attribute, initial = false, options = nil|
-        return if initial && !Torque::PostgreSQL.config.enum.initializer
+        break if initial && !Torque::PostgreSQL.config.enum.initializer
         options = {} if options.nil?
 
         # Generate methods on self class
         builder = Builder::Enum.new(self, attribute, subtype, initial, options)
-        return if builder.conflicting?
+        break if builder.conflicting?
         builder.build
 
         # Mark the enum as defined
