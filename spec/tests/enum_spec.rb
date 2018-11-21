@@ -446,9 +446,23 @@ RSpec.describe 'Enum' do
       expect(instance.role_text).to be_eql('Super Duper Admin')
     end
 
-    it 'scopes are correctly applied' do
+    it 'has scopes correctly applied' do
       subject.roles.each do |value|
         expect(subject.send(value).to_sql).to match(/WHERE "users"."role" = '#{value}'/)
+      end
+    end
+
+    it 'has scopes available on associations' do
+      author = FactoryGirl.create(:author)
+      FactoryGirl.create(:post, author: author)
+
+      Post.enum(:status)
+      expect(author.posts).to respond_to(:test_scope)
+
+      Enum::ContentStatus.each do |value|
+        expect(author.posts).to be_a(ActiveRecord::Associations::CollectionProxy)
+        expect(author.posts).to respond_to(value.to_sym)
+        expect(author.posts.send(value).to_sql).to match(/AND "posts"."status" = '#{value}'/)
       end
     end
 
