@@ -38,20 +38,21 @@ module Torque
           m.register_type 'interval', OID::Interval.new
         end
 
-        # Add the composite types to be loaded too.
-        if ActiveRecord.gem_version >= Gem::Version.new('5.2.1')
+        # :nodoc:
+        if Torque::PostgreSQL::AR521
           def load_additional_types(oids = nil)
             super
-            load_additional_types_imp(oids)
+            torque_load_additional_types(oids)
           end
         else
           def load_additional_types(type_map, oids = nil)
             super
-            load_additional_types_imp(oids)
+            torque_load_additional_types(oids)
           end
         end
 
-        def load_additional_types_imp(oids = nil)
+        # Add the composite types to be loaded too.
+        def torque_load_additional_types(oids = nil)
           filter = "AND     a.typelem::integer IN (%s)" % oids.join(", ") if oids
 
           query = <<-SQL

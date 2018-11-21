@@ -3,10 +3,16 @@ module Torque
     module Adapter
       module ColumnMethods
 
+        # Creates a column with an interval type, allowing span of times and
+        # dates to be stored without having to store a seconds-based integer
+        # or any sort of other approach
         def interval(*args, **options)
           args.each { |name| column(name, :interval, options) }
         end
 
+        # Creates a column with an enum type, needing to specify the subtype,
+        # which is basically the name of the type defined prior creating the
+        # column
         def enum(*args, **options)
           args.each do |name|
             type = options.fetch(:subtype, name)
@@ -21,7 +27,7 @@ module Torque
 
         attr_reader :inherits
 
-        def initialize(name, *args, **options)
+        def initialize(name, *_, **options)
           old_args = []
           old_args << options.delete(:temporary) || false
           old_args << options.delete(:options)

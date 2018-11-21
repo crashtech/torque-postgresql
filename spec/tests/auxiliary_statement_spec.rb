@@ -7,6 +7,7 @@ RSpec.describe 'AuxiliaryStatement' do
 
   context 'on relation' do
     let(:klass) { User }
+    let(:true_value) { Torque::PostgreSQL::AR521 ? 'TRUE' : "'t'" }
     subject { klass.unscoped }
 
     it 'has its method' do
@@ -63,11 +64,7 @@ RSpec.describe 'AuxiliaryStatement' do
       result = 'WITH "comments" AS'
       result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id", "comments"."active" FROM "comments")'
       result << ' SELECT "users".*, "comments"."comment_content" FROM "users"'
-      if ActiveRecord.gem_version >= Gem::Version.new('5.2.1')
-        result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id" AND "comments"."active" = TRUE'
-      else
-        result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id" AND "comments"."active" = \'t\''
-      end
+      result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id" AND "comments"."active" = ' + true_value
       expect(subject.with(:comments, join: {active: true}).arel.to_sql).to eql(result)
     end
 
@@ -247,11 +244,7 @@ RSpec.describe 'AuxiliaryStatement' do
           cte.join id: :user_id
         end
 
-        if ActiveRecord.gem_version >= Gem::Version.new('5.2.1')
-          result = 'WITH "comments" AS (SELECT * FROM comments WHERE active = TRUE)'
-        else
-          result = 'WITH "comments" AS (SELECT * FROM comments WHERE active = \'t\')'
-        end
+        result = "WITH \"comments\" AS (SELECT * FROM comments WHERE active = #{true_value})"
         result << ' SELECT "users".*, "comments"."comment" FROM "users"'
         result << ' INNER JOIN "comments" ON "users"."id" = "comments"."user_id"'
         expect(subject.with(:comments, args: {active: true}).arel.to_sql).to eql(result)

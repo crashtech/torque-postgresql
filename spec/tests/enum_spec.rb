@@ -91,7 +91,7 @@ RSpec.describe 'Enum' do
 
     it 'raises StatementInvalid when type isn\'t defined' do
       subject.enum('foo')
-      creation = connection.schema_creation.accept subject
+      creation = connection.send(:schema_creation).accept subject
       expect{ connection.execute creation }.to raise_error(ActiveRecord::StatementInvalid)
     end
   end

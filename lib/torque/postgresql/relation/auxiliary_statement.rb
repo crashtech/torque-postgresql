@@ -33,7 +33,7 @@ module Torque
         # Get all auxiliary statements bound attributes and the base bound
         # attributes as well
         def bound_attributes
-          if ActiveRecord.gem_version >= Gem::Version.new('5.2.1')
+          if Torque::PostgreSQL::AR521
             visitor = ::Arel::Visitors::PostgreSQL.new(ActiveRecord::Base.connection)
             visitor.accept(self.arel.ast, ::Arel::Collectors::Bind.new).value
           else
@@ -46,7 +46,7 @@ module Torque
         private
 
           # Hook arel build to add the distinct on clause
-          def build_arel(aliases = nil)
+          def build_arel(*)
             arel = super
             build_auxiliary_statements(arel)
             arel
