@@ -2,6 +2,9 @@ module Torque
   module PostgreSQL
     include ActiveSupport::Configurable
 
+    # Stores a version check for compatibility purposes
+    AR521 = (ActiveRecord.gem_version >= Gem::Version.new('5.2.1'))
+
     # Allow nested configurations
     # :TODO: Rely on +inheritable_copy+ to make nested configurations
     config.define_singleton_method(:nested) do |name, &block|

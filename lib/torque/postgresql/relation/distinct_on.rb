@@ -32,8 +32,8 @@ module Torque
         private
 
           # Hook arel build to add the distinct on clause
-          def build_arel
-            arel = super
+          def build_arel(*)
+            arel = Torque::PostgreSQL::AR521 ? super : super()
             value = self.distinct_on_values
             arel.distinct_on(resolve_column(value)) if value.present?
             arel

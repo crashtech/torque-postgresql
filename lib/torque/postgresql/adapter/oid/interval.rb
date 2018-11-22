@@ -81,7 +81,7 @@ module Torque
               num = num.to_i unless num.is_a?(Numeric)
               if num > 0
                 seconds += num.send(part).value
-                [part, num]
+                [part.to_sym, num]
               end
             end
             ActiveSupport::Duration.new(seconds, parts.compact)

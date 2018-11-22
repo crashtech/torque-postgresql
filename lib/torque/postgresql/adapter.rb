@@ -11,7 +11,7 @@ module Torque
     module Adapter
 
       include Quoting
-      include ColumnDumper
+      include ColumnDumper unless Torque::PostgreSQL::AR521
       include DatabaseStatements
       include SchemaStatements
 

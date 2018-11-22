@@ -2,6 +2,8 @@ module Torque
   module PostgreSQL
     module SchemaDumper
 
+      include Adapter::ColumnDumper if Torque::PostgreSQL::AR521
+
       def dump(stream) # :nodoc:
         @connection.dump_mode!
         super
@@ -80,6 +82,10 @@ module Torque
 
     end
 
-    ActiveRecord::SchemaDumper.prepend SchemaDumper
+    if Torque::PostgreSQL::AR521
+      ActiveRecord::ConnectionAdapters::PostgreSQL::SchemaDumper.prepend SchemaDumper
+    else
+      ActiveRecord::SchemaDumper.prepend SchemaDumper
+    end
   end
 end

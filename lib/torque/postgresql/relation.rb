@@ -76,7 +76,7 @@ module Torque
           @dynamic_selection ||= []
         end
 
-        def build_arel
+        def build_arel(*)
           arel = super
           arel.project(*dynamic_selection) if select_values.blank? && dynamic_selection.any?
           arel

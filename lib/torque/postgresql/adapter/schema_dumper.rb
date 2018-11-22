@@ -4,8 +4,10 @@ module Torque
       module ColumnDumper
 
         # Adds +:subtype+ as a valid migration key
-        def migration_keys
-          super + [:subtype]
+        unless Torque::PostgreSQL::AR521
+          def migration_keys
+            super + [:subtype]
+          end
         end
 
         # Adds +:subtype+ option to the default set
@@ -22,7 +24,7 @@ module Torque
         private
 
           def schema_subtype(column)
-            column.sql_type.to_sym.inspect if [:enum].include? column.type
+            column.sql_type.to_sym.inspect if column.type == :enum
           end
 
       end

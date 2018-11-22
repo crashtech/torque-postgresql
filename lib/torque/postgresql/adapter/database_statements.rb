@@ -33,15 +33,26 @@ module Torque
         end
 
         # Change some of the types being mapped
-        def initialize_type_map(m)
+        def initialize_type_map(m = type_map)
           super
           m.register_type 'interval', OID::Interval.new
         end
 
-        # Add the composite types to be loaded too.
-        def load_additional_types(type_map, oids = nil)
-          super
+        # :nodoc:
+        if Torque::PostgreSQL::AR521
+          def load_additional_types(oids = nil)
+            super
+            torque_load_additional_types(oids)
+          end
+        else
+          def load_additional_types(type_map, oids = nil)
+            super
+            torque_load_additional_types(oids)
+          end
+        end
 
+        # Add the composite types to be loaded too.
+        def torque_load_additional_types(oids = nil)
           filter = "AND     a.typelem::integer IN (%s)" % oids.join(", ") if oids
 
           query = <<-SQL
