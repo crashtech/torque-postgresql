@@ -87,6 +87,20 @@ module Torque
           "#{full_table_name_prefix}#{contained}#{undecorated_table_name(name)}#{full_table_name_suffix}"
         end
 
+        # For all main purposes, physical inherited classes should have
+        # base_class as their own
+        def base_class
+          return super unless physically_inherited?
+          self
+        end
+
+        # Primary key is one exception when getting information about the class,
+        # it must returns the superclass PK
+        def primary_key
+          return super unless physically_inherited?
+          superclass.primary_key
+        end
+
         # Add an additional check to return the name of the table even when the
         # class is inherited, but only if it is a physical inheritance
         def compute_table_name
