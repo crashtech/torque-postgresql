@@ -3,6 +3,21 @@ require 'spec_helper'
 RSpec.describe 'Enum' do
   let(:connection) { ActiveRecord::Base.connection }
 
+  before :all do
+    Torque::PostgreSQL.config.enum.base_method = :pg_enum
+    Torque::PostgreSQL::Attributes::Enum.include_on(ActiveRecord::Base)
+
+    # Define a method to find yet to define constants
+    Torque::PostgreSQL.config.enum.namespace.define_singleton_method(:const_missing) do |name|
+      Torque::PostgreSQL::Attributes::Enum.lookup(name)
+    end
+
+    # Define a helper method to get a sample value
+    Torque::PostgreSQL.config.enum.namespace.define_singleton_method(:sample) do |name|
+      Torque::PostgreSQL::Attributes::Enum.lookup(name).sample
+    end
+  end
+
   context 'on migration' do
     it 'can be created' do
       connection.create_enum(:status, %i(foo bar))
@@ -456,7 +471,7 @@ RSpec.describe 'Enum' do
       author = FactoryGirl.create(:author)
       FactoryGirl.create(:post, author: author)
 
-      Post.enum(:status)
+      Post.pg_enum(:status)
       expect(author.posts).to respond_to(:test_scope)
 
       Enum::ContentStatus.each do |value|
@@ -488,12 +503,18 @@ RSpec.describe 'Enum' do
     end
 
     it 'raises when starting an enum with conflicting methods' do
-      expect { Post.enum :conflict }.to raise_error(ArgumentError, /already exists in/)
+      expect { Post.pg_enum :conflict }.to raise_error(ArgumentError, /already exists in/)
     end
 
     context 'without autoload' do
       subject { Author }
       let(:instance) { FactoryGirl.build(:author) }
+
+      it 'has both rails original enum and the new pg_enum' do
+        expect(subject).to respond_to(:enum)
+        expect(subject).to respond_to(:pg_enum)
+        expect(subject.method(:pg_enum).arity).to eql(-1)
+      end
 
       it 'does not create all methods' do
         expect(subject).to_not respond_to(:specialties)
@@ -507,7 +528,7 @@ RSpec.describe 'Enum' do
       end
 
       it 'can be manually initiated' do
-        Author.enum :specialty
+        Author.pg_enum :specialty
         expect(subject).to respond_to(:specialties)
         expect(instance).to respond_to(:specialty_text)
 
@@ -520,7 +541,7 @@ RSpec.describe 'Enum' do
     end
 
     context 'with prefix' do
-      before(:each) { Author.enum :specialty, prefix: 'in' }
+      before(:each) { Author.pg_enum :specialty, prefix: 'in' }
       subject { Author }
       let(:instance) { FactoryGirl.build(:author) }
 
@@ -537,7 +558,7 @@ RSpec.describe 'Enum' do
     end
 
     context 'with suffix, only, and except' do
-      before(:each) { Author.enum :specialty, suffix: 'expert', only: %w(books movies), except: 'books' }
+      before(:each) { Author.pg_enum :specialty, suffix: 'expert', only: %w(books movies), except: 'books' }
       subject { Author }
       let(:instance) { FactoryGirl.build(:author) }
 

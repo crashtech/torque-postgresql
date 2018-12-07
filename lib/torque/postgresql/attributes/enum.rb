@@ -22,6 +22,20 @@ module Torque
             namespace.const_set(const, Class.new(Enum))
           end
 
+          # Provide a method on the given class to setup which enums will be
+          # manually initialized
+          def include_on(klass)
+            method_name = Torque::PostgreSQL.config.enum.base_method
+            klass.singleton_class.class_eval <<-STR, __FILE__, __LINE__ + 1
+              def #{method_name}(*args, **options)
+                args.each do |attribute|
+                  type = attribute_types[attribute.to_s]
+                  TypeMap.lookup(type, self, attribute.to_s, false, options)
+                end
+              end
+            STR
+          end
+
           # You can specify the connection name for each enum
           def connection_specification_name
             return self == Enum ? 'primary' : superclass.connection_specification_name
@@ -85,21 +99,6 @@ module Torque
             def connection(name)
               ActiveRecord::Base.connection_handler.retrieve_connection(name)
             end
-
-        end
-
-        # Extension of the ActiveRecord::Base to initiate the enum features
-        module Base
-
-          method_name = Torque::PostgreSQL.config.enum.base_method
-          module_eval <<-STR, __FILE__, __LINE__ + 1
-            def #{method_name}(*args, **options)
-              args.each do |attribute|
-                type = attribute_types[attribute.to_s]
-                TypeMap.lookup(type, self, attribute.to_s, false, options)
-              end
-            end
-          STR
 
         end
 
@@ -217,9 +216,6 @@ module Torque
 
       end
 
-      # Extend ActiveRecord::Base so it can have the initializer
-      ActiveRecord::Base.extend Enum::Base
-
       # Create the methods related to the attribute to handle the enum type
       TypeMap.register_type Adapter::OID::Enum do |subtype, attribute, initial = false, options = nil|
         break if initial && !Torque::PostgreSQL.config.enum.initializer
@@ -232,16 +228,6 @@ module Torque
 
         # Mark the enum as defined
         defined_enums[attribute] = subtype.klass
-      end
-
-      # Define a method to find yet to define constants
-      Torque::PostgreSQL.config.enum.namespace.define_singleton_method(:const_missing) do |name|
-        Enum.lookup(name)
-      end
-
-      # Define a helper method to get a sample value
-      Torque::PostgreSQL.config.enum.namespace.define_singleton_method(:sample) do |name|
-        Enum.lookup(name).sample
       end
     end
   end
