@@ -60,6 +60,11 @@ RSpec.describe 'Interval' do
       it 'retruns sample as string' do
         expect(subject.serialize(reference)).to eq('P1Y2M3DT4H5M6S')
       end
+
+      it 'transforms weeks into days' do
+        reference = ActiveSupport::Duration.build(1000000)
+        expect(subject.serialize(reference)).to eq('P11DT13H46M40S')
+      end
     end
 
     context 'on cast' do
