@@ -62,7 +62,7 @@ RSpec.describe 'Interval' do
       end
 
       it 'transforms weeks into days' do
-        reference = ActiveSupport::Duration.build(1000000)
+        reference = subject.cast(1000000)
         expect(subject.serialize(reference)).to eq('P11DT13H46M40S')
       end
     end

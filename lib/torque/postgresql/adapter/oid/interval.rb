@@ -57,7 +57,7 @@ module Torque
           def serialize(value)
             return if value.blank?
             value = cast(value) unless value.is_a?(ActiveSupport::Duration)
-            value = remove_weeks(value) if value.parts.key?(:weeks)
+            value = remove_weeks(value) if value.parts.to_h.key?(:weeks)
             value.iso8601(precision: @scale)
           end
 
@@ -79,11 +79,12 @@ module Torque
             seconds = 0
             parts = parts.map do |part, num|
               num = num.to_i unless num.is_a?(Numeric)
-              if num > 0
-                seconds += num.send(part).value
-                [part.to_sym, num]
-              end
+              next if num <= 0
+
+              seconds += num.send(part).value
+              [part.to_sym, num]
             end
+
             ActiveSupport::Duration.new(seconds, parts.compact)
           end
 
