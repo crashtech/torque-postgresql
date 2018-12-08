@@ -29,7 +29,7 @@ module Torque
           # Use local type map to identify attribute decorator
           def define_attribute_method(attribute)
             type = attribute_types[attribute]
-            super unless TypeMap.lookup(type, self, attribute, true)
+            super unless TypeMap.lookup(type, self, attribute)
           end
 
       end

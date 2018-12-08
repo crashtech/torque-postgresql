@@ -2,6 +2,22 @@ require 'spec_helper'
 
 RSpec.describe 'Enum' do
   let(:connection) { ActiveRecord::Base.connection }
+  let(:type_map) { Torque::PostgreSQL::Attributes::TypeMap }
+
+  before :each do
+    Torque::PostgreSQL.config.enum.base_method = :pg_enum
+    Torque::PostgreSQL::Attributes::Enum.include_on(ActiveRecord::Base)
+
+    # Define a method to find yet to define constants
+    Torque::PostgreSQL.config.enum.namespace.define_singleton_method(:const_missing) do |name|
+      Torque::PostgreSQL::Attributes::Enum.lookup(name)
+    end
+
+    # Define a helper method to get a sample value
+    Torque::PostgreSQL.config.enum.namespace.define_singleton_method(:sample) do |name|
+      Torque::PostgreSQL::Attributes::Enum.lookup(name).sample
+    end
+  end
 
   context 'on migration' do
     it 'can be created' do
@@ -393,30 +409,33 @@ RSpec.describe 'Enum' do
 
   context 'on uninitialized model' do
     before(:each) { Torque::PostgreSQL.config.enum.initializer = true }
-
-    subject { User }
-    it 'has no roles method' do
-      expect(subject).to_not respond_to(:roles)
+    subject do
+      APost = Class.new(ActiveRecord::Base)
+      APost.table_name = 'posts'
+      APost
     end
 
-    it 'can load roles on the fly' do
-      result = subject.roles
+    it 'has no statuses method' do
+      expect(subject).to_not respond_to(:statuses)
+    end
+
+    it 'can load statuses on the fly' do
+      result = subject.statuses
       expect(result).to be_a(Array)
-      expect(result).to be_eql(Enum::Roles.values)
+      expect(result).to be_eql(Enum::ContentStatus.values)
     end
   end
 
   context 'on model' do
-    before :each do
-      Torque::PostgreSQL.config.enum.initializer = true
-      User.send(:define_attribute_method, 'role')
-      Torque::PostgreSQL.config.enum.initializer = false
-    end
+    before(:each) { type_map.decorate!(User, :role) }
+
     subject { User }
     let(:instance) { FactoryGirl.build(:user) }
 
     it 'has all enum methods' do
-      expect(subject).to respond_to(:roles)
+      expect(subject).to  respond_to(:roles)
+      expect(subject).to  respond_to(:roles_texts)
+      expect(subject).to  respond_to(:roles_options)
       expect(instance).to respond_to(:role_text)
 
       subject.roles.each do |value|
@@ -456,7 +475,7 @@ RSpec.describe 'Enum' do
       author = FactoryGirl.create(:author)
       FactoryGirl.create(:post, author: author)
 
-      Post.enum(:status)
+      type_map.decorate!(Post, :status)
       expect(author.posts).to respond_to(:test_scope)
 
       Enum::ContentStatus.each do |value|
@@ -488,27 +507,50 @@ RSpec.describe 'Enum' do
     end
 
     it 'raises when starting an enum with conflicting methods' do
-      expect { Post.enum :conflict }.to raise_error(ArgumentError, /already exists in/)
+      AText = Class.new(ActiveRecord::Base)
+      AText.table_name = 'texts'
+
+      expect { type_map.decorate!(AText, :conflict) }.to raise_error(ArgumentError, /already exists in/)
     end
 
     context 'without autoload' do
       subject { Author }
       let(:instance) { FactoryGirl.build(:author) }
 
+      it 'configurating an enum should not invoke a query' do
+        klass = Torque::PostgreSQL::Adapter::SchemaStatements
+        expect_any_instance_of(klass).to_not receive(:enum_values).with('types')
+        Activity.pg_enum :type
+        expect(Activity.defined_enums).to_not include('type')
+      end
+
+      it 'has both rails original enum and the new pg_enum' do
+        expect(subject).to respond_to(:enum)
+        expect(subject).to respond_to(:pg_enum)
+        expect(subject.method(:pg_enum).arity).to eql(-1)
+      end
+
       it 'does not create all methods' do
-        expect(subject).to_not respond_to(:specialties)
-        expect(instance).to_not respond_to(:specialty_text)
+        AAuthor = Class.new(ActiveRecord::Base)
+        AAuthor.table_name = 'authors'
+
+        expect(AAuthor).to_not respond_to(:specialties)
+        expect(AAuthor).to_not respond_to(:specialties_texts)
+        expect(AAuthor).to_not respond_to(:specialties_options)
+        expect(AAuthor.instance_methods).to_not include(:specialty_text)
 
         Enum::Specialties.values.each do |value|
-          expect(subject).to_not  respond_to(value)
-          expect(instance).to_not respond_to(value + '?')
-          expect(instance).to_not respond_to(value + '!')
+          expect(AAuthor).to_not respond_to(value)
+          expect(AAuthor.instance_methods).to_not include(value + '?')
+          expect(AAuthor.instance_methods).to_not include(value + '!')
         end
       end
 
       it 'can be manually initiated' do
-        Author.enum :specialty
-        expect(subject).to respond_to(:specialties)
+        type_map.decorate!(Author, :specialty)
+        expect(subject).to  respond_to(:specialties)
+        expect(subject).to  respond_to(:specialties_texts)
+        expect(subject).to  respond_to(:specialties_options)
         expect(instance).to respond_to(:specialty_text)
 
         Enum::Specialties.values.each do |value|
@@ -520,12 +562,14 @@ RSpec.describe 'Enum' do
     end
 
     context 'with prefix' do
-      before(:each) { Author.enum :specialty, prefix: 'in' }
+      before(:each) { type_map.decorate!(Author, :specialty, prefix: 'in') }
       subject { Author }
       let(:instance) { FactoryGirl.build(:author) }
 
       it 'creates all methods correctly' do
-        expect(subject).to respond_to(:specialties)
+        expect(subject).to  respond_to(:specialties)
+        expect(subject).to  respond_to(:specialties_texts)
+        expect(subject).to  respond_to(:specialties_options)
         expect(instance).to respond_to(:specialty_text)
 
         subject.specialties.each do |value|
@@ -537,7 +581,11 @@ RSpec.describe 'Enum' do
     end
 
     context 'with suffix, only, and except' do
-      before(:each) { Author.enum :specialty, suffix: 'expert', only: %w(books movies), except: 'books' }
+      before(:each) do
+        type_map.decorate!(Author, :specialty, suffix: 'expert', only: %w(books movies),
+          except: 'books')
+      end
+
       subject { Author }
       let(:instance) { FactoryGirl.build(:author) }
 

@@ -11,7 +11,6 @@ module Torque
         @data_sources_model_names = {}
         @inheritance_dependencies = {}
         @inheritance_associations = {}
-        @cached_data_sources_size = 0
       end
 
       def initialize_dup(*) # :nodoc:
@@ -19,7 +18,30 @@ module Torque
         @data_sources_model_names = @data_sources_model_names.dup
         @inheritance_dependencies = @inheritance_dependencies.dup
         @inheritance_associations = @inheritance_associations.dup
-        @cached_data_sources_size = @cached_data_sources_size.dup
+      end
+
+      def encode_with(coder) # :nodoc:
+        super
+        coder["data_sources_model_names"] = @data_sources_model_names
+        coder["inheritance_dependencies"] = @inheritance_dependencies
+        coder["inheritance_associations"] = @inheritance_associations
+      end
+
+      def init_with(coder) # :nodoc:
+        super
+        @data_sources_model_names = coder["data_sources_model_names"]
+        @inheritance_dependencies = coder["inheritance_dependencies"]
+        @inheritance_associations = coder["inheritance_associations"]
+      end
+
+      def add(table_name, *) # :nodoc:
+        super
+
+        # Reset inheritance information when a table is added
+        if @data_sources.key?(table_name)
+          @inheritance_dependencies.clear
+          @inheritance_associations.clear
+        end
       end
 
       def clear! # :nodoc:
@@ -27,7 +49,6 @@ module Torque
         @data_sources_model_names.clear
         @inheritance_dependencies.clear
         @inheritance_associations.clear
-        @cached_data_sources_size = nil
       end
 
       def size # :nodoc:
@@ -43,12 +64,10 @@ module Torque
         @data_sources_model_names.delete name
         @inheritance_dependencies.delete name
         @inheritance_associations.delete name
-        @inheritance_cache = inheritance_cache_key
       end
 
       def marshal_dump # :nodoc:
         super + [
-          @inheritance_cache,
           @inheritance_dependencies,
           @inheritance_associations,
           @data_sources_model_names,
@@ -59,7 +78,6 @@ module Torque
         @data_sources_model_names = array.pop
         @inheritance_associations = array.pop
         @inheritance_dependencies = array.pop
-        @inheritance_cache = array.pop
         super
       end
 
@@ -143,19 +161,10 @@ module Torque
           end
         end
 
-        # Generates the cache key for inheitance information
-        def inheritance_cache_key
-          @data_sources.keys.compact.sort.join(',')
-        end
-
         # Reload information about tables inheritance and dependencies, uses a
         # cache to not perform additional checkes
         def reload_inheritance_data!
-          cache_key = inheritance_cache_key
-
-          return unless @inheritance_cache != cache_key
-          @inheritance_cache = cache_key
-
+          return if @inheritance_dependencies.present?
           @inheritance_dependencies = connection.inherited_tables
           @inheritance_associations = generate_associations
         end

@@ -10,6 +10,10 @@ module Torque
             new(row['typname'])
           end
 
+          def self.auto_initialize?
+            Torque::PostgreSQL.config.enum.initializer
+          end
+
           def initialize(name)
             @name  = name
             @klass = Attributes::Enum.lookup(name)

@@ -4,15 +4,14 @@ module Torque
       module Builder
         class Enum
 
-          attr_accessor :klass, :attribute, :subtype, :initial, :options, :values
+          attr_accessor :klass, :attribute, :subtype, :options, :values
 
           # Start a new builder of methods for composite values on
           # ActiveRecord::Base
-          def initialize(klass, attribute, subtype, initial, options)
+          def initialize(klass, attribute, subtype, options)
             @klass     = klass
             @attribute = attribute.to_s
             @subtype   = subtype
-            @initial   = initial
             @options   = options
 
             @values    = subtype.klass.values
@@ -53,9 +52,12 @@ module Torque
           # with the base class methods
           def conflicting?
             return false if options[:force] == true
+            attributes = attribute.pluralize
 
-            dangerous?(attribute.pluralize, true)
-            dangerous?(attribute + '_text')
+            dangerous?(attributes, true)
+            dangerous?("#{attributes}_options", true)
+            dangerous?("#{attributes}_texts", true)
+            dangerous?("#{attribute}_text")
 
             values_methods.each do |attr, list|
               list.map(&method(:dangerous?))
@@ -63,19 +65,11 @@ module Torque
 
             return false
           rescue Interrupt => err
-            if !initial
-              raise ArgumentError, <<-MSG.strip.gsub(/\n +/, ' ')
-                #{subtype.class.name} was not able to generate requested
-                methods because the method #{err} already exists in
-                #{klass.name}.
-              MSG
-            else
-              warn <<-MSG.strip.gsub(/\n +/, ' ')
-                #{subtype.class.name} was not able to autoload on
-                #{klass.name} because the method #{err} already exists.
-              MSG
-              return true
-            end
+            raise ArgumentError, <<-MSG.strip.gsub(/\n +/, ' ')
+              #{subtype.class.name} was not able to generate requested
+              methods because the method #{err} already exists in
+              #{klass.name}.
+            MSG
           end
 
           # Create all methods needed
@@ -102,45 +96,60 @@ module Torque
 
             # Create the method that allow access to the list of values
             def plural
-              klass.singleton_class.module_eval <<-STR, __FILE__, __LINE__ + 1
-                def #{attribute.pluralize}                  # def statuses
-                  ::#{subtype.klass.name}.values            #   ::Enum::Status.values
-                end                                         # end
-              STR
+              attr = attribute
+              enum_klass = subtype.klass
+              klass.singleton_class.module_eval do
+                # def self.statuses() statuses end
+                define_method(attr.pluralize) do
+                  enum_klass.values
+                end
+
+                # def self.statuses_texts() members.map(&:text) end
+                define_method(attr.pluralize + '_texts') do
+                  enum_klass.members.map do |member|
+                    member.text(attr, self)
+                  end
+                end
+
+                # def self.statuses_options() statuses_texts.zip(statuses) end
+                define_method(attr.pluralize + '_options') do
+                  enum_klass.values
+                end
+              end
             end
 
             # Create the method that turn the attribute value into text using
             # the model scope
             def text
-              klass.module_eval <<-STR, __FILE__, __LINE__ + 1
-                def #{attribute}_text                       # def status_text
-                  #{attribute}.text('#{attribute}', self)   #   status.text('status', self)
-                end                                         # end
-              STR
+              attr = attribute
+              klass.module_eval do
+                # def status_text() status.text('status', self) end
+                define_method("#{attr}_text") { send(attr).text(attr, self) }
+              end
             end
 
             # Create all the methods that represent actions related to the
             # attribute value
             def all_values
-              values_methods.each do |val, list|
-                klass.module_eval <<-STR, __FILE__, __LINE__ + 1
-                  scope :#{list[0]}, -> do                  # scope :disabled, -> do
-                    where(#{attribute}: '#{val}')           #   where(status: 'disabled')
-                  end                                       # end
-                STR
-                klass.module_eval <<-STR, __FILE__, __LINE__ + 1
-                  def #{list[1]}                            # def disabled?
-                    #{attribute}.#{val}?                    #   status.disabled?
-                  end                                       # end
+              attr = attribute
+              vals = values_methods
+              klass.module_eval do
+                vals.each do |val, list|
+                  # scope :disabled, -> { where(status: 'disabled') }
+                  scope list[0], -> { where(attr => val) }
 
-                  def #{list[2]}                            # def disabled!
-                    if enum_save_on_bang                    #   if enum_save_on_bang
-                      update!(#{attribute}: '#{val}')       #     update!(status: 'disabled')
-                    else                                    #   else
-                      #{attribute}.#{val}!                  #     status.disabled!
-                    end                                     #   end
-                  end                                       # end
-                STR
+                  # def disabled? status.disabled? end
+                  define_method(list[1]) { send(attr).public_send("#{val}?") }
+
+                  # def disabled! enum_save_on_bang ? update!(status: 'disabled') : status.disabled! end
+                  define_method(list[2]) do
+                    if enum_save_on_bang
+                      update!(attr => val)
+                    else
+                      send(attr).public_send("#{val}!")
+                    end
+                  end
+                end
               end
             end
 

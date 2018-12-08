@@ -184,9 +184,9 @@ RSpec.describe 'TableInheritance' do
     let(:other) { AuthorJournalist }
 
     it 'has a merged version of attributes' do
-      result_base = %w(id author_id title active created_at updated_at description url file post_id).to_set
-      result_child = %w(id author_id title active created_at updated_at file post_id url).to_set
-      result_child2 = %w(id author_id title active created_at updated_at description url).to_set
+      result_base = %w(id author_id title active kind created_at updated_at description url file post_id).to_set
+      result_child = %w(id author_id title active kind created_at updated_at file post_id url).to_set
+      result_child2 = %w(id author_id title active kind created_at updated_at description url).to_set
       result_other = %w(id name type specialty).to_set
 
       expect(base.inheritance_merged_attributes).to eql(result_base)
@@ -254,12 +254,12 @@ RSpec.describe 'TableInheritance' do
       end
 
       it 'returns the right ammount of entries' do
-        base.create(title: 'Activity only')
-        child.create(title: 'Activity book')
+        base.create!(title: 'Activity only')
+        child.create!(title: 'Activity book')
 
-        expect(base.all.size).to eql(2)
-        expect(base.itself_only.size).to eql(1)
-        expect(child.all.size).to eql(1)
+        expect(base.count).to eql(2)
+        expect(base.itself_only.count).to eql(1)
+        expect(child.count).to eql(1)
       end
     end
 

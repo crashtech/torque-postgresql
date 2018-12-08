@@ -49,8 +49,7 @@ module Torque
           # The value must be Integer when no precision is given
           def deserialize(value)
             return if value.blank?
-            parts = ActiveSupport::Duration::ISO8601Parser.new(value).parse!
-            parts_to_duration(parts)
+            ActiveSupport::Duration.parse(value)
           end
 
           # Uses the ActiveSupport::Duration::ISO8601Serializer
@@ -58,6 +57,7 @@ module Torque
           def serialize(value)
             return if value.blank?
             value = cast(value) unless value.is_a?(ActiveSupport::Duration)
+            value = remove_weeks(value) if value.parts.to_h.key?(:weeks)
             value.iso8601(precision: @scale)
           end
 
@@ -73,20 +73,31 @@ module Torque
 
           # Transform a list of parts into a duration object
           def parts_to_duration(parts)
-            parts = parts.to_h.with_indifferent_access.slice(*CAST_PARTS)
+            parts = parts.to_h.slice(*CAST_PARTS)
             return 0.seconds if parts.blank?
 
             seconds = 0
             parts = parts.map do |part, num|
               num = num.to_i unless num.is_a?(Numeric)
-              if num > 0
-                seconds += num.send(part).value
-                [part.to_sym, num]
-              end
+              next if num <= 0
+
+              seconds += num.send(part).value
+              [part.to_sym, num]
             end
+
             ActiveSupport::Duration.new(seconds, parts.compact)
           end
 
+          # As PostgreSQL converts weeks in duration to days, intercept duration
+          # values with weeks and turn them into days before serializing so it
+          # won't break because the following issues
+          # https://github.com/crashtech/torque-postgresql/issues/26
+          # https://github.com/rails/rails/issues/34655
+          def remove_weeks(value)
+            parts = value.parts.dup
+            parts[:days] += parts.delete(:weeks) * 7
+            ActiveSupport::Duration.new(value.seconds.to_i, parts)
+          end
         end
       end
     end

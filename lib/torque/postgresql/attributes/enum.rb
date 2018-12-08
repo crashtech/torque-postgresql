@@ -22,6 +22,17 @@ module Torque
             namespace.const_set(const, Class.new(Enum))
           end
 
+          # Provide a method on the given class to setup which enums will be
+          # manually initialized
+          def include_on(klass)
+            method_name = Torque::PostgreSQL.config.enum.base_method
+            klass.singleton_class.class_eval do
+              define_method(method_name) do |*args, **options|
+                Torque::PostgreSQL::Attributes::TypeMap.decorate(self, args, **options)
+              end
+            end
+          end
+
           # You can specify the connection name for each enum
           def connection_specification_name
             return self == Enum ? 'primary' : superclass.connection_specification_name
@@ -45,6 +56,16 @@ module Torque
           # Different from values, it returns the list of items already casted
           def members
             values.dup.map(&method(:new))
+          end
+
+          # Get the list of the values translated by I18n
+          def texts
+            members.map(&:text)
+          end
+
+          # Get a list of values translated and ready for select
+          def to_options
+            texts.zip(values)
           end
 
           # Fetch a value from the list
@@ -85,21 +106,6 @@ module Torque
             def connection(name)
               ActiveRecord::Base.connection_handler.retrieve_connection(name)
             end
-
-        end
-
-        # Extension of the ActiveRecord::Base to initiate the enum features
-        module Base
-
-          method_name = Torque::PostgreSQL.config.enum.base_method
-          module_eval <<-STR, __FILE__, __LINE__ + 1
-            def #{method_name}(*args, **options)
-              args.each do |attribute|
-                type = attribute_types[attribute.to_s]
-                TypeMap.lookup(type, self, attribute.to_s, false, options)
-              end
-            end
-          STR
 
         end
 
@@ -171,7 +177,7 @@ module Torque
 
             if attr && model
               values[:attr] = attr
-              values[:model] = model.class.model_name.i18n_key
+              values[:model] = model.model_name.i18n_key
               list_from = :i18n_scopes
             end
 
@@ -217,31 +223,15 @@ module Torque
 
       end
 
-      # Extend ActiveRecord::Base so it can have the initializer
-      ActiveRecord::Base.extend Enum::Base
-
       # Create the methods related to the attribute to handle the enum type
-      TypeMap.register_type Adapter::OID::Enum do |subtype, attribute, initial = false, options = nil|
-        break if initial && !Torque::PostgreSQL.config.enum.initializer
-        options = {} if options.nil?
-
+      TypeMap.register_type Adapter::OID::Enum do |subtype, attribute, options = nil|
         # Generate methods on self class
-        builder = Builder::Enum.new(self, attribute, subtype, initial, options)
+        builder = Builder::Enum.new(self, attribute, subtype, options || {})
         break if builder.conflicting?
         builder.build
 
         # Mark the enum as defined
         defined_enums[attribute] = subtype.klass
-      end
-
-      # Define a method to find yet to define constants
-      Torque::PostgreSQL.config.enum.namespace.define_singleton_method(:const_missing) do |name|
-        Enum.lookup(name)
-      end
-
-      # Define a helper method to get a sample value
-      Torque::PostgreSQL.config.enum.namespace.define_singleton_method(:sample) do |name|
-        Enum.lookup(name).sample
       end
     end
   end
