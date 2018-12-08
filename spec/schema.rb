@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 31
+  version = 34
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -33,11 +33,16 @@ begin
       t.enum     "specialty", subtype: :specialties
     end
 
+    create_table "texts", force: :cascade do |t|
+      t.string   "content"
+      t.enum     "conflict",  subtype: :conflicts
+    end
+
     create_table "comments", force: :cascade do |t|
       t.integer "user_id",    null: false
       t.integer "comment_id"
       t.text    "content",    null: false
-      t.string  "type"
+      t.string  "kind"
       t.index ["user_id"], name: "index_comments_on_user_id", using: :btree
       t.index ["comment_id"], name: "index_comments_on_comment_id", using: :btree
     end
@@ -59,7 +64,6 @@ begin
       t.string   "title"
       t.text     "content"
       t.enum     "status",    subtype: :content_status
-      t.enum     "conflict",  subtype: :conflicts
       t.index ["author_id"], name: "index_posts_on_author_id", using: :btree
     end
 
@@ -74,7 +78,7 @@ begin
       t.integer  "author_id"
       t.string   "title"
       t.boolean  "active"
-      t.enum     "type",                    subtype: :types
+      t.enum     "kind",                    subtype: :types
       t.datetime "created_at", null: false
       t.datetime "updated_at", null: false
     end

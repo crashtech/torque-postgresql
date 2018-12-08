@@ -22,7 +22,6 @@ module Torque
 
           # If the attributes are not loaded,
           def method_missing(method_name, *args, &block)
-            puts method_name.inspect
             return super unless define_attribute_methods
             self.send(method_name, *args, &block)
           end

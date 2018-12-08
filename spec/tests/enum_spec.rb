@@ -409,31 +409,33 @@ RSpec.describe 'Enum' do
 
   context 'on uninitialized model' do
     before(:each) { Torque::PostgreSQL.config.enum.initializer = true }
-
-    subject { User }
-    it 'has no roles method' do
-      expect(subject).to_not respond_to(:roles)
+    subject do
+      APost = Class.new(ActiveRecord::Base)
+      APost.table_name = 'posts'
+      APost
     end
 
-    it 'can load roles on the fly' do
-      result = subject.roles
+    it 'has no statuses method' do
+      expect(subject).to_not respond_to(:statuses)
+    end
+
+    it 'can load statuses on the fly' do
+      result = subject.statuses
       expect(result).to be_a(Array)
-      expect(result).to be_eql(Enum::Roles.values)
+      expect(result).to be_eql(Enum::ContentStatus.values)
     end
   end
 
   context 'on model' do
-    before :each do
-      Torque::PostgreSQL.config.enum.initializer = true
-      User.send(:define_attribute_method, 'role')
-      Torque::PostgreSQL.config.enum.initializer = false
-    end
+    before(:each) { type_map.decorate!(User, :role) }
 
     subject { User }
     let(:instance) { FactoryGirl.build(:user) }
 
     it 'has all enum methods' do
-      expect(subject).to respond_to(:roles)
+      expect(subject).to  respond_to(:roles)
+      expect(subject).to  respond_to(:roles_texts)
+      expect(subject).to  respond_to(:roles_options)
       expect(instance).to respond_to(:role_text)
 
       subject.roles.each do |value|
@@ -505,7 +507,10 @@ RSpec.describe 'Enum' do
     end
 
     it 'raises when starting an enum with conflicting methods' do
-      expect { type_map.decorate!(Post, :conflict) }.to raise_error(ArgumentError, /already exists in/)
+      AText = Class.new(ActiveRecord::Base)
+      AText.table_name = 'texts'
+
+      expect { type_map.decorate!(AText, :conflict) }.to raise_error(ArgumentError, /already exists in/)
     end
 
     context 'without autoload' do
@@ -526,19 +531,26 @@ RSpec.describe 'Enum' do
       end
 
       it 'does not create all methods' do
-        expect(subject).to_not respond_to(:specialties)
-        expect(instance).to_not respond_to(:specialty_text)
+        AAuthor = Class.new(ActiveRecord::Base)
+        AAuthor.table_name = 'authors'
+
+        expect(AAuthor).to_not respond_to(:specialties)
+        expect(AAuthor).to_not respond_to(:specialties_texts)
+        expect(AAuthor).to_not respond_to(:specialties_options)
+        expect(AAuthor.instance_methods).to_not include(:specialty_text)
 
         Enum::Specialties.values.each do |value|
-          expect(subject).to_not  respond_to(value)
-          expect(instance).to_not respond_to(value + '?')
-          expect(instance).to_not respond_to(value + '!')
+          expect(AAuthor).to_not respond_to(value)
+          expect(AAuthor.instance_methods).to_not include(value + '?')
+          expect(AAuthor.instance_methods).to_not include(value + '!')
         end
       end
 
       it 'can be manually initiated' do
         type_map.decorate!(Author, :specialty)
-        expect(subject).to respond_to(:specialties)
+        expect(subject).to  respond_to(:specialties)
+        expect(subject).to  respond_to(:specialties_texts)
+        expect(subject).to  respond_to(:specialties_options)
         expect(instance).to respond_to(:specialty_text)
 
         Enum::Specialties.values.each do |value|
@@ -555,7 +567,9 @@ RSpec.describe 'Enum' do
       let(:instance) { FactoryGirl.build(:author) }
 
       it 'creates all methods correctly' do
-        expect(subject).to respond_to(:specialties)
+        expect(subject).to  respond_to(:specialties)
+        expect(subject).to  respond_to(:specialties_texts)
+        expect(subject).to  respond_to(:specialties_options)
         expect(instance).to respond_to(:specialty_text)
 
         subject.specialties.each do |value|

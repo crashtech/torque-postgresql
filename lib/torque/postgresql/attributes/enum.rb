@@ -58,6 +58,16 @@ module Torque
             values.dup.map(&method(:new))
           end
 
+          # Get the list of the values translated by I18n
+          def texts
+            members.map(&:text)
+          end
+
+          # Get a list of values translated and ready for select
+          def to_options
+            texts.zip(values)
+          end
+
           # Fetch a value from the list
           # see https://github.com/rails/rails/blob/v5.0.0/activerecord/lib/active_record/fixtures.rb#L656
           # see https://github.com/rails/rails/blob/v5.0.0/activerecord/lib/active_record/validations/uniqueness.rb#L101
@@ -167,7 +177,7 @@ module Torque
 
             if attr && model
               values[:attr] = attr
-              values[:model] = model.class.model_name.i18n_key
+              values[:model] = model.model_name.i18n_key
               list_from = :i18n_scopes
             end
 

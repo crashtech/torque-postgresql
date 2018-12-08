@@ -112,11 +112,24 @@ module Torque
             .inheritance.auto_cast_column_name.to_sym
         end
       end
+
+      # When a relation is created, force the attributes to be defined,
+      # because the type mapper may add new methods to the model. This happens
+      # for the given model Klass and its inheritances
+      module Initializer
+        def initialize(klass, *)
+          super
+
+          klass.superclass.send(:relation) if klass.define_attribute_methods &&
+            klass.superclass != ActiveRecord::Base && !klass.superclass.abstract_class?
+        end
+      end
     end
 
     # Include the methos here provided and then change the constants to ensure
     # the operation of ActiveRecord Relation
     ActiveRecord::Relation.include Relation
+    ActiveRecord::Relation.prepend Relation::Initializer
 
     warn_level = $VERBOSE
     $VERBOSE = nil
