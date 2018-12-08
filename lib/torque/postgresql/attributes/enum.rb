@@ -26,14 +26,11 @@ module Torque
           # manually initialized
           def include_on(klass)
             method_name = Torque::PostgreSQL.config.enum.base_method
-            klass.singleton_class.class_eval <<-STR, __FILE__, __LINE__ + 1
-              def #{method_name}(*args, **options)
-                args.each do |attribute|
-                  type = attribute_types[attribute.to_s]
-                  TypeMap.lookup(type, self, attribute.to_s, false, options)
-                end
+            klass.singleton_class.class_eval do
+              define_method(method_name) do |*args, **options|
+                Torque::PostgreSQL::Attributes::TypeMap.decorate(self, args, **options)
               end
-            STR
+            end
           end
 
           # You can specify the connection name for each enum
@@ -217,12 +214,9 @@ module Torque
       end
 
       # Create the methods related to the attribute to handle the enum type
-      TypeMap.register_type Adapter::OID::Enum do |subtype, attribute, initial = false, options = nil|
-        break if initial && !Torque::PostgreSQL.config.enum.initializer
-        options = {} if options.nil?
-
+      TypeMap.register_type Adapter::OID::Enum do |subtype, attribute, options = nil|
         # Generate methods on self class
-        builder = Builder::Enum.new(self, attribute, subtype, initial, options)
+        builder = Builder::Enum.new(self, attribute, subtype, options || {})
         break if builder.conflicting?
         builder.build
 

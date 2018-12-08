@@ -4,15 +4,14 @@ module Torque
       module Builder
         class Enum
 
-          attr_accessor :klass, :attribute, :subtype, :initial, :options, :values
+          attr_accessor :klass, :attribute, :subtype, :options, :values
 
           # Start a new builder of methods for composite values on
           # ActiveRecord::Base
-          def initialize(klass, attribute, subtype, initial, options)
+          def initialize(klass, attribute, subtype, options)
             @klass     = klass
             @attribute = attribute.to_s
             @subtype   = subtype
-            @initial   = initial
             @options   = options
 
             @values    = subtype.klass.values
@@ -63,19 +62,11 @@ module Torque
 
             return false
           rescue Interrupt => err
-            if !initial
-              raise ArgumentError, <<-MSG.strip.gsub(/\n +/, ' ')
-                #{subtype.class.name} was not able to generate requested
-                methods because the method #{err} already exists in
-                #{klass.name}.
-              MSG
-            else
-              warn <<-MSG.strip.gsub(/\n +/, ' ')
-                #{subtype.class.name} was not able to autoload on
-                #{klass.name} because the method #{err} already exists.
-              MSG
-              return true
-            end
+            raise ArgumentError, <<-MSG.strip.gsub(/\n +/, ' ')
+              #{subtype.class.name} was not able to generate requested
+              methods because the method #{err} already exists in
+              #{klass.name}.
+            MSG
           end
 
           # Create all methods needed

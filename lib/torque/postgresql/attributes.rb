@@ -22,6 +22,7 @@ module Torque
 
           # If the attributes are not loaded,
           def method_missing(method_name, *args, &block)
+            puts method_name.inspect
             return super unless define_attribute_methods
             self.send(method_name, *args, &block)
           end
@@ -29,7 +30,7 @@ module Torque
           # Use local type map to identify attribute decorator
           def define_attribute_method(attribute)
             type = attribute_types[attribute]
-            super unless TypeMap.lookup(type, self, attribute, true)
+            super unless TypeMap.lookup(type, self, attribute)
           end
 
       end
