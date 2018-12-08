@@ -20,6 +20,30 @@ module Torque
         @inheritance_associations = @inheritance_associations.dup
       end
 
+      def encode_with(coder) # :nodoc:
+        super
+        coder["data_sources_model_names"] = @data_sources_model_names
+        coder["inheritance_dependencies"] = @inheritance_dependencies
+        coder["inheritance_associations"] = @inheritance_associations
+      end
+
+      def init_with(coder) # :nodoc:
+        super
+        @data_sources_model_names = coder["data_sources_model_names"]
+        @inheritance_dependencies = coder["inheritance_dependencies"]
+        @inheritance_associations = coder["inheritance_associations"]
+      end
+
+      def add(table_name, *) # :nodoc:
+        super
+
+        # Reset inheritance information when a table is added
+        if @data_sources.key?(table_name)
+          @inheritance_dependencies.clear
+          @inheritance_associations.clear
+        end
+      end
+
       def clear! # :nodoc:
         super
         @data_sources_model_names.clear
