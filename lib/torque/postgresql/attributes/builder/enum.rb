@@ -4,7 +4,7 @@ module Torque
       module Builder
         class Enum
 
-          attr_accessor :klass, :attribute, :subtype, :options, :values
+          attr_accessor :klass, :attribute, :subtype, :options, :values, :enum_module
 
           # Start a new builder of methods for composite values on
           # ActiveRecord::Base
@@ -74,9 +74,14 @@ module Torque
 
           # Create all methods needed
           def build
+            @enum_module = Module.new
+
             plural
             text
             all_values
+
+            klass.include enum_module
+            klass.extend enum_module::ClassMethods
           end
 
           private
@@ -98,7 +103,8 @@ module Torque
             def plural
               attr = attribute
               enum_klass = subtype.klass
-              klass.singleton_class.module_eval do
+              enum_module.const_set('ClassMethods', Module.new)
+              enum_module::ClassMethods.module_eval do
                 # def self.statuses() statuses end
                 define_method(attr.pluralize) do
                   enum_klass.values
@@ -113,7 +119,7 @@ module Torque
 
                 # def self.statuses_options() statuses_texts.zip(statuses) end
                 define_method(attr.pluralize + '_options') do
-                  enum_klass.values
+                  public_send(attr.pluralize + '_texts').zip(enum_klass.values)
                 end
               end
             end
@@ -122,7 +128,7 @@ module Torque
             # the model scope
             def text
               attr = attribute
-              klass.module_eval do
+              enum_module.module_eval do
                 # def status_text() status.text('status', self) end
                 define_method("#{attr}_text") { send(attr).text(attr, self) }
               end
@@ -133,10 +139,11 @@ module Torque
             def all_values
               attr = attribute
               vals = values_methods
-              klass.module_eval do
+              model_klass = klass
+              enum_module.module_eval do
                 vals.each do |val, list|
                   # scope :disabled, -> { where(status: 'disabled') }
-                  scope list[0], -> { where(attr => val) }
+                  model_klass.scope list[0], -> { where(attr => val) }
 
                   # def disabled? status.disabled? end
                   define_method(list[1]) { send(attr).public_send("#{val}?") }

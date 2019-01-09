@@ -513,6 +513,24 @@ RSpec.describe 'Enum' do
       expect { type_map.decorate!(AText, :conflict) }.to raise_error(ArgumentError, /already exists in/)
     end
 
+    context 'on inherited classes' do
+      it 'has all enum methods' do
+        klass = ActivityBook
+        instance = klass.new
+
+        expect(klass).to    respond_to(:kinds)
+        expect(klass).to    respond_to(:kinds_texts)
+        expect(klass).to    respond_to(:kinds_options)
+        expect(instance).to respond_to(:kind_text)
+
+        klass.kinds.each do |value|
+          expect(klass).to    respond_to(value)
+          expect(instance).to respond_to(value + '?')
+          expect(instance).to respond_to(value + '!')
+        end
+      end
+    end
+
     context 'without autoload' do
       subject { Author }
       let(:instance) { FactoryGirl.build(:author) }
