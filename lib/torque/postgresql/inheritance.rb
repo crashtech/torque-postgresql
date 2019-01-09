@@ -39,6 +39,8 @@ module Torque
 
         # Check if the model's table depends on any inheritance
         def physically_inherited?
+          return false unless connected?
+
           @physically_inherited ||= connection.schema_cache.dependencies(
             defined?(@table_name) ? @table_name : decorated_table_name,
           ).present?
