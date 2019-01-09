@@ -90,26 +90,32 @@ module Torque
 
         # Gets a list of user defined types.
         # You can even choose the +category+ filter
-        def user_defined_types(category = nil)
-          category_condition = "AND     typtype = '#{category}'" unless category.nil?
+        def user_defined_types(*categories)
+          category_condition = categories.present? \
+            ? "AND t.typtype IN ('#{categories.join("', '")}')" \
+            : "AND t.typtype NOT IN ('b', 'd')"
+
           select_all(<<-SQL, 'SCHEMA').rows.to_h
-            SELECT      t.typname AS name,
-                        CASE t.typtype
-                        WHEN 'e' THEN 'enum'
-                        END AS type
-            FROM        pg_type t
-            LEFT JOIN   pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-            WHERE       n.nspname NOT IN ('pg_catalog', 'information_schema')
-            #{category_condition}
-            AND     NOT EXISTS(
-                      SELECT 1 FROM pg_catalog.pg_type el
-                        WHERE el.oid = t.typelem AND el.typarray = t.oid
-                      )
-            AND     (t.typrelid = 0 OR (
-                      SELECT c.relkind = 'c' FROM pg_catalog.pg_class c
-                        WHERE c.oid = t.typrelid
-                      ))
-            ORDER BY    t.typtype DESC
+            SELECT t.typname AS name,
+                   CASE t.typtype
+                     WHEN 'e' THEN 'enum'
+                     END     AS type
+            FROM pg_type t
+                   LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+            WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
+              #{category_condition}
+              AND NOT EXISTS(
+                SELECT 1
+                FROM pg_catalog.pg_type el
+                WHERE el.oid = t.typelem
+                  AND el.typarray = t.oid
+              )
+              AND (t.typrelid = 0 OR (
+              SELECT c.relkind = 'c'
+              FROM pg_catalog.pg_class c
+              WHERE c.oid = t.typrelid
+            ))
+            ORDER BY t.typtype DESC
           SQL
         end
 
