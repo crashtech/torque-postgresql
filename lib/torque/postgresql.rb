@@ -10,6 +10,7 @@ require 'active_record/connection_adapters/postgresql_adapter'
 require 'torque/postgresql/config'
 require 'torque/postgresql/version'
 require 'torque/postgresql/collector'
+require 'torque/postgresql/geometry_builder'
 
 require 'torque/postgresql/i18n'
 require 'torque/postgresql/arel'

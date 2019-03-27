@@ -35,7 +35,11 @@ module Torque
         # Change some of the types being mapped
         def initialize_type_map(m = type_map)
           super
+          m.register_type 'box', OID::Box.new
+          m.register_type 'circle', OID::Circle.new
           m.register_type 'interval', OID::Interval.new
+          m.register_type 'line', OID::Line.new
+          m.register_type 'segment', OID::Segment.new
         end
 
         # :nodoc:

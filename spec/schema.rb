@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 34
+  version = 35
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -26,6 +26,17 @@ begin
     create_enum "roles", ["visitor", "assistant", "manager", "admin"], force: :cascade
     create_enum "conflicts", ["valid", "invalid", "untrusted"], force: :cascade
     create_enum "types", ["A", "B", "C", "D"], force: :cascade
+
+    create_table "geometries", force: :cascade do |t|
+      t.point   "point"
+      t.line    "line"
+      t.lseg    "lseg"
+      t.box     "box"
+      t.path    "closed_path"
+      t.path    "open_path"
+      t.polygon "polygon"
+      t.circle  "circle"
+    end
 
     create_table "authors", force: :cascade do |t|
       t.string   "name"
