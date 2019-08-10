@@ -47,6 +47,16 @@ module Torque
           !obj.nil? && obj.is_a?(::Arel::SelectManager)
         end
 
+        # A way to create auxiliary statements outside of models configurations,
+        # being able to use on extensions
+        def create(base, table_name = nil, &block)
+          klass = Class.new(AuxiliaryStatement)
+          klass.instance_variable_set(:@table_name, table_name)
+          klass.instance_variable_set(:@base, base)
+          klass.configurator(block)
+          klass
+        end
+
         # Set a configuration block, if the class is already set up, just clean
         # the query and wait it to be setup again
         def configurator(block)
@@ -56,7 +66,7 @@ module Torque
 
         # Get the base class associated to this statement
         def base
-          self.parent
+          @base || self.parent
         end
 
         # Get the name of the base class
@@ -126,7 +136,7 @@ module Torque
             @join_attributes = []
 
             # Generate attributes projections
-            attributes_projections(settings.attributes)
+            attributes_projections(settings.attributes) if settings.attributes.present?
 
             # Generate join projections
             if settings.join.present?

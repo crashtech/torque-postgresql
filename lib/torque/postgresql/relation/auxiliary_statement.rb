@@ -17,8 +17,8 @@ module Torque
         def with!(*args)
           options = args.extract_options!
           args.each do |table|
-            instance = table.is_a?(PostgreSQL::AuxiliaryStatement) \
-              ? table.class.new(options) \
+            instance = table.is_a?(Class) && table < PostgreSQL::AuxiliaryStatement \
+              ? table.new(options) \
               : PostgreSQL::AuxiliaryStatement.instantiate(table, self, options)
             instance.ensure_dependencies!(self)
             self.auxiliary_statements_values |= [instance]
