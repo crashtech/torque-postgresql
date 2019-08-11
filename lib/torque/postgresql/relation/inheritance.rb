@@ -106,7 +106,7 @@ module Torque
 
             table = ::Arel::Table.new(type_attribute.camelize.underscore)
             column = table[type_attribute].in(types)
-            ::Arel::Nodes::SqlLiteral.new(column.to_sql).as(auto_cast_attribute)
+            ::Arel.sql(column.to_sql).as(auto_cast_attribute)
           end
 
       end

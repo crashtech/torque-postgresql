@@ -25,7 +25,7 @@ module Torque
           value.gsub!(DESTRUCTOR, '')
           build_klass(*value.split(','))
         when ::Hash
-          build_klass(*value.with_indifferent_access.slice(*pieces))
+          build_klass(*value.symbolize_keys.slice(*pieces))
         when ::Array
           build_klass(*value)
         else
@@ -34,18 +34,18 @@ module Torque
       end
 
       def serialize(value)
-        case value
-        when config_class
-          formation % pieces.lazy.map do |piece|
-            value.public_send(piece)
-          end.map(&number_serializer).force
-        when ::Hash
-          formation % value.with_indifferent_access.slice(*pieces).map(&number_serializer)
-        when ::Array
-          formation % value.map(&number_serializer)
-        else
-          super
-        end
+        parts =
+          case value
+          when config_class
+            pieces.map { |piece| value.public_send(piece) }
+          when ::Hash
+            value.symbolize_keys.slice(*pieces)
+          when ::Array
+            value
+          end
+
+        return super if parts.nil?
+        format(formation, parts.map(&number_serializer))
       end
 
       def deserialize(value)

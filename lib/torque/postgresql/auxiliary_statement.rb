@@ -272,7 +272,7 @@ module Torque
           # Prepare the query depending on its type
           if query.is_a?(String)
             args = args.map{ |k, v| [k, klass.parent.connection.quote(v)] }.to_h
-            ::Arel::Nodes::SqlLiteral.new("(#{query})" % args)
+            ::Arel.sql("(#{query})" % args)
           elsif relation_query?(query)
             query.select(*select_columns).arel
           else

@@ -9,6 +9,7 @@ module Torque
 
         delegate :base, :base_name, :base_table, :table, :table_name, to: :@source
         delegate :relation_query?, to: Torque::PostgreSQL::AuxiliaryStatement
+        delegate :sql, to: '::Arel'
 
         def initialize(source)
           @source = source
@@ -27,11 +28,6 @@ module Torque
         end
 
         alias column col
-
-        # Grant an easy access to arel sql literal
-        def sql(string)
-          ::Arel::Nodes::SqlLiteral.new(string)
-        end
 
         # There are two ways of setting the query:
         # - A simple relation based on a Model
