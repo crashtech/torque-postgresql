@@ -70,11 +70,13 @@ module Torque
         end
       end
 
-      private
+      protected
 
         def dynamic_selection
           @dynamic_selection ||= []
         end
+
+      private
 
         def build_arel(*)
           arel = super
