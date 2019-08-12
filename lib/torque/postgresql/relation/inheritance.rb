@@ -76,7 +76,7 @@ module Torque
             end
 
             columns.push(build_auto_caster_marker(arel, self.cast_records_value))
-            dynamic_selection.concat(columns) if columns.any?
+            self.select_extra_values += columns if columns.any?
           end
 
           # Build as many left outer join as necessary for each dependent table

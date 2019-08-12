@@ -70,6 +70,9 @@ module Torque
       # arguments to format string or send on a proc
       cte.send_arguments_key = :args
 
+      # Specify the namespace of each enum type of value
+      cte.exposed_class = 'TorqueCTE'
+
     end
 
     # Configure inheritance features

@@ -1,5 +1,5 @@
 module Torque
   module PostgreSQL
-    VERSION = '0.2.17'
+    VERSION = '1.0.0'
   end
 end

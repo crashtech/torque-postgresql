@@ -71,13 +71,11 @@ module Torque
 
           # Message when trying to define multiple types
           def raise_type_defined(key)
-            raise ArgumentError, <<-MSG.strip
+            raise ArgumentError, <<-MSG.squish
               Type #{key} is already defined here: #{types[key].source_location.join(':')}
             MSG
           end
-
         end
-
       end
     end
   end

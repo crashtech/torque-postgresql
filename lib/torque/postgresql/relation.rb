@@ -14,8 +14,13 @@ module Torque
       include Inheritance
 
       SINGLE_VALUE_METHODS = [:itself_only]
-      MULTI_VALUE_METHODS = [:distinct_on, :auxiliary_statements, :cast_records]
+      MULTI_VALUE_METHODS = [:distinct_on, :auxiliary_statements, :cast_records, :select_extra]
       VALUE_METHODS = SINGLE_VALUE_METHODS + MULTI_VALUE_METHODS
+
+      # :nodoc:
+      def select_extra_values; get_value(:select_extra); end
+      # :nodoc:
+      def select_extra_values=(value); set_value(:select_extra, value); end
 
       # Resolve column name when calculating models, allowing the column name to
       # be more complex while keeping the query selection quality
@@ -70,17 +75,11 @@ module Torque
         end
       end
 
-      protected
-
-        def dynamic_selection
-          @dynamic_selection ||= []
-        end
-
       private
 
         def build_arel(*)
           arel = super
-          arel.project(*dynamic_selection) if select_values.blank? && dynamic_selection.any?
+          arel.project(*select_extra_values) if select_values.blank?
           arel
         end
 
@@ -136,9 +135,9 @@ module Torque
     warn_level = $VERBOSE
     $VERBOSE = nil
 
-    ActiveRecord::Relation::SINGLE_VALUE_METHODS  += Relation::SINGLE_VALUE_METHODS
-    ActiveRecord::Relation::MULTI_VALUE_METHODS   += Relation::MULTI_VALUE_METHODS
-    ActiveRecord::Relation::VALUE_METHODS         += Relation::VALUE_METHODS
+    ActiveRecord::Relation::SINGLE_VALUE_METHODS       += Relation::SINGLE_VALUE_METHODS
+    ActiveRecord::Relation::MULTI_VALUE_METHODS        += Relation::MULTI_VALUE_METHODS
+    ActiveRecord::Relation::VALUE_METHODS              += Relation::VALUE_METHODS
     ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES += [:cast_records, :itself_only,
       :distinct_on, :auxiliary_statements]
 

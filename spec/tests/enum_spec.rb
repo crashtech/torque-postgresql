@@ -515,15 +515,15 @@ RSpec.describe 'Enum' do
 
     context 'on inherited classes' do
       it 'has all enum methods' do
-        klass = ActivityBook
+        klass = Class.new(User)
         instance = klass.new
 
-        expect(klass).to    respond_to(:kinds)
-        expect(klass).to    respond_to(:kinds_texts)
-        expect(klass).to    respond_to(:kinds_options)
-        expect(instance).to respond_to(:kind_text)
+        expect(klass).to    respond_to(:roles)
+        expect(klass).to    respond_to(:roles_texts)
+        expect(klass).to    respond_to(:roles_options)
+        expect(instance).to respond_to(:role_text)
 
-        klass.kinds.each do |value|
+        klass.roles.each do |value|
           expect(klass).to    respond_to(value)
           expect(instance).to respond_to(value + '?')
           expect(instance).to respond_to(value + '!')

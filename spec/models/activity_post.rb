@@ -1,3 +1,5 @@
+require_relative 'activity'
+
 class ActivityPost < Activity
   belongs_to :post
 end

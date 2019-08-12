@@ -12,7 +12,8 @@ module Torque
           super
 
           subclass.class_attribute(:auxiliary_statements_list)
-          subclass.auxiliary_statements_list = Hash.new
+          subclass.auxiliary_statements_list = {}
+
           record_class = ActiveRecord::Relation._record_class_attribute
 
           # Define helper methods to return the class of the given records

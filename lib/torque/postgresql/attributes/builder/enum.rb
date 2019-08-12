@@ -65,7 +65,7 @@ module Torque
 
             return false
           rescue Interrupt => err
-            raise ArgumentError, <<-MSG.strip.gsub(/\n +/, ' ')
+            raise ArgumentError, <<-MSG.squish
               #{subtype.class.name} was not able to generate requested
               methods because the method #{err} already exists in
               #{klass.name}.
