@@ -203,17 +203,15 @@ module Torque
             end
 
             # Add the scopes defined by the reflection
-            if Torque::PostgreSQL::AR521
+            if association.respond_to?(:build_join_constraint)
               @query.merge(association.join_scope(@query.arel_table, base))
               constraint = association.build_join_constraint(table, foreign_table)
-            else
+            elsif association.respond_to?(:join_scope)
               @query.merge(association.join_scope(@query.arel_table))
-
-              join = association.join_keys
-              klass = association.klass
-              constraint = table[join.key].eq(foreign_table[join.foreign_key])
-              constraint = table.create_and([constraint, klass.send(:type_condition, table)]) \
-                if klass.finder_needs_type_condition?
+              constraint = build_join_constraint(association, foreign_table)
+            else
+              # Old versions doesn't not easily support scopes
+              constraint = build_join_constraint(association, foreign_table)
             end
 
             # Add the join constraints
@@ -245,6 +243,20 @@ module Torque
 
           # Build the join based on the join type
           arel_join.new(table, table.create_on(conditions))
+        end
+
+        # Manually build the join constraint
+        def build_join_constraint(association, foreign_table)
+          klass = association.klass
+          join = !association.respond_to?(:join_scope) \
+            ? association.join_keys(klass) \
+            : association.join_keys
+
+          result = table[join.key].eq(foreign_table[join.foreign_key])
+          result = table.create_and([result, klass.send(:type_condition, table)]) \
+            if klass.finder_needs_type_condition?
+
+          result
         end
 
         # Get the class of the join on arel
