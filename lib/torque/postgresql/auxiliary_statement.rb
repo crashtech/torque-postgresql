@@ -27,9 +27,28 @@ module Torque
           base.const_set(const, Class.new(AuxiliaryStatement))
         end
 
+        # Find an auxiliary statement on parent classes and clone it
+        def find_and_inherit(name, base)
+          klass = base.klass
+          source = while (klass = klass.superclass) < ActiveRecord::Base
+            next if klass.abstract_class? || !klass.respond_to?(:auxiliary_statements_list)
+            break klass.auxiliary_statements_list[name] \
+              if klass.auxiliary_statements_list.key?(name)
+          end
+
+          # If no source, the CTE doesn't exist
+          return unless source.present? && source < AuxiliaryStatement
+
+          result = Class.new(source)
+          result.configurator(source.instance_variable_get(:@config))
+          base.const_set("#{name.to_s.camelize}_#{self.name.demodulize}", result)
+        end
+
         # Create a new instance of an auxiliary statement
         def instantiate(statement, base, options = nil)
           klass = base.auxiliary_statements_list[statement]
+          klass = find_and_inherit(statement, base) if klass.nil?
+
           return klass.new(options) unless klass.nil?
           raise ArgumentError, <<-MSG.strip
             There's no '#{statement}' auxiliary statement defined for #{base.class.name}.
@@ -74,6 +93,11 @@ module Torque
           base.name
         end
 
+        # Get the arel table of the base class
+        def base_table
+          @base_table ||= base.arel_table
+        end
+
         # Get the arel version of the statement table
         def table
           @table ||= ::Arel::Table.new(table_name)
@@ -82,11 +106,6 @@ module Torque
         # Get the name of the table of the configurated statement
         def table_name
           @table_name ||= self.name.demodulize.split('_').first.underscore
-        end
-
-        # Get the arel table of the base class
-        def base_table
-          @base_table ||= base.arel_table
         end
 
         # Get the arel table of the query
@@ -217,10 +236,10 @@ module Torque
         arel.join(table, arel_join).on(*join_columns)
 
         # Return the subquery for this statement
-        ::Arel::Nodes::As.new(table, mount_query)
+        ::Arel::Nodes::As.new(table, build_query)
       end
 
-      # Get the bound attributes from statement qeury
+      # Get the bound attributes from statement query
       def bound_attributes
         return [] unless relation_query?(self.class.query)
         self.class.query.send(:bound_attributes)
@@ -257,7 +276,7 @@ module Torque
         end
 
         # Mount the query base on it's class
-        def mount_query
+        def build_query
           klass = self.class
           query = klass.query
           args = @args

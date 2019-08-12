@@ -2,14 +2,14 @@ module Torque
   module PostgreSQL
     class AuxiliaryStatement
       class Settings < Collector.new(:attributes, :join, :join_type, :query, :requires,
-                                     :polymorphic)
+          :polymorphic)
 
         attr_reader :source
         alias cte source
 
         delegate :base, :base_name, :base_table, :table, :table_name, to: :@source
         delegate :relation_query?, to: Torque::PostgreSQL::AuxiliaryStatement
-        delegate :sql, to: '::Arel'
+        delegate :sql, to: ::Arel
 
         def initialize(source)
           @source = source
@@ -44,10 +44,12 @@ module Torque
           end
 
           valid_type = command.respond_to?(:call) || command.is_a?(String)
+
           raise ArgumentError, <<-MSG.strip.gsub(/\n +/, ' ') if command.nil?
             To use proc or string as query, you need to provide the table name
             as the first argument
           MSG
+
           raise ArgumentError, <<-MSG.strip.gsub(/\n +/, ' ') unless valid_type
             Only relation, string and proc are valid object types for query,
             #{command.inspect} given.

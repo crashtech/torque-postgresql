@@ -357,6 +357,49 @@ RSpec.describe 'AuxiliaryStatement' do
       end
     end
 
+    context 'with inheritance' do
+      let(:base) { Activity }
+      let(:klass) { ActivityBook }
+
+      it 'accepts ancestors auxiliary statements' do
+        base.send(:auxiliary_statement, :authors) do |cte|
+          cte.query Author.all
+          cte.attributes name: :author_name
+          cte.join author_id: :id
+        end
+
+        result = 'WITH "authors" AS'
+        result << ' (SELECT "authors"."name" AS author_name, "authors"."id" FROM "authors")'
+        result << ' SELECT "activity_books".*, "authors"."author_name" FROM "activity_books"'
+        result << ' INNER JOIN "authors" ON "activity_books"."author_id" = "authors"."id"'
+        expect(subject.with(:authors).arel.to_sql).to eql(result)
+      end
+
+      it 'can replace ancestors auxiliary statements' do
+        base.send(:auxiliary_statement, :authors) do |cte|
+          cte.query Author.all
+          cte.attributes name: :author_name
+          cte.join author_id: :id
+        end
+
+        klass.send(:auxiliary_statement, :authors) do |cte|
+          cte.query Author.all
+          cte.attributes type: :author_type
+          cte.join author_id: :id
+        end
+
+        result = 'WITH "authors" AS'
+        result << ' (SELECT "authors"."type" AS author_type, "authors"."id" FROM "authors")'
+        result << ' SELECT "activity_books".*, "authors"."author_type" FROM "activity_books"'
+        result << ' INNER JOIN "authors" ON "activity_books"."author_id" = "authors"."id"'
+        expect(subject.with(:authors).arel.to_sql).to eql(result)
+      end
+
+      it 'raises an error when no class has the auxiliary statement' do
+        expect{ subject.with(:comments).arel.to_sql }.to raise_error(ArgumentError)
+      end
+    end
+
     it 'can uses join on polymorphic relations' do
       Comment.columns_hash['source_id'] = true
       klass.send(:auxiliary_statement, :comments) do |cte|
