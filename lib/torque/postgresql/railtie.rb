@@ -25,7 +25,8 @@ module Torque
         # Define the exposed constant for auxiliary statements
         if torque_config.auxiliary_statement.exposed_class.present?
           *ns, name = torque_config.auxiliary_statement.exposed_class.split('::')
-          Object.const_get(ns).const_set(name, Torque::PostgreSQL::AuxiliaryStatement)
+          base = ns.present? ? Object.const_get(ns.join('::')) : Object
+          base.const_set(name, Torque::PostgreSQL::AuxiliaryStatement)
         end
       end
     end
