@@ -156,7 +156,7 @@ module Torque
 
         # Override bitwise & operator to ensure formatted values
         def &(other)
-          other.map!(&method(:instantiate))
+          other = other.entries.map(&method(:instantiate))
           values = @hash.keys.select { |k| other.include?(k) }
           self.class.new(values)
         end

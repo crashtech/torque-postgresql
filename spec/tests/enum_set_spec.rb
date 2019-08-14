@@ -26,7 +26,12 @@ RSpec.describe 'Enum' do
       subject.enum(:content_status, array: true)
       expect(subject['content_status'].name).to be_eql('content_status')
       expect(subject['content_status'].type).to be_eql(:content_status)
-      expect(subject['content_status'].options[:array]).to be_eql(true)
+
+      array = subject['content_status'].respond_to?(:options) \
+        ? subject['content_status'].options[:array] \
+        : subject['content_status'].array
+
+      expect(array).to be_eql(true)
     end
   end
 
