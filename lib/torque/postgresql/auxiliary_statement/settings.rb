@@ -2,7 +2,7 @@ module Torque
   module PostgreSQL
     class AuxiliaryStatement
       class Settings < Collector.new(:attributes, :join, :join_type, :query, :requires,
-          :polymorphic)
+          :polymorphic, :through)
 
         attr_reader :base, :source
         alias_method :select, :attributes

@@ -155,6 +155,8 @@ module Torque
           # Merge join settings
           if settings.join.present?
             @join = settings.join.merge(@join)
+          elsif settings.through.present?
+            @association = settings.through.to_s
           elsif relation_query?(@query)
             @association = base.reflections.find do |name, reflection|
               break name if @query.klass.eql? reflection.klass
