@@ -29,13 +29,13 @@ module Torque
     # Configure ENUM features
     config.nested(:enum) do |enum|
 
-      # Indicates if the enum features on ActiveRecord::Base should be initiated
-      # automatically or not
-      enum.initializer = false
-
       # The name of the method to be used on any ActiveRecord::Base to
       # initialize model-based enum features
       enum.base_method = :enum
+
+      # The name of the method to be used on any ActiveRecord::Base to
+      # initialize model-based enum set features
+      enum.set_method = :enum_set
 
       # Indicates if bang methods like 'disabled!' should update the record on
       # database or not

@@ -3,7 +3,6 @@ module Torque
     module Attributes
       module Builder
         class Enum
-
           attr_accessor :klass, :attribute, :subtype, :options, :values, :enum_module
 
           # Start a new builder of methods for composite values on
@@ -77,7 +76,7 @@ module Torque
             @enum_module = Module.new
 
             plural
-            text
+            stringify
             all_values
 
             klass.include enum_module
@@ -126,11 +125,11 @@ module Torque
 
             # Create the method that turn the attribute value into text using
             # the model scope
-            def text
+            def stringify
               attr = attribute
               enum_module.module_eval do
                 # def status_text() status.text('status', self) end
-                define_method("#{attr}_text") { send(attr).text(attr, self) }
+                define_method("#{attr}_text") { send(attr)&.text(attr, self) }
               end
             end
 
@@ -139,27 +138,32 @@ module Torque
             def all_values
               attr = attribute
               vals = values_methods
+
+              enum_klass = subtype.klass
               model_klass = klass
+
               enum_module.module_eval do
                 vals.each do |val, list|
                   # scope :disabled, -> { where(status: 'disabled') }
-                  model_klass.scope list[0], -> { where(attr => val) }
+                  model_klass.scope list[0], -> do
+                    where(enum_klass.scope(arel_table[attr], val))
+                  end
 
                   # def disabled? status.disabled? end
                   define_method(list[1]) { send(attr).public_send("#{val}?") }
 
-                  # def disabled! enum_save_on_bang ? update!(status: 'disabled') : status.disabled! end
+                  # def disabled!
+                  # changed = send(attr).public_send("#{val}!")
+                  # save! if changed && enum_save_on_bang
+                  # true
                   define_method(list[2]) do
-                    if enum_save_on_bang
-                      update!(attr => val)
-                    else
-                      send(attr).public_send("#{val}!")
-                    end
+                    changed = send(attr).public_send("#{val}!")
+                    return save! if changed && enum_save_on_bang
+                    true
                   end
                 end
               end
             end
-
         end
       end
     end

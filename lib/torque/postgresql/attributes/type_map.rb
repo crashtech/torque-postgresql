@@ -65,8 +65,7 @@ module Torque
           # Check whether the given attribute on the given klass is
           # decorable by this type mapper
           def decorable?(key, klass, attribute)
-            key.class.auto_initialize? ||
-              (decorable.key?(klass) && decorable[klass].include?(attribute.to_s))
+            decorable.key?(klass) && decorable[klass].include?(attribute.to_s)
           end
 
           # Message when trying to define multiple types

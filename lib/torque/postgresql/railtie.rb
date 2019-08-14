@@ -11,6 +11,7 @@ module Torque
         # Include enum on ActiveRecord::Base so it can have the correct enum
         # initializer
         Torque::PostgreSQL::Attributes::Enum.include_on(ActiveRecord::Base)
+        Torque::PostgreSQL::Attributes::EnumSet.include_on(ActiveRecord::Base)
 
         # Define a method to find enumaerators based on the namespace
         torque_config.enum.namespace.define_singleton_method(:const_missing) do |name|

@@ -17,6 +17,25 @@ module Torque
           Name.new(schema, table).quoted
         end
 
+        def quote_default_expression(value, column)
+          if value.is_a?(Array)
+            quote(value) + '::' + column.sql_type
+          else
+            super
+          end
+        end
+
+        private
+
+          def _quote(value)
+            case value
+            when Array
+              values = value.map(&method(:quote))
+              "ARRAY[#{values.join(',')}]"
+            else
+              super
+            end
+          end
       end
     end
   end

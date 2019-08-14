@@ -3,7 +3,7 @@ module Torque
     module Adapter
       module DatabaseStatements
 
-        EXTENDED_DATABASE_TYPES = %i(enum interval)
+        EXTENDED_DATABASE_TYPES = %i(enum enum_set interval)
 
         # Switch between dump mode or not
         def dump_mode!
@@ -61,7 +61,8 @@ module Torque
 
           query = <<-SQL
             SELECT      a.typelem AS oid, t.typname, t.typelem,
-                        t.typdelim, t.typbasetype, t.typtype
+                        t.typdelim, t.typbasetype, t.typtype,
+                        t.typarray
             FROM        pg_type t
             INNER JOIN  pg_type a ON (a.oid = t.typarray)
             LEFT JOIN   pg_catalog.pg_namespace n ON n.oid = t.typnamespace
@@ -80,14 +81,9 @@ module Torque
 
           execute_and_clear(query, 'SCHEMA', []) do |records|
             records.each do |row|
-              typtype = row['typtype']
-              type = begin
-                case
-                when typtype == 'e' then OID::Enum.create(row)
-                end
+              case row['typtype']
+              when 'e' then OID::Enum.create(row, type_map)
               end
-
-              type_map.register_type row['oid'].to_i, type
             end
           end
         end
@@ -158,6 +154,20 @@ module Torque
                  #{local_condition}
                ORDER BY a.attnum
           SQL
+        end
+
+        # Extracts the value from a PostgreSQL column default definition.
+        def extract_value_from_default(default)
+          case default
+            # Array elements
+          when /\AARRAY\[(.*)\]\z/
+            # TODO: Improve this since it's not the most safe approach
+            eval(default.gsub(/ARRAY|::\w+(\[\])?/, ''))
+          else
+            super
+          end
+        rescue SyntaxError
+          # If somethin goes wrong with the eval, just return nil
         end
 
       end

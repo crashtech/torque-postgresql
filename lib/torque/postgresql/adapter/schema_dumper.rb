@@ -10,6 +10,15 @@ module Torque
           end
         end
 
+        # Translate +:enum_set+ into +:enum+
+        def schema_type(column)
+          if column.type == :enum_set
+            :enum
+          else
+            super
+          end
+        end
+
         # Adds +:subtype+ option to the default set
         def prepare_column_options(column)
           spec = super
@@ -24,7 +33,7 @@ module Torque
         private
 
           def schema_subtype(column)
-            column.sql_type.to_sym.inspect if column.type == :enum
+            column.sql_type.to_sym.inspect if column.type == :enum || column.type == :enum_set
           end
 
       end

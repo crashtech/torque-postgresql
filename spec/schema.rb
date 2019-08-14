@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 35
+  version = 41
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -38,6 +38,20 @@ begin
       t.circle  "circle"
     end
 
+    create_table "tags", force: :cascade do |t|
+      t.string "name"
+    end
+
+    create_table "videos", force: :cascade do |t|
+      t.bigint   "tag_ids", array: true
+      t.string   "title"
+      t.string   "url"
+      t.enum     "type", subtype: :types
+      t.enum     "conflicts", subtype: :conflicts, array: true
+      t.datetime "created_at", null: false
+      t.datetime "updated_at", null: false
+    end
+
     create_table "authors", force: :cascade do |t|
       t.string   "name"
       t.string   "type"
@@ -61,6 +75,7 @@ begin
     create_table "courses", force: :cascade do |t|
       t.string   "title",      null: false
       t.interval "duration"
+      t.enum     "types", subtype: :types, array: true, default: [:A, :B]
       t.datetime "created_at", null: false
       t.datetime "updated_at", null: false
     end

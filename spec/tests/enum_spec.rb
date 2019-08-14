@@ -160,6 +160,10 @@ RSpec.describe 'Enum' do
       expect(subject.instance_variable_defined?(:@values)).to be_falsey
     end
 
+    it 'returns the db type name' do
+      expect(subject.type_name).to be_eql('content_status')
+    end
+
     it 'values match database values' do
       expect(subject.values).to be_eql(values)
     end
@@ -219,9 +223,10 @@ RSpec.describe 'Enum' do
       value = subject.new(nil)
 
       expect(value.__class__).to be_eql(lazy)
-      expect(value.draft?).to be_falsey
       expect(value.to_s).to be_eql('')
       expect(value.to_i).to be_nil
+
+      expect(value.draft?).to be_falsey
     end
 
     it 'accepts values to come from numeric' do
@@ -240,7 +245,6 @@ RSpec.describe 'Enum' do
       expect(value).to be < subject.archived
       expect(value).to be_eql(subject.draft)
       expect(value).to_not be_eql(subject.published)
-      expect(subject.draft == mock_enum.draft).to be_falsey
     end
 
     it 'allows values comparison with string' do
@@ -380,14 +384,14 @@ RSpec.describe 'Enum' do
 
       it 'accepts string' do
         value = subject.cast('created')
-        expect(value).to be_eql(enum.created)
         expect(value).to be_a(enum)
+        expect(value).to be_eql(enum.created)
       end
 
       it 'accepts numeric' do
         value = subject.cast(1)
-        expect(value).to be_eql(enum.draft)
         expect(value).to be_a(enum)
+        expect(value).to be_eql(enum.draft)
       end
     end
   end
@@ -404,25 +408,6 @@ RSpec.describe 'Enum' do
       expect(subject.new(1).text).to be_eql('Draft (2)')
       expect(subject.new(2).text).to be_eql('Finally published')
       expect(subject.new(3).text).to be_eql('Archived')
-    end
-  end
-
-  context 'on uninitialized model' do
-    before(:each) { Torque::PostgreSQL.config.enum.initializer = true }
-    subject do
-      APost = Class.new(ActiveRecord::Base)
-      APost.table_name = 'posts'
-      APost
-    end
-
-    it 'has no statuses method' do
-      expect(subject).to_not respond_to(:statuses)
-    end
-
-    it 'can load statuses on the fly' do
-      result = subject.statuses
-      expect(result).to be_a(Array)
-      expect(result).to be_eql(Enum::ContentStatus.values)
     end
   end
 
