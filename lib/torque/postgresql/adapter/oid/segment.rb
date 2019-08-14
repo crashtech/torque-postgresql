@@ -56,8 +56,14 @@ module Torque
             end
 
             def build_klass(*args)
-              x1, y1, x2, y2 = args.map(&:to_f)
-              config_class.new(point_class.new(x1, y1), point_class.new(x2, y2))
+              return nil if args.empty?
+              check_invalid_format!(args)
+
+              x1, y1, x2, y2 = args.try(:first, pieces.size)&.map(&:to_f)
+              config_class.new(
+                point_class.new(x1, y1),
+                point_class.new(x2, y2),
+              )
             end
 
         end

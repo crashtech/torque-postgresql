@@ -44,10 +44,9 @@ module Torque
             value
           end
 
-        parts.compact!
-        parts.flatten!
+          parts = parts&.compact&.flatten
+          return if parts.blank?
 
-        return if parts.blank?
         raise 'Invalid format' if parts.size < pieces.size
         format(formation, *parts.first(pieces.size).map(&number_serializer))
       end
@@ -80,9 +79,13 @@ module Torque
 
         def build_klass(*args)
           return nil if args.empty?
+          check_invalid_format!(args)
 
-          raise 'Invalid format' if args.size < pieces.size
           config_class.new(*args.try(:first, pieces.size)&.map(&:to_f))
+        end
+
+        def check_invalid_format!(args)
+          raise 'Invalid format' if args.size < pieces.size
         end
     end
   end

@@ -157,18 +157,62 @@ RSpec.describe 'Geometries' do
   end
 
   context 'on box' do
-    let(:klass) { Torque::PostgreSQL.config.geometry.box_class }
+    let(:klass) { Torque::PostgreSQL::Adapter::OID::Box }
+    let(:value_klass) { Torque::PostgreSQL::Box }
+    let(:instance) { klass.new }
+    let(:value_instance) { instance.cast([1, 2, 3, 4]) }
+
+    before { allow(instance).to receive(:config_class).and_return(value_klass) }
+
+    it '#points' do
+      mock_klass = Struct.new(:a, :b)
+      Torque::PostgreSQL.config.geometry.point_class = mock_klass
+
+      result = value_instance.points
+      expect(result).to be_a(Array)
+      expect(result.size).to be_eql(4)
+      expect(result).to all(be_a(mock_klass))
+
+      expect(result[0].a).to be_eql(1.0)
+      expect(result[0].b).to be_eql(2.0)
+      expect(result[1].a).to be_eql(1.0)
+      expect(result[1].b).to be_eql(4.0)
+      expect(result[2].a).to be_eql(3.0)
+      expect(result[2].b).to be_eql(2.0)
+      expect(result[3].a).to be_eql(3.0)
+      expect(result[3].b).to be_eql(4.0)
+    end
   end
 
   context 'on circle' do
-    let(:klass) { Torque::PostgreSQL.config.geometry.circle_class }
-  end
+    let(:klass) { Torque::PostgreSQL::Adapter::OID::Circle }
+    let(:value_klass) { Torque::PostgreSQL::Circle }
+    let(:instance) { klass.new }
+    let(:value_instance) { instance.cast([1, 2, 3]) }
 
-  context 'on line' do
-    let(:klass) { Torque::PostgreSQL.config.geometry.line_class }
-  end
+    before { allow(instance).to receive(:config_class).and_return(value_klass) }
 
-  context 'on segment' do
-    let(:klass) { Torque::PostgreSQL.config.geometry.segment_class }
+    it '#center' do
+      mock_klass = Struct.new(:a, :b)
+      Torque::PostgreSQL.config.geometry.point_class = mock_klass
+
+      result = value_instance.center
+      expect(result).to be_a(mock_klass)
+      expect(result.a).to be_eql(1.0)
+      expect(result.b).to be_eql(2.0)
+    end
+
+    it '#center=' do
+      mock_klass = Struct.new(:x, :y)
+      Torque::PostgreSQL.config.geometry.point_class = mock_klass
+
+      value_instance.center = [1, 2]
+      expect(value_instance.x).to be_eql(1)
+      expect(value_instance.y).to be_eql(2)
+
+      value_instance.center = mock_klass.new(3, 4)
+      expect(value_instance.x).to be_eql(3)
+      expect(value_instance.y).to be_eql(4)
+    end
   end
 end
