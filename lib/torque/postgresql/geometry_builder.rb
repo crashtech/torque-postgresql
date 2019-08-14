@@ -25,7 +25,7 @@ module Torque
           value.gsub!(DESTRUCTOR, '')
           build_klass(*value.split(','))
         when ::Hash
-          build_klass(*value.symbolize_keys.slice(*pieces))
+          build_klass(*value.symbolize_keys.slice(*pieces).values)
         when ::Array
           build_klass(*value)
         else
@@ -39,13 +39,17 @@ module Torque
           when config_class
             pieces.map { |piece| value.public_send(piece) }
           when ::Hash
-            value.symbolize_keys.slice(*pieces)
+            value.symbolize_keys.slice(*pieces).values
           when ::Array
             value
           end
 
-        return super if parts.nil?
-        format(formation, parts.map(&number_serializer))
+        parts.compact!
+        parts.flatten!
+
+        return if parts.blank?
+        raise 'Invalid format' if parts.size < pieces.size
+        format(formation, *parts.first(pieces.size).map(&number_serializer))
       end
 
       def deserialize(value)
@@ -75,7 +79,10 @@ module Torque
         end
 
         def build_klass(*args)
-          config_class.new(*args.map(&:to_f)[0...pieces.size])
+          return nil if args.empty?
+
+          raise 'Invalid format' if args.size < pieces.size
+          config_class.new(*args.try(:first, pieces.size)&.map(&:to_f))
         end
     end
   end
