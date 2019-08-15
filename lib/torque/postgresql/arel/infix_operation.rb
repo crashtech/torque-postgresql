@@ -33,6 +33,7 @@ module Torque
       end
 
       ::Arel::Nodes::Function.include(Math)
+      ::Arel::Nodes::Binary.include(Math)
       ::Arel::Attribute.include(Math)
     end
   end

@@ -43,8 +43,11 @@ module Torque
           # Merge settings related to inheritance tables
           def merge_inheritance
             relation.itself_only_value = true if other.itself_only_value
-            relation.cast_records_value.concat(other.cast_records_value).uniq! \
-              if other.cast_records_value.present?
+
+            if other.cast_records_value.present?
+              relation.cast_records_value += other.cast_records_value
+              relation.cast_records_value.uniq!
+            end
           end
 
       end

@@ -203,18 +203,14 @@ module Torque
             end
 
             # Add the scopes defined by the reflection
-            if association.respond_to?(:build_join_constraint)
-              @query.merge(association.join_scope(@query.arel_table, base))
-              constraint = association.build_join_constraint(table, foreign_table)
-            elsif association.respond_to?(:join_scope)
-              @query.merge(association.join_scope(@query.arel_table))
-              constraint = build_join_constraint(association, foreign_table)
-            else
-              # Old versions doesn't not easily support scopes
-              constraint = build_join_constraint(association, foreign_table)
+            if association.respond_to?(:join_scope)
+              args = [@query.arel_table]
+              args << base if association.method(:join_scope).arity.eql?(2)
+              @query.merge(association.join_scope(*args))
             end
 
             # Add the join constraints
+            constraint = association.build_join_constraint(table, foreign_table)
             constraint = constraint.children if constraint.is_a?(::Arel::Nodes::And)
             conditions.children.concat(Array.wrap(constraint))
           end
@@ -243,20 +239,6 @@ module Torque
 
           # Build the join based on the join type
           arel_join.new(table, table.create_on(conditions))
-        end
-
-        # Manually build the join constraint
-        def build_join_constraint(association, foreign_table)
-          klass = association.klass
-          join = !association.respond_to?(:join_scope) \
-            ? association.join_keys(klass) \
-            : association.join_keys
-
-          result = table[join.key].eq(foreign_table[join.foreign_key])
-          result = table.create_and([result, klass.send(:type_condition, table)]) \
-            if klass.finder_needs_type_condition?
-
-          result
         end
 
         # Get the class of the join on arel

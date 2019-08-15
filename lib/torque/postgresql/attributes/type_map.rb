@@ -1,6 +1,7 @@
 module Torque
   module PostgreSQL
     module Attributes
+      # Remove type map and add decorators direct to ActiveRecord::Base
       module TypeMap
 
         class << self
