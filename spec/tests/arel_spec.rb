@@ -9,12 +9,18 @@ RSpec.describe 'Arel' do
     let(:visitor) { ::Arel::Visitors::PostgreSQL.new(conn) }
 
     [
-      [:overlap,      [1, 2],            "ARRAY[1, 2]"],
-      [:contains,     [3, 4],            "ARRAY[3, 4]"],
-      [:contained_by, [5, 6],            "ARRAY[5, 6]"],
-      [:has_key,      ::Arel.sql("'a'"), "'a'"],
-      [:has_all_keys, ['b', 'c'],        "ARRAY['b', 'c']"],
-      [:has_any_keys, ['d', 'e'],        "ARRAY['d', 'e']"],
+      [:overlap,        [1, 2],                       "ARRAY[1, 2]"],
+      [:contains,       [3, 4],                       "ARRAY[3, 4]"],
+      [:contained_by,   [5, 6],                       "ARRAY[5, 6]"],
+      [:has_key,        ::Arel.sql("'a'"),            "'a'"],
+      [:has_all_keys,   ['b', 'c'],                   "ARRAY['b', 'c']"],
+      [:has_any_keys,   ['d', 'e'],                   "ARRAY['d', 'e']"],
+
+      [:strictly_left,  ::Arel.sql('numrange(1, 2)'), 'numrange(1, 2)'],
+      [:strictly_right, ::Arel.sql('numrange(3, 4)'), 'numrange(3, 4)'],
+      [:not_on_left,    ::Arel.sql('numrange(5, 6)'), 'numrange(5, 6)'],
+      [:not_on_right,   ::Arel.sql('numrange(7, 8)'), 'numrange(7, 8)'],
+      [:adjacent_to,    ::Arel.sql('numrange(9, 0)'), 'numrange(9, 0)'],
     ].each do |(operator, value, quoted_value)|
       klass_name = operator.to_s.camelize
 

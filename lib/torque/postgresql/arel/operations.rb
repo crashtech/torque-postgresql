@@ -11,6 +11,7 @@ module Torque
       end
 
       ::Arel::Attributes::Attribute.include(Operations)
+      ::Arel::Nodes::SqlLiteral.include(Operations)
       ::Arel::Nodes::Node.include(Operations)
     end
   end

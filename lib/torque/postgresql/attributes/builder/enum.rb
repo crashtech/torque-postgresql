@@ -5,8 +5,7 @@ module Torque
         class Enum
           attr_accessor :klass, :attribute, :subtype, :options, :values, :enum_module
 
-          # Start a new builder of methods for composite values on
-          # ActiveRecord::Base
+          # Start a new builder of methods for enum values on ActiveRecord::Base
           def initialize(klass, attribute, subtype, options)
             @klass     = klass
             @attribute = attribute.to_s
@@ -102,6 +101,8 @@ module Torque
             def plural
               attr = attribute
               enum_klass = subtype.klass
+
+              # TODO: Rewrite these as string
               enum_module.const_set('ClassMethods', Module.new)
               enum_module::ClassMethods.module_eval do
                 # def self.statuses() statuses end
@@ -127,6 +128,8 @@ module Torque
             # the model scope
             def stringify
               attr = attribute
+
+              # TODO: Rewrite these as string
               enum_module.module_eval do
                 # def status_text() status.text('status', self) end
                 define_method("#{attr}_text") { send(attr)&.text(attr, self) }
@@ -142,6 +145,7 @@ module Torque
               enum_klass = subtype.klass
               model_klass = klass
 
+              # TODO: Rewrite these as string
               enum_module.module_eval do
                 vals.each do |val, list|
                   # scope :disabled, -> { where(status: 'disabled') }

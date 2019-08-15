@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 41
+  version = 43
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -36,6 +36,12 @@ begin
       t.path    "open_path"
       t.polygon "polygon"
       t.circle  "circle"
+    end
+
+    create_table "time_keepers", force: :cascade do |t|
+      t.daterange "available"
+      t.tsrange   "period"
+      t.tstzrange "tzperiod"
     end
 
     create_table "tags", force: :cascade do |t|

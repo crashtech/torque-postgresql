@@ -95,6 +95,40 @@ module Torque
 
     end
 
+    # Configure period features
+    config.nested(:period) do |period|
+
+      # The name of the method to be used on any ActiveRecord::Base to
+      # initialize model-based period features
+      period.base_method = :period_for
+
+      # Define the list of methods that will be created by default while setting
+      # up a new period field
+      period.method_names = {
+        current_on:            '%s_on',
+        current:               'current_%s',
+        not_current:           'not_current_%s',
+        overlapping:           '%s_overlapping',
+        not_overlapping:       '%s_not_overlapping',
+        starting_after:        '%s_starting_after',
+        starting_before:       '%s_starting_before',
+        finishing_after:       '%s_finishing_after',
+        finishing_before:      '%s_finishing_before',
+        real_starting_after:   '%s_real_starting_after',
+        real_starting_before:  '%s_real_starting_before',
+        real_finishing_after:  '%s_real_finishing_after',
+        real_finishing_before: '%s_real_finishing_before',
+
+        current?:              'current_%s?',
+        current_on?:           'current_%s_on?',
+        start:                 '%s_start',
+        finish:                '%s_finish',
+        real_start:            '%s_real_start',
+        real_finish:           '%s_real_finish',
+      }
+
+    end
+
     # Configure geometry data types
     config.nested(:geometry) do |geometry|
 

@@ -4,6 +4,7 @@ require_relative 'oid/enum'
 require_relative 'oid/enum_set'
 require_relative 'oid/interval'
 require_relative 'oid/line'
+require_relative 'oid/range'
 require_relative 'oid/segment'
 
 module Torque
