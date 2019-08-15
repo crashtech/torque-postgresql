@@ -13,7 +13,6 @@
 begin
   version = 43
 
-  raise SystemExit
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
     self.verbose = false
