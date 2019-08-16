@@ -8,17 +8,17 @@ module Torque
 
       Math = Module.new
       INFLIX_OPERATION = {
-        'Overlap'       => :'&&',
-        'Contains'      => :'@>',
-        'ContainedBy'   => :'<@',
-        'HasKey'        => :'?',
-        'HasAllKeys'    => :'?&',
-        'HasAnyKeys'    => :'?|',
-        'StrictlyLeft'  => :'<<',
-        'StrictlyRight' => :'>>',
-        'NotOnLeft'     => :'&<',
-        'NotOnRight'    => :'&>',
-        'AdjacentTo'    => :'-|-',
+        'Overlaps'          => :'&&',
+        'Contains'          => :'@>',
+        'ContainedBy'       => :'<@',
+        'HasKey'            => :'?',
+        'HasAllKeys'        => :'?&',
+        'HasAnyKeys'        => :'?|',
+        'StrictlyLeft'      => :'<<',
+        'StrictlyRight'     => :'>>',
+        'DoesntRightExtend' => :'&<',
+        'DoesntLeftExtend'  => :'&>',
+        'AdjacentTo'        => :'-|-',
       }.freeze
 
       INFLIX_OPERATION.each do |operator_name, operator|
@@ -32,8 +32,7 @@ module Torque
         end
       end
 
-      ::Arel::Nodes::Function.include(Math)
-      ::Arel::Nodes::Binary.include(Math)
+      ::Arel::Nodes::Node.include(Math)
       ::Arel::Attribute.include(Math)
     end
   end

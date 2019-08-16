@@ -2,6 +2,10 @@ module Torque
   module PostgreSQL
     module Reflection
       module AbstractReflection
+        AREL_ATTR = ::Arel::Attributes::Attribute
+
+        ARR_NO_CAST = 'bigint'.freeze
+        ARR_CAST = 'bigint[]'.freeze
 
         # Check if the foreign key actually exists
         def connected_through_array?
@@ -23,6 +27,7 @@ module Torque
         end
 
         # Build the id constraint checking if both types are perfect matching
+        # TODO: Try to simplify by `tags.id = ANY(videos.tag_ids)`
         def build_id_constraint(klass_attr, source_attr)
           return klass_attr.eq(source_attr) unless connected_through_array?
           join = method(:join_keys).arity.eql?(0) ? join_keys : join_keys(klass)
@@ -32,36 +37,51 @@ module Torque
           # active_record and foreign_key are associated with the source Class
           source_type = active_record.columns_hash[join.foreign_key]
 
-          # Check which types are array
-          klass_array = klass_type.try(:array)
-          source_array = source_type.try(:array)
-
-          # If none of the types are an array, raise an error
-          raise ArgumentError, <<-MSG.squish unless klass_array || source_array
-            The association #{name} is marked as connected through an array but none of the
-            attributes are an actual array. Please remove that option from the settings
-            '#{macro}' :#{name}, array: false
-          MSG
-
-          # Decide if should apply a cast
-          attr_klass = ::Arel::Attributes::Attribute
+          # Decide if should apply a cast to ensure same type comparision
           should_cast = klass_type.type.eql?(:integer) && source_type.type.eql?(:integer)
           should_cast &= !klass_type.sql_type.eql?(source_type.sql_type)
-          should_cast |= !(klass_attr.is_a?(attr_klass) && source_attr.is_a?(attr_klass))
+          should_cast |= !(klass_attr.is_a?(AREL_ATTR) && source_attr.is_a?(AREL_ATTR))
 
-          # Make sure that both attributes are set as quoted arrays
-          klass_attr = ::Arel::Nodes.build_quoted(Array.wrap(klass_attr)) unless klass_array
-          source_attr = ::Arel::Nodes.build_quoted(Array.wrap(source_attr)) unless source_array
-
-          # Cast values if they are different but both are integer
-          if should_cast
-            klass_attr = klass_attr.cast('bigint[]')
-            source_attr = source_attr.cast('bigint[]')
-          end
+          # Apply necessary transformations to values
+          klass_attr = cast_constraint_to_array(klass_type, klass_attr, should_cast)
+          source_attr = cast_constraint_to_array(source_type, source_attr, should_cast)
 
           # Return the overlap condition
-          klass_attr.overlap(source_attr)
+          klass_attr.overlaps(source_attr)
         end
+
+        private
+
+          # Prepare a value for an array constraint overlap condition
+          def cast_constraint_to_array(type, value, should_cast)
+            base_ready = type.try(:array) && value.is_a?(AREL_ATTR)
+            return value if base_ready && (type.sql_type.eql?(ARR_NO_CAST) || !should_cast)
+
+            value = ::Arel::Nodes.build_quoted(Array.wrap(value)) unless base_ready
+            value = value.cast(ARR_CAST) if should_cast
+            value
+          end
+
+          # returns either +nil+ or the inverse association name that it finds.
+          def automatic_inverse_of
+            return super unless connected_through_array?
+            if can_find_inverse_of_automatically?(self)
+              inverse_name = options[:as] || active_record.name.demodulize
+              inverse_name = ActiveSupport::Inflector.underscore(inverse_name)
+              inverse_name = ActiveSupport::Inflector.pluralize(inverse_name)
+              inverse_name = inverse_name.to_sym
+
+              begin
+                reflection = klass._reflect_on_association(inverse_name)
+              rescue NameError
+                # Give up: we couldn't compute the klass type so we won't be able
+                # to find any associations either.
+                reflection = false
+              end
+
+              return inverse_name if valid_inverse_reflection?(reflection)
+            end
+          end
 
       end
 

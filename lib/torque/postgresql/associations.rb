@@ -1,3 +1,5 @@
 require_relative 'associations/association_scope'
+require_relative 'associations/belongs_to_many_association'
 require_relative 'associations/builder'
+require_relative 'associations/has_many_association'
 require_relative 'associations/preloader'

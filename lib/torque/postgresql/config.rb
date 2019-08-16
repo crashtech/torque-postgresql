@@ -26,6 +26,26 @@ module Torque
       end.to_h
     end
 
+    # Configure associations features
+    config.nested(:associations) do |assoc|
+
+      # Define if belongs to many associations are marked as required by default
+      assoc.belongs_to_many_required_by_default = false
+
+    end
+
+    # Configure auxiliary statement features
+    config.nested(:auxiliary_statement) do |cte|
+
+      # Define the key that is used on auxiliary statements to send extra
+      # arguments to format string or send on a proc
+      cte.send_arguments_key = :args
+
+      # Specify the namespace of each enum type of value
+      cte.exposed_class = 'TorqueCTE'
+
+    end
+
     # Configure ENUM features
     config.nested(:enum) do |enum|
 
@@ -63,15 +83,28 @@ module Torque
 
     end
 
-    # Configure auxiliary statement features
-    config.nested(:auxiliary_statement) do |cte|
+    # Configure geometry data types
+    config.nested(:geometry) do |geometry|
 
-      # Define the key that is used on auxiliary statements to send extra
-      # arguments to format string or send on a proc
-      cte.send_arguments_key = :args
+      # Define the class that will be handling Point data types after decoding
+      # it. Any class provided here must respond to 'x', and 'y'
+      geometry.point_class = ActiveRecord::Point
 
-      # Specify the namespace of each enum type of value
-      cte.exposed_class = 'TorqueCTE'
+      # Define the class that will be handling Circle data types after decoding
+      # it. Any class provided here must respond to 'x', 'y', and 'r'
+      geometry.circle_class = nil
+
+      # Define the class that will be handling Box data types after decoding it.
+      # Any class provided here must respond to 'x1', 'y1', 'x2', and 'y2'
+      geometry.box_class = nil
+
+      # Define the class that will be handling Line data types after decoding
+      # it. Any class provided here must respond to 'a', 'b', and 'c'
+      geometry.line_class = nil
+
+      # Define the class that will be handling Segment data types after decoding
+      # it. Any class provided here must respond to 'x1', 'y1', 'x2', and 'y2'
+      geometry.segment_class = nil
 
     end
 
@@ -123,34 +156,10 @@ module Torque
         current_on?:           'current_%s_on?',
         start:                 '%s_start',
         finish:                '%s_finish',
+        real:                  'real_%s',
         real_start:            '%s_real_start',
         real_finish:           '%s_real_finish',
       }
-
-    end
-
-    # Configure geometry data types
-    config.nested(:geometry) do |geometry|
-
-      # Define the class that will be handling Point data types after decoding
-      # it. Any class provided here must respond to 'x', and 'y'
-      geometry.point_class = ActiveRecord::Point
-
-      # Define the class that will be handling Circle data types after decoding
-      # it. Any class provided here must respond to 'x', 'y', and 'r'
-      geometry.circle_class = nil
-
-      # Define the class that will be handling Box data types after decoding it.
-      # Any class provided here must respond to 'x1', 'y1', 'x2', and 'y2'
-      geometry.box_class = nil
-
-      # Define the class that will be handling Line data types after decoding
-      # it. Any class provided here must respond to 'a', 'b', and 'c'
-      geometry.line_class = nil
-
-      # Define the class that will be handling Segment data types after decoding
-      # it. Any class provided here must respond to 'x1', 'y1', 'x2', and 'y2'
-      geometry.segment_class = nil
 
     end
 

@@ -56,7 +56,7 @@ module Torque
 
           # Get the list of methods associated withe the instances
           def instance_method_names
-            @instance_method_names ||= method_names.to_a[13..18].to_h
+            @instance_method_names ||= method_names.to_a[13..19].to_h
           end
 
           # Check if any of the methods that will be created get in conflict
@@ -176,12 +176,12 @@ module Torque
 
               klass.scope method_names[:overlapping], ->(value) do
                 value = arel_table[value] if value.is_a?(Symbol)
-                where(arel_attr.overlap(value))
+                where(arel_attr.overlaps(value))
               end
 
               klass.scope method_names[:not_overlapping], ->(value) do
                 value = arel_table[value] if value.is_a?(Symbol)
-                where.not(arel_attr.overlap(value))
+                where.not(arel_attr.overlaps(value))
               end
 
               klass.scope method_names[:starting_after], ->(value) do
@@ -255,6 +255,17 @@ module Torque
                 end
 
                 if attr_threshold.present?
+                  define_method(builder.method_names[:real]) do
+                    left = public_send(builder.method_names[:real_start])
+                    right = public_send(builder.method_names[:real_finish])
+                    return unless left || right
+
+                    left ||= -::Float::INFINITY
+                    right ||= ::Float::INFINITY
+
+                    left..right
+                  end
+
                   define_method(builder.method_names[:real_start]) do
                     threshold = attr_threshold
                     threshold = public_send(threshold) if threshold.is_a?(Symbol)

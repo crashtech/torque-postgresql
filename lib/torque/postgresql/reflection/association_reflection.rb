@@ -17,7 +17,9 @@ module Torque
           # Check if the foreign key should be pluralized
           def derive_foreign_key
             result = super
-            collection? && connected_through_array? ? result.pluralize : result
+            result = ActiveSupport::Inflector.pluralize(result) \
+              if collection? && connected_through_array?
+            result
           end
 
       end

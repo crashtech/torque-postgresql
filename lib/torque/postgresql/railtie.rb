@@ -14,6 +14,10 @@ module Torque
         Torque::PostgreSQL::Attributes::EnumSet.include_on(ActiveRecord::Base)
         Torque::PostgreSQL::Attributes::Period.include_on(ActiveRecord::Base)
 
+        # Setup belongs_to_many association
+        ActiveRecord::Base.belongs_to_many_required_by_default = torque_config.associations
+          .belongs_to_many_required_by_default
+
         # Define a method to find enumaerators based on the namespace
         torque_config.enum.namespace.define_singleton_method(:const_missing) do |name|
           Torque::PostgreSQL::Attributes::Enum.lookup(name)

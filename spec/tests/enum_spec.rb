@@ -415,7 +415,7 @@ RSpec.describe 'Enum' do
     before(:each) { type_map.decorate!(User, :role) }
 
     subject { User }
-    let(:instance) { FactoryGirl.build(:user) }
+    let(:instance) { FactoryBot.build(:user) }
 
     it 'has all enum methods' do
       expect(subject).to  respond_to(:roles)
@@ -457,8 +457,8 @@ RSpec.describe 'Enum' do
     end
 
     it 'has scopes available on associations' do
-      author = FactoryGirl.create(:author)
-      FactoryGirl.create(:post, author: author)
+      author = FactoryBot.create(:author)
+      FactoryBot.create(:post, author: author)
 
       type_map.decorate!(Post, :status)
       expect(author.posts).to respond_to(:test_scope)
@@ -518,7 +518,7 @@ RSpec.describe 'Enum' do
 
     context 'without autoload' do
       subject { Author }
-      let(:instance) { FactoryGirl.build(:author) }
+      let(:instance) { FactoryBot.build(:author) }
 
       it 'configurating an enum should not invoke a query' do
         klass = Torque::PostgreSQL::Adapter::SchemaStatements
@@ -567,7 +567,7 @@ RSpec.describe 'Enum' do
     context 'with prefix' do
       before(:each) { type_map.decorate!(Author, :specialty, prefix: 'in') }
       subject { Author }
-      let(:instance) { FactoryGirl.build(:author) }
+      let(:instance) { FactoryBot.build(:author) }
 
       it 'creates all methods correctly' do
         expect(subject).to  respond_to(:specialties)
@@ -590,7 +590,7 @@ RSpec.describe 'Enum' do
       end
 
       subject { Author }
-      let(:instance) { FactoryGirl.build(:author) }
+      let(:instance) { FactoryBot.build(:author) }
 
       it 'creates only the requested methods' do
         expect(subject).to  respond_to('movies_expert')
