@@ -44,8 +44,8 @@ module Torque
             value
           end
 
-          parts = parts&.compact&.flatten
-          return if parts.blank?
+        parts = parts&.compact&.flatten
+        return if parts.blank?
 
         raise 'Invalid format' if parts.size < pieces.size
         format(formation, *parts.first(pieces.size).map(&number_serializer))
