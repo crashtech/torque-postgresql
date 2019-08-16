@@ -16,8 +16,8 @@ module Torque
         def build_join_constraint(table, foreign_table)
           join = method(:join_keys).arity.eql?(0) ? join_keys : join_keys(klass)
 
-          klass_attr = table[join_keys.key]
-          source_attr = foreign_table[join_keys.foreign_key]
+          klass_attr = table[join.key]
+          source_attr = foreign_table[join.foreign_key]
 
           result = build_id_constraint(klass_attr, source_attr)
           result = table.create_and([result, klass.send(:type_condition, table)]) \
