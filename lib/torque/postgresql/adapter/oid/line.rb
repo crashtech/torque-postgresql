@@ -5,7 +5,9 @@ module Torque
       alias c= intercept=
 
       def a=(value)
-        slope = vertical? ? Float::INFINITY : Rational(value, b)
+        self.slope = vertical? \
+          ? Float::INFINITY \
+          : Rational(value, b)
       end
 
       def a
@@ -13,7 +15,9 @@ module Torque
       end
 
       def b=(value)
-        slope = value.zero? ? Float::INFINITY : Rational(a, value)
+        self.slope = value.zero? \
+          ? Float::INFINITY \
+          : Rational(a, value)
       end
 
       def b
@@ -41,7 +45,10 @@ module Torque
           protected
 
             def build_klass(*args)
-              a, b, c = args.map(&:to_f)
+              return nil if args.empty?
+              check_invalid_format!(args)
+
+              a, b, c = args.try(:first, pieces.size)&.map(&:to_f)
               slope = b.zero? ? Float::INFINITY : Rational(a, b)
               config_class.new(slope, c)
             end

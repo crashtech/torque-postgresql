@@ -168,6 +168,21 @@ RSpec.describe 'AuxiliaryStatement' do
       expect(subject.with(:comments).arel.to_sql).to eql(result)
     end
 
+    it 'can manually define the association' do
+      klass.has_many :sample_comment, class_name: 'Comment', foreign_key: :a_user_id
+      klass.send(:auxiliary_statement, :comments) do |cte|
+        cte.query Comment.all
+        cte.through :sample_comment
+        cte.attributes content: :sample_content
+      end
+
+      result = 'WITH "comments" AS'
+      result << ' (SELECT "comments"."a_user_id", "comments"."content" AS sample_content FROM "comments")'
+      result << ' SELECT "users".*, "comments"."sample_content" FROM "users"'
+      result << ' INNER JOIN "comments" ON "comments"."a_user_id" = "users"."id"'
+      expect(subject.with(:comments).arel.to_sql).to eql(result)
+    end
+
     it 'accepts complex scopes from dependencies' do
       klass.send(:auxiliary_statement, :comments1) do |cte|
         cte.query Comment.where(id: 1).all
