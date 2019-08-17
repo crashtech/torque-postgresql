@@ -79,7 +79,8 @@ module Torque
                 reflection = false
               end
 
-              return inverse_name if valid_inverse_reflection?(reflection)
+              return inverse_name if reflection.connected_through_array? &&
+                valid_inverse_reflection?(reflection)
             end
           end
 

@@ -293,6 +293,6 @@ module Torque
       end
     end
 
-    ActiveRecord::Base.include Base
+    ::ActiveRecord::Base.include(Base)
   end
 end

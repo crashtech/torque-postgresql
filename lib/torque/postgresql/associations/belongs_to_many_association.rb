@@ -27,18 +27,25 @@ module Torque
           end
         end
 
-        def insert_record(record, validate = true, raise_error = false, &block)
-          owner[reflection.active_record_primary_key] ||= []
-          owner[reflection.active_record_primary_key].push(record)
+        def ids_reader
+          owner[reflection.active_record_primary_key]
+        end
 
-          call_method = raise_error ? :save! : :save
-          owner.public_send(call_method, validate: validate, &block)
+        def insert_record(record, *)
+          super
 
-          super unless record.persisted?
+          attribute = (ids_reader || owner[reflection.active_record_primary_key] = [])
+          attribute.push(record[klass_fk])
+          record
         end
 
         def empty?
           size.zero?
+        end
+
+        def include?(record)
+          list = owner[reflection.active_record_primary_key]
+          ids_reader && ids_reader.include?(record[klass_fk])
         end
 
         private
@@ -46,19 +53,14 @@ module Torque
           # Returns the number of records in this collection, which basically
           # means count the number of entries in the +primary_key+
           def count_records
-            owner[reflection.active_record_primary_key]&.size || (@target ||= []).size
+            ids_reader&.size || (@target ||= []).size
           end
 
           # When the idea is to nulligy the association, then just set the owner
           # +primary_key+ as empty
           def delete_count(method, scope)
-            new_value = owner[reflection.active_record_primary_key]
-            new_value -= Array(scope.where_values_hash[reflection.klass.primary_key])
-
+            remove_stash_records(scope.where_values_hash[klass_fk])
             scope.delete_all if method == :delete_all
-
-            # TODO: Stash the owner change and perform it at the end
-            owner.update(reflection.active_record_primary_key => new_value.presence)
           end
 
           def delete_or_nullify_all_records(method)
@@ -68,18 +70,24 @@ module Torque
           # Deletes the records according to the <tt>:dependent</tt> option.
           def delete_records(records, method)
             if method == :destroy
-              keys = records.each_with_object(reflection.klass.primary_key)
-
-              new_value = owner[reflection.active_record_primary_key]
-              new_value -= Array(keys.map(&:_read_attribute))
-
-              # TODO: Stash the owner change and perform it at the end
-              owner.update(reflection.active_record_primary_key => new_value)
+              remove_stash_records(records_or_ids)
               records.each(&:destroy!)
             else
-              scope = self.scope.where(reflection.klass.primary_key => records)
+              scope = self.scope.where(klass_fk => records)
               delete_count(method, scope)
             end
+          end
+
+          def remove_stash_records(records_or_ids)
+            records_or_ids.map! do |item|
+              item.is_a?(::ActiveRecord::Base) ? item[klass_fk] : item.to_i
+            end
+
+            Array.wrap(records_or_ids).each(&ids_reader.method(:delete))
+          end
+
+          def klass_fk
+            reflection.foreign_key
           end
 
           def difference(a, b)
