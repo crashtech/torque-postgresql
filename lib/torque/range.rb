@@ -19,9 +19,10 @@ module Torque
 
     def subtract(other)
       raise ArgumentError, 'value must be a Range' unless other.kind_of?(Range)
+      return if other.eql?(self)
 
       other = intersection(other)
-      return if other.nil?
+      return self if other.nil?
 
       min.eql?(other.min) ? other.max..max : min..other.min
     end
@@ -30,7 +31,7 @@ module Torque
     def add(other)
       raise ArgumentError, 'value must be a Range' unless other.kind_of?(Range)
 
-      intersection(other) && union(other)
+      union(other) if intersection(other)
     end
     alias_method :+, :add
   end
