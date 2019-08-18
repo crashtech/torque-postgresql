@@ -17,6 +17,27 @@ module Torque
           Name.new(schema, table).quoted
         end
 
+        def quote_default_expression(value, column)
+          if value.is_a?(::Enumerable)
+            quote(value) + '::' + column.sql_type
+          else
+            super
+          end
+        end
+
+        private
+
+          def _quote(value)
+            return super unless value.is_a?(Array)
+
+            values = value.map(&method(:quote))
+            "ARRAY[#{values.join(','.freeze)}]"
+          end
+
+          def _type_cast(value)
+            return super unless value.is_a?(Array)
+            value.map(&method(:quote)).join(','.freeze)
+          end
       end
     end
   end

@@ -6,12 +6,16 @@ module Torque
 
           attr_reader :name, :klass
 
-          def self.create(row)
-            new(row['typname'])
-          end
+          def self.create(row, type_map)
+            name    = row['typname']
+            oid     = row['oid'].to_i
+            arr_oid = row['typarray'].to_i
 
-          def self.auto_initialize?
-            Torque::PostgreSQL.config.enum.initializer
+            oid_klass     = Enum.new(name)
+            oid_set_klass = EnumSet.new(name, oid_klass.klass)
+
+            type_map.register_type(oid,     oid_klass)
+            type_map.register_type(arr_oid, oid_set_klass)
           end
 
           def initialize(name)

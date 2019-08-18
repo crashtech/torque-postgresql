@@ -6,7 +6,7 @@ module Torque
         def merge # :nodoc:
           super
 
-          merge_dynamic_selection
+          merge_select_extra
           merge_distinct_on
           merge_auxiliary_statements
           merge_inheritance
@@ -16,9 +16,10 @@ module Torque
 
         private
 
-          # Merge dynamic selection columns
-          def merge_dynamic_selection
-            relation.send(:dynamic_selection).concat(other.send(:dynamic_selection))
+          # Merge extra select columns
+          def merge_select_extra
+            relation.select_extra_values.concat(other.select_extra_values).uniq! \
+              if other.select_extra_values.present?
           end
 
           # Merge distinct on columns
@@ -41,9 +42,12 @@ module Torque
 
           # Merge settings related to inheritance tables
           def merge_inheritance
-            relation.itself_only_value = true if other.itself_only_value
-            relation.cast_records_value.concat(other.cast_records_value).uniq! \
-              if other.cast_records_value.present?
+            relation.itself_only_value = true if other.itself_only_value.present?
+
+            if other.cast_records_value.present?
+              relation.cast_records_value += other.cast_records_value
+              relation.cast_records_value.uniq!
+            end
           end
 
       end

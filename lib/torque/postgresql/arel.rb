@@ -1,3 +1,6 @@
+require_relative 'arel/infix_operation'
 require_relative 'arel/join_source'
+require_relative 'arel/nodes'
+require_relative 'arel/operations'
 require_relative 'arel/select_manager'
 require_relative 'arel/visitors'

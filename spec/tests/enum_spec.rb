@@ -160,6 +160,10 @@ RSpec.describe 'Enum' do
       expect(subject.instance_variable_defined?(:@values)).to be_falsey
     end
 
+    it 'returns the db type name' do
+      expect(subject.type_name).to be_eql('content_status')
+    end
+
     it 'values match database values' do
       expect(subject.values).to be_eql(values)
     end
@@ -219,9 +223,10 @@ RSpec.describe 'Enum' do
       value = subject.new(nil)
 
       expect(value.__class__).to be_eql(lazy)
-      expect(value.draft?).to be_falsey
       expect(value.to_s).to be_eql('')
       expect(value.to_i).to be_nil
+
+      expect(value.draft?).to be_falsey
     end
 
     it 'accepts values to come from numeric' do
@@ -240,7 +245,6 @@ RSpec.describe 'Enum' do
       expect(value).to be < subject.archived
       expect(value).to be_eql(subject.draft)
       expect(value).to_not be_eql(subject.published)
-      expect(subject.draft == mock_enum.draft).to be_falsey
     end
 
     it 'allows values comparison with string' do
@@ -380,14 +384,14 @@ RSpec.describe 'Enum' do
 
       it 'accepts string' do
         value = subject.cast('created')
-        expect(value).to be_eql(enum.created)
         expect(value).to be_a(enum)
+        expect(value).to be_eql(enum.created)
       end
 
       it 'accepts numeric' do
         value = subject.cast(1)
-        expect(value).to be_eql(enum.draft)
         expect(value).to be_a(enum)
+        expect(value).to be_eql(enum.draft)
       end
     end
   end
@@ -407,30 +411,11 @@ RSpec.describe 'Enum' do
     end
   end
 
-  context 'on uninitialized model' do
-    before(:each) { Torque::PostgreSQL.config.enum.initializer = true }
-    subject do
-      APost = Class.new(ActiveRecord::Base)
-      APost.table_name = 'posts'
-      APost
-    end
-
-    it 'has no statuses method' do
-      expect(subject).to_not respond_to(:statuses)
-    end
-
-    it 'can load statuses on the fly' do
-      result = subject.statuses
-      expect(result).to be_a(Array)
-      expect(result).to be_eql(Enum::ContentStatus.values)
-    end
-  end
-
   context 'on model' do
     before(:each) { type_map.decorate!(User, :role) }
 
     subject { User }
-    let(:instance) { FactoryGirl.build(:user) }
+    let(:instance) { FactoryBot.build(:user) }
 
     it 'has all enum methods' do
       expect(subject).to  respond_to(:roles)
@@ -472,8 +457,8 @@ RSpec.describe 'Enum' do
     end
 
     it 'has scopes available on associations' do
-      author = FactoryGirl.create(:author)
-      FactoryGirl.create(:post, author: author)
+      author = FactoryBot.create(:author)
+      FactoryBot.create(:post, author: author)
 
       type_map.decorate!(Post, :status)
       expect(author.posts).to respond_to(:test_scope)
@@ -515,15 +500,15 @@ RSpec.describe 'Enum' do
 
     context 'on inherited classes' do
       it 'has all enum methods' do
-        klass = ActivityBook
+        klass = Class.new(User)
         instance = klass.new
 
-        expect(klass).to    respond_to(:kinds)
-        expect(klass).to    respond_to(:kinds_texts)
-        expect(klass).to    respond_to(:kinds_options)
-        expect(instance).to respond_to(:kind_text)
+        expect(klass).to    respond_to(:roles)
+        expect(klass).to    respond_to(:roles_texts)
+        expect(klass).to    respond_to(:roles_options)
+        expect(instance).to respond_to(:role_text)
 
-        klass.kinds.each do |value|
+        klass.roles.each do |value|
           expect(klass).to    respond_to(value)
           expect(instance).to respond_to(value + '?')
           expect(instance).to respond_to(value + '!')
@@ -533,7 +518,7 @@ RSpec.describe 'Enum' do
 
     context 'without autoload' do
       subject { Author }
-      let(:instance) { FactoryGirl.build(:author) }
+      let(:instance) { FactoryBot.build(:author) }
 
       it 'configurating an enum should not invoke a query' do
         klass = Torque::PostgreSQL::Adapter::SchemaStatements
@@ -582,7 +567,7 @@ RSpec.describe 'Enum' do
     context 'with prefix' do
       before(:each) { type_map.decorate!(Author, :specialty, prefix: 'in') }
       subject { Author }
-      let(:instance) { FactoryGirl.build(:author) }
+      let(:instance) { FactoryBot.build(:author) }
 
       it 'creates all methods correctly' do
         expect(subject).to  respond_to(:specialties)
@@ -605,7 +590,7 @@ RSpec.describe 'Enum' do
       end
 
       subject { Author }
-      let(:instance) { FactoryGirl.build(:author) }
+      let(:instance) { FactoryBot.build(:author) }
 
       it 'creates only the requested methods' do
         expect(subject).to  respond_to('movies_expert')

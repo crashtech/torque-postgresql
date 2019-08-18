@@ -20,6 +20,13 @@ module Torque
           end
         end
 
+        # Creates a column with an enum array type, needing to specify the
+        # subtype, which is basically the name of the type defined prior
+        # creating the column
+        def enum_set(*args, **options)
+          super(*args, **options.merge(array: true))
+        end
+
       end
 
       module TableDefinition

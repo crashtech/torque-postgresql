@@ -11,7 +11,7 @@ module Torque
         class << self
           include Enumerable
 
-          delegate :each, :sample, to: :members
+          delegate :each, :sample, :size, :length, to: :members
 
           # Find or create the class that will handle the value
           def lookup(name)
@@ -72,8 +72,7 @@ module Torque
           # see https://github.com/rails/rails/blob/v5.0.0/activerecord/lib/active_record/fixtures.rb#L656
           # see https://github.com/rails/rails/blob/v5.0.0/activerecord/lib/active_record/validations/uniqueness.rb#L101
           def fetch(value, *)
-            return nil unless values.include?(value)
-            send(value)
+            new(value.to_s) if values.include?(value)
           end
           alias [] fetch
 
@@ -89,11 +88,16 @@ module Torque
             self.values.include?(value.to_s)
           end
 
+          # Build an active record scope for a given atribute agains a value
+          def scope(attribute, value)
+            attribute.eq(value)
+          end
+
           private
 
             # Allows checking value existance
             def respond_to_missing?(method_name, include_private = false)
-              valid?(method_name)
+              valid?(method_name) || super
             end
 
             # Allow fast creation of values
@@ -165,7 +169,7 @@ module Torque
 
         # Change the inspection to show the enum name
         def inspect
-          nil? ? 'nil' : "#<#{self.class.name} #{super}>"
+          nil? ? 'nil' : ":#{to_s}"
         end
 
         private
@@ -199,9 +203,9 @@ module Torque
             name = method_name.to_s
 
             if name.chomp!('?')
-              self == name.tr('_', '-') || self == name
+              self == name
             elsif name.chomp!('!')
-              replace(name)
+              replace(name) unless self == name
             else
               super
             end
@@ -220,7 +224,6 @@ module Torque
           def raise_comparison(other)
             raise EnumError, "Comparison of #{self.class.name} with #{self.inspect} failed"
           end
-
       end
 
       # Create the methods related to the attribute to handle the enum type

@@ -17,11 +17,11 @@ module Torque
         def with!(*args)
           options = args.extract_options!
           args.each do |table|
-            instance = table.is_a?(PostgreSQL::AuxiliaryStatement) \
-              ? table.class.new(options) \
+            instance = table.is_a?(Class) && table < PostgreSQL::AuxiliaryStatement \
+              ? table.new(options) \
               : PostgreSQL::AuxiliaryStatement.instantiate(table, self, options)
-            instance.ensure_dependencies!(self)
-            self.auxiliary_statements_values |= [instance]
+
+            self.auxiliary_statements_values += [instance]
           end
 
           self
@@ -47,30 +47,23 @@ module Torque
 
           # Hook arel build to add the distinct on clause
           def build_arel(*)
-            arel = super
-            build_auxiliary_statements(arel)
-            arel
+            subqueries = build_auxiliary_statements
+            return super if subqueries.nil?
+            super.with(subqueries)
           end
 
           # Build all necessary data for auxiliary statements
-          def build_auxiliary_statements(arel)
+          def build_auxiliary_statements
             return unless self.auxiliary_statements_values.present?
-
-            columns = []
-            subqueries = self.auxiliary_statements_values.map do |klass|
-              columns << klass.columns
-              klass.build_arel(arel, self)
+            self.auxiliary_statements_values.map do |klass|
+              klass.build(self)
             end
-
-            columns.flatten!
-            arel.with(subqueries.flatten)
-            dynamic_selection.concat(columns) if columns.any?
           end
 
           # Throw an error showing that an auxiliary statement of the given
           # table name isn't defined
           def auxiliary_statement_error(name)
-            raise ArgumentError, <<-MSG.strip
+            raise ArgumentError, <<-MSG.squish
               There's no '#{name}' auxiliary statement defined for #{self.class.name}.
             MSG
           end

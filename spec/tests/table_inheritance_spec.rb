@@ -283,7 +283,7 @@ RSpec.describe 'TableInheritance' do
         result << ', COALESCE("i_1"."file", "i_2"."file") AS file, COALESCE("i_1"."post_id", "i_2"."post_id") AS post_id'
         result << ", \"record_class\".\"_record_class\" IN ('activity_books', 'activity_posts', 'activity_post_samples') AS _auto_cast"
         result << ' FROM "activities"'
-        result << ' INNER JOIN "record_class" ON "activities"."tableoid" = "record_class"."oid"'
+        result << ' INNER JOIN "record_class" ON "record_class"."oid" = "activities"."tableoid"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
         result << ' LEFT OUTER JOIN "activity_posts" "i_1" ON "activities"."id" = "i_1"."id"'
         result << ' LEFT OUTER JOIN "activity_post_samples" "i_2" ON "activities"."id" = "i_2"."id"'
@@ -296,7 +296,7 @@ RSpec.describe 'TableInheritance' do
         result << ', "i_0"."description", "i_0"."url"'
         result << ", \"record_class\".\"_record_class\" IN ('activity_books') AS _auto_cast"
         result << ' FROM "activities"'
-        result << ' INNER JOIN "record_class" ON "activities"."tableoid" = "record_class"."oid"'
+        result << ' INNER JOIN "record_class" ON "record_class"."oid" = "activities"."tableoid"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
         expect(base.cast_records(child).all.to_sql).to eql(result)
       end
@@ -307,7 +307,7 @@ RSpec.describe 'TableInheritance' do
         result << ', "i_0"."description", "i_0"."url"'
         result << ", \"record_class\".\"_record_class\" IN ('activity_books') AS _auto_cast"
         result << ' FROM "activities"'
-        result << ' INNER JOIN "record_class" ON "activities"."tableoid" = "record_class"."oid"'
+        result << ' INNER JOIN "record_class" ON "record_class"."oid" = "activities"."tableoid"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
         result << " WHERE \"record_class\".\"_record_class\" = 'activity_books'"
         expect(base.cast_records(child, filter: true).all.to_sql).to eql(result)
@@ -317,7 +317,7 @@ RSpec.describe 'TableInheritance' do
         result = 'WITH "record_class" AS (SELECT "pg_class"."oid", "pg_class"."relname" AS _record_class FROM "pg_class")'
         result << ' SELECT COUNT(*)'
         result << ' FROM "activities"'
-        result << ' INNER JOIN "record_class" ON "activities"."tableoid" = "record_class"."oid"'
+        result << ' INNER JOIN "record_class" ON "record_class"."oid" = "activities"."tableoid"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
         result << ' LEFT OUTER JOIN "activity_posts" "i_1" ON "activities"."id" = "i_1"."id"'
         result << ' LEFT OUTER JOIN "activity_post_samples" "i_2" ON "activities"."id" = "i_2"."id"'
@@ -329,7 +329,7 @@ RSpec.describe 'TableInheritance' do
         result = 'WITH "record_class" AS (SELECT "pg_class"."oid", "pg_class"."relname" AS _record_class FROM "pg_class")'
         result << ' SELECT SUM("activities"."id")'
         result << ' FROM "activities"'
-        result << ' INNER JOIN "record_class" ON "activities"."tableoid" = "record_class"."oid"'
+        result << ' INNER JOIN "record_class" ON "record_class"."oid" = "activities"."tableoid"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
         result << ' LEFT OUTER JOIN "activity_posts" "i_1" ON "activities"."id" = "i_1"."id"'
         result << ' LEFT OUTER JOIN "activity_post_samples" "i_2" ON "activities"."id" = "i_2"."id"'

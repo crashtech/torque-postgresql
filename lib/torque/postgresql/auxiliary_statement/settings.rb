@@ -2,16 +2,27 @@ module Torque
   module PostgreSQL
     class AuxiliaryStatement
       class Settings < Collector.new(:attributes, :join, :join_type, :query, :requires,
-                                     :polymorphic)
+          :polymorphic, :through)
 
-        attr_reader :source
-        alias cte source
+        attr_reader :base, :source
+        alias_method :select, :attributes
+        alias_method :cte, :source
 
-        delegate :base, :base_name, :base_table, :table, :table_name, to: :@source
         delegate :relation_query?, to: Torque::PostgreSQL::AuxiliaryStatement
+        delegate :table, :table_name, to: :@source
+        delegate :sql, to: ::Arel
 
-        def initialize(source)
+        def initialize(base, source)
+          @base = base
           @source = source
+        end
+
+        def base_name
+          @base.name
+        end
+
+        def base_table
+          @base.arel_table
         end
 
         # Get the arel version of the table set on the query
@@ -28,11 +39,6 @@ module Torque
 
         alias column col
 
-        # Grant an easy access to arel sql literal
-        def sql(string)
-          ::Arel::Nodes::SqlLiteral.new(string)
-        end
-
         # There are two ways of setting the query:
         # - A simple relation based on a Model
         # - A Arel-based select manager
@@ -48,11 +54,13 @@ module Torque
           end
 
           valid_type = command.respond_to?(:call) || command.is_a?(String)
-          raise ArgumentError, <<-MSG.strip.gsub(/\n +/, ' ') if command.nil?
+
+          raise ArgumentError, <<-MSG.squish if command.nil?
             To use proc or string as query, you need to provide the table name
             as the first argument
           MSG
-          raise ArgumentError, <<-MSG.strip.gsub(/\n +/, ' ') unless valid_type
+
+          raise ArgumentError, <<-MSG.squish unless valid_type
             Only relation, string and proc are valid object types for query,
             #{command.inspect} given.
           MSG

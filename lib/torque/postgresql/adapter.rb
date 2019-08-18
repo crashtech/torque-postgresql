@@ -9,7 +9,6 @@ require_relative 'adapter/schema_statements'
 module Torque
   module PostgreSQL
     module Adapter
-
       include Quoting
       include ColumnDumper unless Torque::PostgreSQL::AR521
       include DatabaseStatements
@@ -18,10 +17,9 @@ module Torque
       # Get the current PostgreSQL version as a Gem Version.
       def version
         @version ||= Gem::Version.new(
-          select_value('SELECT version()')
-            .match(/#{Adapter::ADAPTER_NAME} ([\d\.]+)/)[1])
+          select_value('SELECT version()').match(/#{Adapter::ADAPTER_NAME} ([\d\.]+)/)[1]
+        )
       end
-
     end
 
     ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.prepend Adapter

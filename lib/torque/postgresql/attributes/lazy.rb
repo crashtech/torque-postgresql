@@ -16,7 +16,7 @@ module Torque
         end
 
         def inspect
-          'nil'
+          'nil'.freeze
         end
 
         def __class__

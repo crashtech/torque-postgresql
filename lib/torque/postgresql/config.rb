@@ -26,16 +26,36 @@ module Torque
       end.to_h
     end
 
+    # Configure associations features
+    config.nested(:associations) do |assoc|
+
+      # Define if belongs to many associations are marked as required by default
+      assoc.belongs_to_many_required_by_default = false
+
+    end
+
+    # Configure auxiliary statement features
+    config.nested(:auxiliary_statement) do |cte|
+
+      # Define the key that is used on auxiliary statements to send extra
+      # arguments to format string or send on a proc
+      cte.send_arguments_key = :args
+
+      # Specify the namespace of each enum type of value
+      cte.exposed_class = 'TorqueCTE'
+
+    end
+
     # Configure ENUM features
     config.nested(:enum) do |enum|
-
-      # Indicates if the enum features on ActiveRecord::Base should be initiated
-      # automatically or not
-      enum.initializer = false
 
       # The name of the method to be used on any ActiveRecord::Base to
       # initialize model-based enum features
       enum.base_method = :enum
+
+      # The name of the method to be used on any ActiveRecord::Base to
+      # initialize model-based enum set features
+      enum.set_method = :enum_set
 
       # Indicates if bang methods like 'disabled!' should update the record on
       # database or not
@@ -63,12 +83,28 @@ module Torque
 
     end
 
-    # Configure auxiliary statement features
-    config.nested(:auxiliary_statement) do |cte|
+    # Configure geometry data types
+    config.nested(:geometry) do |geometry|
 
-      # Define the key that is used on auxiliary statements to send extra
-      # arguments to format string or send on a proc
-      cte.send_arguments_key = :args
+      # Define the class that will be handling Point data types after decoding
+      # it. Any class provided here must respond to 'x', and 'y'
+      geometry.point_class = ActiveRecord::Point
+
+      # Define the class that will be handling Circle data types after decoding
+      # it. Any class provided here must respond to 'x', 'y', and 'r'
+      geometry.circle_class = nil
+
+      # Define the class that will be handling Box data types after decoding it.
+      # Any class provided here must respond to 'x1', 'y1', 'x2', and 'y2'
+      geometry.box_class = nil
+
+      # Define the class that will be handling Line data types after decoding
+      # it. Any class provided here must respond to 'a', 'b', and 'c'
+      geometry.line_class = nil
+
+      # Define the class that will be handling Segment data types after decoding
+      # it. Any class provided here must respond to 'x1', 'y1', 'x2', and 'y2'
+      geometry.segment_class = nil
 
     end
 
@@ -89,6 +125,51 @@ module Torque
       # records should be casted to its correctly model. This will be TRUE for
       # the records mentioned on `cast_records`
       inheritance.auto_cast_column_name = :_auto_cast
+
+    end
+
+    # Configure period features
+    config.nested(:period) do |period|
+
+      # The name of the method to be used on any ActiveRecord::Base to
+      # initialize model-based period features
+      period.base_method = :period_for
+
+      # Define the list of methods that will be created by default while setting
+      # up a new period field
+      period.method_names = {
+        current_on:            '%s_on',                       # 0
+        current:               'current_%s',                  # 1
+        not_current:           'not_current_%s',              # 2
+        containing:            '%s_containing',               # 3
+        not_containing:        '%s_not_containing',           # 4
+        overlapping:           '%s_overlapping',              # 5
+        not_overlapping:       '%s_not_overlapping',          # 6
+        starting_after:        '%s_starting_after',           # 7
+        starting_before:       '%s_starting_before',          # 8
+        finishing_after:       '%s_finishing_after',          # 9
+        finishing_before:      '%s_finishing_before',         # 10
+
+        real_containing:       '%s_real_containing',          # 11
+        real_overlapping:      '%s_real_overlapping',         # 12
+        real_starting_after:   '%s_real_starting_after',      # 13
+        real_starting_before:  '%s_real_starting_before',     # 14
+        real_finishing_after:  '%s_real_finishing_after',     # 15
+        real_finishing_before: '%s_real_finishing_before',    # 16
+
+        containing_date:       '%s_containing_date',          # 17
+        not_containing_date:   '%s_not_containing_date',      # 18
+        overlapping_date:      '%s_overlapping_date',         # 19
+        not_overlapping_date:  '%s_not_overlapping_date',     # 20
+
+        current?:              'current_%s?',                 # 21
+        current_on?:           'current_%s_on?',              # 22
+        start:                 '%s_start',                    # 23
+        finish:                '%s_finish',                   # 24
+        real:                  'real_%s',                     # 25
+        real_start:            '%s_real_start',               # 26
+        real_finish:           '%s_real_finish',              # 27
+      }
 
     end
 

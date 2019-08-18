@@ -76,7 +76,7 @@ module Torque
             end
 
             columns.push(build_auto_caster_marker(arel, self.cast_records_value))
-            dynamic_selection.concat(columns) if columns.any?
+            self.select_extra_values += columns if columns.any?
           end
 
           # Build as many left outer join as necessary for each dependent table
@@ -106,7 +106,7 @@ module Torque
 
             table = ::Arel::Table.new(type_attribute.camelize.underscore)
             column = table[type_attribute].in(types)
-            ::Arel::Nodes::SqlLiteral.new(column.to_sql).as(auto_cast_attribute)
+            ::Arel.sql(column.to_sql).as(auto_cast_attribute)
           end
 
       end

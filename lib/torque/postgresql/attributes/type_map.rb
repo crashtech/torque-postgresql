@@ -1,6 +1,7 @@
 module Torque
   module PostgreSQL
     module Attributes
+      # Remove type map and add decorators direct to ActiveRecord::Base
       module TypeMap
 
         class << self
@@ -65,19 +66,16 @@ module Torque
           # Check whether the given attribute on the given klass is
           # decorable by this type mapper
           def decorable?(key, klass, attribute)
-            key.class.auto_initialize? ||
-              (decorable.key?(klass) && decorable[klass].include?(attribute.to_s))
+            decorable.key?(klass) && decorable[klass].include?(attribute.to_s)
           end
 
           # Message when trying to define multiple types
           def raise_type_defined(key)
-            raise ArgumentError, <<-MSG.strip
+            raise ArgumentError, <<-MSG.squish
               Type #{key} is already defined here: #{types[key].source_location.join(':')}
             MSG
           end
-
         end
-
       end
     end
   end
