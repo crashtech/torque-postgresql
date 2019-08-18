@@ -7,7 +7,7 @@ RSpec.describe 'Period' do
   let(:fields) { %i[available period tzperiod] }
   let(:method_names) { Torque::PostgreSQL::config.period.method_names }
 
-  let(:true_value) { Torque::PostgreSQL::AR521 ? '#{true_value}' : "'t'" }
+  let(:true_value) { Torque::PostgreSQL::AR521 ? 'TRUE' : "'t'" }
   let(:false_value) { Torque::PostgreSQL::AR521 ? 'FALSE' : "'f'" }
 
   let(:klass_method_names) { method_names.to_a[0..20].to_h }
@@ -81,11 +81,11 @@ RSpec.describe 'Period' do
 
       it 'queries not current period' do
         expect(model.not_current_period.to_sql).to include(<<-SQL.squish)
-          (NOT (coalesce(#{nullif_condition} @>
+          NOT (coalesce(#{nullif_condition} @>
         SQL
 
         expect(model.not_current_period.to_sql).to include(<<-SQL.squish)
-          #{cast_type}, #{true_value}))
+          #{cast_type}, #{true_value})
         SQL
       end
 
@@ -101,11 +101,11 @@ RSpec.describe 'Period' do
 
       it 'queries not containing period' do
         expect(model.period_not_containing(:test).to_sql).to include(<<-SQL.squish)
-          (NOT (#{db_field} @> "time_keepers"."test"))
+          NOT (#{db_field} @> "time_keepers"."test")
         SQL
 
         expect(model.period_not_containing(value).to_sql).to include(<<-SQL.squish)
-          (NOT (#{db_field} @> #{db_value}))
+          NOT (#{db_field} @> #{db_value})
         SQL
       end
 
@@ -121,11 +121,11 @@ RSpec.describe 'Period' do
 
       it 'queries not overlapping period' do
         expect(model.period_not_overlapping(:test).to_sql).to include(<<-SQL.squish)
-          (NOT (#{db_field} && "time_keepers"."test"))
+          NOT (#{db_field} && "time_keepers"."test")
         SQL
 
         expect(model.period_not_overlapping(value, value).to_sql).to include(<<-SQL.squish)
-          (NOT (#{db_field} && #{type}(#{db_value}, #{db_value})))
+          NOT (#{db_field} && #{type}(#{db_value}, #{db_value}))
         SQL
       end
 
@@ -197,11 +197,11 @@ RSpec.describe 'Period' do
 
       it 'queries not containing date period' do
         expect(model.period_not_containing_date(:test).to_sql).to include(<<-SQL.squish)
-          (NOT (#{date_db_field} @> "time_keepers"."test"))
+          NOT (#{date_db_field} @> "time_keepers"."test")
         SQL
 
         expect(model.period_not_containing_date(value).to_sql).to include(<<-SQL.squish)
-          (NOT (#{date_db_field} @> #{db_value}))
+          NOT (#{date_db_field} @> #{db_value})
         SQL
       end
 
@@ -217,11 +217,11 @@ RSpec.describe 'Period' do
 
       it 'queries not overlapping date period' do
         expect(model.period_not_overlapping_date(:test).to_sql).to include(<<-SQL.squish)
-          (NOT (#{date_db_field} && "time_keepers"."test"))
+          NOT (#{date_db_field} && "time_keepers"."test")
         SQL
 
         expect(model.period_not_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-          (NOT (#{date_db_field} && #{date_type}(#{db_value}, #{db_value})))
+          NOT (#{date_db_field} && #{date_type}(#{db_value}, #{db_value}))
         SQL
       end
     end
@@ -290,11 +290,11 @@ RSpec.describe 'Period' do
 
         it 'queries not current period' do
           expect(model.not_current_period.to_sql).to include(<<-SQL.squish)
-            (NOT (coalesce(#{nullif_condition} @>
+            NOT (coalesce(#{nullif_condition} @>
           SQL
 
           expect(model.not_current_period.to_sql).to include(<<-SQL.squish)
-            #{cast_type}, #{true_value}))
+            #{cast_type}, #{true_value})
           SQL
         end
 
@@ -370,11 +370,11 @@ RSpec.describe 'Period' do
 
         it 'queries not containing date period' do
           expect(model.period_not_containing_date(:test).to_sql).to include(<<-SQL.squish)
-            (NOT (#{date_db_field} @> "time_keepers"."test"))
+            NOT (#{date_db_field} @> "time_keepers"."test")
           SQL
 
           expect(model.period_not_containing_date(value).to_sql).to include(<<-SQL.squish)
-            (NOT (#{date_db_field} @> #{db_value}))
+            NOT (#{date_db_field} @> #{db_value})
           SQL
         end
 
@@ -390,11 +390,11 @@ RSpec.describe 'Period' do
 
         it 'queries not overlapping date period' do
           expect(model.period_not_overlapping_date(:test).to_sql).to include(<<-SQL.squish)
-            (NOT (#{date_db_field} && "time_keepers"."test"))
+            NOT (#{date_db_field} && "time_keepers"."test")
           SQL
 
           expect(model.period_not_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-            (NOT (#{date_db_field} && #{date_type}(#{db_value}, #{db_value})))
+            NOT (#{date_db_field} && #{date_type}(#{db_value}, #{db_value}))
           SQL
         end
       end
@@ -474,11 +474,11 @@ RSpec.describe 'Period' do
 
         it 'queries not current period' do
           expect(model.not_current_period.to_sql).to include(<<-SQL.squish)
-            (NOT (coalesce(#{nullif_condition} @>
+            NOT (coalesce(#{nullif_condition} @>
           SQL
 
           expect(model.not_current_period.to_sql).to include(<<-SQL.squish)
-            #{cast_type}, #{true_value}))
+            #{cast_type}, #{true_value})
           SQL
         end
 
@@ -554,11 +554,11 @@ RSpec.describe 'Period' do
 
         it 'queries not containing date period' do
           expect(model.period_not_containing_date(:test).to_sql).to include(<<-SQL.squish)
-            (NOT (#{date_db_field} @> "time_keepers"."test"))
+            NOT (#{date_db_field} @> "time_keepers"."test")
           SQL
 
           expect(model.period_not_containing_date(value).to_sql).to include(<<-SQL.squish)
-            (NOT (#{date_db_field} @> #{db_value}))
+            NOT (#{date_db_field} @> #{db_value})
           SQL
         end
 
@@ -574,11 +574,11 @@ RSpec.describe 'Period' do
 
         it 'queries not overlapping date period' do
           expect(model.period_not_overlapping_date(:test).to_sql).to include(<<-SQL.squish)
-            (NOT (#{date_db_field} && "time_keepers"."test"))
+            NOT (#{date_db_field} && "time_keepers"."test")
           SQL
 
           expect(model.period_not_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-            (NOT (#{date_db_field} && #{date_type}(#{db_value}, #{db_value})))
+            NOT (#{date_db_field} && #{date_type}(#{db_value}, #{db_value}))
           SQL
         end
       end
@@ -667,11 +667,11 @@ RSpec.describe 'Period' do
 
       it 'queries not current available' do
         expect(model.not_current_available.to_sql).to include(<<-SQL.squish)
-          (NOT (coalesce(#{nullif_condition} @>
+          NOT (coalesce(#{nullif_condition} @>
         SQL
 
         expect(model.not_current_available.to_sql).to include(<<-SQL.squish)
-          #{cast_type}, #{false_value}))
+          #{cast_type}, #{false_value})
         SQL
       end
 
@@ -687,11 +687,11 @@ RSpec.describe 'Period' do
 
       it 'queries not containing available' do
         expect(model.available_not_containing(:test).to_sql).to include(<<-SQL.squish)
-          (NOT (#{db_field} @> "time_keepers"."test"))
+          NOT (#{db_field} @> "time_keepers"."test")
         SQL
 
         expect(model.available_not_containing(value).to_sql).to include(<<-SQL.squish)
-          (NOT (#{db_field} @> #{db_value}))
+          NOT (#{db_field} @> #{db_value})
         SQL
       end
 
@@ -707,11 +707,11 @@ RSpec.describe 'Period' do
 
       it 'queries not overlapping available' do
         expect(model.available_not_overlapping(:test).to_sql).to include(<<-SQL.squish)
-          (NOT (#{db_field} && "time_keepers"."test"))
+          NOT (#{db_field} && "time_keepers"."test")
         SQL
 
         expect(model.available_not_overlapping(value, value).to_sql).to include(<<-SQL.squish)
-          (NOT (#{db_field} && #{type}(#{db_value}, #{db_value})))
+          NOT (#{db_field} && #{type}(#{db_value}, #{db_value}))
         SQL
       end
 
