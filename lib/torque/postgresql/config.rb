@@ -149,23 +149,26 @@ module Torque
         starting_before:       '%s_starting_before',          # 8
         finishing_after:       '%s_finishing_after',          # 9
         finishing_before:      '%s_finishing_before',         # 10
-        real_starting_after:   '%s_real_starting_after',      # 11
-        real_starting_before:  '%s_real_starting_before',     # 12
-        real_finishing_after:  '%s_real_finishing_after',     # 13
-        real_finishing_before: '%s_real_finishing_before',    # 14
 
-        containing_date:       '%s_containing_date',          # 15
-        not_containing_date:   '%s_not_containing_date',      # 16
-        overlapping_date:      '%s_overlapping_date',         # 17
-        not_overlapping_date:  '%s_not_overlapping_date',     # 18
+        real_containing:       '%s_real_containing',          # 11
+        real_overlapping:      '%s_real_overlapping',         # 12
+        real_starting_after:   '%s_real_starting_after',      # 13
+        real_starting_before:  '%s_real_starting_before',     # 14
+        real_finishing_after:  '%s_real_finishing_after',     # 15
+        real_finishing_before: '%s_real_finishing_before',    # 16
 
-        current?:              'current_%s?',                 # 19
-        current_on?:           'current_%s_on?',              # 20
-        start:                 '%s_start',                    # 21
-        finish:                '%s_finish',                   # 22
-        real:                  'real_%s',                     # 23
-        real_start:            '%s_real_start',               # 24
-        real_finish:           '%s_real_finish',              # 25
+        containing_date:       '%s_containing_date',          # 17
+        not_containing_date:   '%s_not_containing_date',      # 18
+        overlapping_date:      '%s_overlapping_date',         # 19
+        not_overlapping_date:  '%s_not_overlapping_date',     # 20
+
+        current?:              'current_%s?',                 # 21
+        current_on?:           'current_%s_on?',              # 22
+        start:                 '%s_start',                    # 23
+        finish:                '%s_finish',                   # 24
+        real:                  'real_%s',                     # 25
+        real_start:            '%s_real_start',               # 26
+        real_finish:           '%s_real_finish',              # 27
       }
 
     end

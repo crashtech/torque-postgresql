@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 44
+  version = 45
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -42,6 +42,7 @@ begin
       t.daterange "available"
       t.tsrange   "period"
       t.tstzrange "tzperiod"
+      t.interval  "th"
     end
 
     create_table "tags", force: :cascade do |t|

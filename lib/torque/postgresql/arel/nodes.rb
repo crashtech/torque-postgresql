@@ -4,6 +4,8 @@ module Torque
       module Nodes
 
         class Cast < ::Arel::Nodes::Binary
+          include ::Arel::Predications
+
           def initialize(left, right, array = false)
             right = right.to_s
             right << '[]' if array
@@ -19,6 +21,8 @@ module Torque
         result = result.cast(cast, true) if cast.present?
         result
       end
+
+      ::Arel::Nodes::Function.include(::Arel::Math)
     end
   end
 end
