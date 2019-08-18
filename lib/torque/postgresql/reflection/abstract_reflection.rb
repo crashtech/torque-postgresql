@@ -12,12 +12,15 @@ module Torque
           false
         end
 
+        # Monkey patching for rais 5.0
+        def torque_join_keys
+          method(:join_keys).arity.eql?(0) ? join_keys : join_keys(klass)
+        end
+
         # Manually build the join constraint
         def build_join_constraint(table, foreign_table)
-          join = method(:join_keys).arity.eql?(0) ? join_keys : join_keys(klass)
-
-          klass_attr = table[join.key]
-          source_attr = foreign_table[join.foreign_key]
+          klass_attr = table[torque_join_keys.key]
+          source_attr = foreign_table[torque_join_keys.foreign_key]
 
           result = build_id_constraint(klass_attr, source_attr)
           result = table.create_and([result, klass.send(:type_condition, table)]) \
@@ -27,15 +30,21 @@ module Torque
         end
 
         # Build the id constraint checking if both types are perfect matching
-        # TODO: Try to simplify by `tags.id = ANY(videos.tag_ids)`
         def build_id_constraint(klass_attr, source_attr)
           return klass_attr.eq(source_attr) unless connected_through_array?
-          join = method(:join_keys).arity.eql?(0) ? join_keys : join_keys(klass)
 
           # Klass and key are associated with the reflection Class
-          klass_type = klass.columns_hash[join.key]
+          klass_type = klass.columns_hash[torque_join_keys.key]
           # active_record and foreign_key are associated with the source Class
-          source_type = active_record.columns_hash[join.foreign_key]
+          source_type = active_record.columns_hash[torque_join_keys.foreign_key]
+
+          # If both are attributes but the left side is not an array, and the
+          # right side is, use the ANY operation
+          any_operation = arel_array_to_any(klass_attr, source_attr, klass_type, source_type)
+          return klass_attr.eq(any_operation) if any_operation
+
+          # If the left side is not an array, just use the IN condition
+          return klass_attr.in(source_attr) unless klass_type.try(:array)
 
           # Decide if should apply a cast to ensure same type comparision
           should_cast = klass_type.type.eql?(:integer) && source_type.type.eql?(:integer)
@@ -60,6 +69,14 @@ module Torque
             value = ::Arel::Nodes.build_quoted(Array.wrap(value)) unless base_ready
             value = value.cast(ARR_CAST) if should_cast
             value
+          end
+
+          # Check if it's possible to turn both attributes into an ANY condition
+          def arel_array_to_any(klass_attr, source_attr, klass_type, source_type)
+            return unless !klass_type.try(:array) && source_type.try(:array) &&
+              klass_attr.is_a?(AREL_ATTR) && source_attr.is_a?(AREL_ATTR)
+
+            ::Arel::Nodes::NamedFunction.new('ANY', [source_attr])
           end
 
           # returns either +nil+ or the inverse association name that it finds.

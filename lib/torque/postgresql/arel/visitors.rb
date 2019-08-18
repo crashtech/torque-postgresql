@@ -17,13 +17,13 @@ module Torque
 
         # Allow quoted arrays to get here
         def visit_Arel_Nodes_Quoted(o, collector)
-          return super unless o.expr.is_a?(::Array)
+          return super unless o.expr.is_a?(::Enumerable)
           quote_array(o.expr, collector)
         end
 
         # Allow quoted arrays to get here
         def visit_Arel_Nodes_Casted(o, collector)
-          return super unless o.val.is_a?(::Array)
+          return super unless o.val.is_a?(::Enumerable)
           quote_array(o.val, collector)
         end
 
@@ -44,7 +44,7 @@ module Torque
           end
       end
 
-      ::Arel::Visitors::PostgreSQL.include Visitors
+      ::Arel::Visitors::PostgreSQL.prepend(Visitors)
     end
   end
 end

@@ -27,8 +27,11 @@ module Torque
 
         nodes.const_set(operator_name, klass)
         visitors.send(:alias_method, :"visit_Arel_Nodes_#{operator_name}", default_alias)
+
+        # Don't worry about quoting here, if the right side is something that
+        # doesn't need quoting, it will leave it as it is
         Math.send(:define_method, operator_name.underscore) do |other|
-          klass.new(self, ::Arel::Nodes.build_quoted(other, self))
+          klass.new(self, nodes.build_quoted(other, self))
         end
       end
 

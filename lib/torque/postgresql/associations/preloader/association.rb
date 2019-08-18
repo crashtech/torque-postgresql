@@ -47,6 +47,14 @@ module Torque
               scope.where(condition).load(&block)
             end
 
+            unless Torque::PostgreSQL::AR521
+              def associate_records_to_owner(owner, records)
+                association = owner.association(reflection.name)
+                association.loaded!
+                association.target.concat(records)
+              end
+            end
+
         end
 
         ::ActiveRecord::Associations::Preloader::Association.prepend(Association)

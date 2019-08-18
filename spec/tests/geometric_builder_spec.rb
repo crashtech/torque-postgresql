@@ -33,7 +33,9 @@ RSpec.describe 'Geometries' do
       it 'returns the definition pieces' do
         expect(instance.pieces).to be_eql([:a, :b, :c, :d])
       end
+
       it 'returns whatever is in the constant' do
+        klass.send(:remove_const, 'PIECES')
         klass.const_set('PIECES', %i[a].freeze)
         expect(instance.pieces).to be_eql([:a])
       end
@@ -45,6 +47,7 @@ RSpec.describe 'Geometries' do
       end
 
       it 'returns whatever is in the constant' do
+        klass.send(:remove_const, 'FORMATION')
         klass.const_set('FORMATION', '(<%s>)'.freeze)
         expect(instance.formation).to be_eql("(<%s>)")
       end

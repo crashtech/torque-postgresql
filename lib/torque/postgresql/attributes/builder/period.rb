@@ -51,12 +51,12 @@ module Torque
 
           # Get the list of methods associated withe the class
           def klass_method_names
-            @klass_method_names ||= method_names.to_a[0..12].to_h
+            @klass_method_names ||= method_names.to_a[0..18].to_h
           end
 
           # Get the list of methods associated withe the instances
           def instance_method_names
-            @instance_method_names ||= method_names.to_a[13..19].to_h
+            @instance_method_names ||= method_names.to_a[19..25].to_h
           end
 
           # Check if any of the methods that will be created get in conflict
@@ -101,9 +101,23 @@ module Torque
             named_function('coalesce', args)
           end
 
+          # Create an arel version of the type with the following values
+          def arel_convert_to_type(left, right = nil)
+            named_function(type, [left, right || left])
+          end
+
+          # Convert timestamp range to date range format
+          def arel_daterange
+            named_function(
+              :daterange,
+              named_function(:lower, arel_attribute).cast(:date),
+              named_function(:upper, arel_attribute).cast(:date),
+            )
+          end
+
           # Create an arel version of an empty value for the range
           def arel_empty_value
-            named_function(type, [::Arel.sql('NULL'), ::Arel.sql('NULL')])
+            arel_convert_to_type(::Arel.sql('NULL'))
           end
 
           # Get the main arel condition to check the value
@@ -157,8 +171,6 @@ module Torque
             def build_singleton_methods
               attr = attribute
               builder = self
-              arel_attr = arel_attribute
-              threshold_sql = threshold_value
 
               # TODO: Rewrite these as string
               klass.scope method_names[:current_on], ->(value) do
@@ -174,51 +186,91 @@ module Torque
                 where.not(builder.arel_check_condition(:contains, current_value))
               end
 
-              klass.scope method_names[:overlapping], ->(value) do
+              klass.scope method_names[:containing], ->(value) do
                 value = arel_table[value] if value.is_a?(Symbol)
-                where(arel_attr.overlaps(value))
+                where(builder.arel_attribute.contains(value))
               end
 
-              klass.scope method_names[:not_overlapping], ->(value) do
+              klass.scope method_names[:not_containing], ->(value) do
                 value = arel_table[value] if value.is_a?(Symbol)
-                where.not(arel_attr.overlaps(value))
+                where.not(builder.arel_attribute.contains(value))
+              end
+
+              klass.scope method_names[:overlapping], ->(value, right = nil) do
+                value = arel_table[value] if value.is_a?(Symbol)
+                value = builder.arel_convert_to_type(value, right) if right.present?
+                where(builder.arel_attribute.overlaps(value))
+              end
+
+              klass.scope method_names[:not_overlapping], ->(value, right = nil) do
+                value = arel_table[value] if value.is_a?(Symbol)
+                value = builder.arel_convert_to_type(value, right) if right.present?
+                where.not(builder.arel_attribute.overlaps(value))
               end
 
               klass.scope method_names[:starting_after], ->(value) do
-                where(builder.named_function(:lower, arel_attr).gt(value))
+                where(builder.named_function(:lower, builder.arel_attribute).gt(value))
               end
 
               klass.scope method_names[:starting_before], ->(value) do
-                where(builder.named_function(:lower, arel_attr).lt(value))
+                where(builder.named_function(:lower, builder.arel_attribute).lt(value))
               end
 
               klass.scope method_names[:finishing_after], ->(value) do
-                where(builder.named_function(:upper, arel_attr).gt(value))
+                where(builder.named_function(:upper, builder.arel_attribute).gt(value))
               end
 
               klass.scope method_names[:finishing_before], ->(value) do
-                where(builder.named_function(:upper, arel_attr).lt(value))
+                where(builder.named_function(:upper, builder.arel_attribute).lt(value))
               end
 
               if threshold.present?
                 klass.scope method_names[:real_starting_after], ->(value) do
-                  condition = builder.named_function(:lower, arel_attr) + threshold_sql
+                  condition = builder.named_function(:lower, builder.arel_attribute)
+                  condition += builder.threshold_value
                   where(condition.gt(value))
                 end
 
                 klass.scope method_names[:real_starting_before], ->(value) do
-                  condition = builder.named_function(:lower, arel_attribute) + threshold_sql
+                  condition = builder.named_function(:lower, builder.arel_attribute)
+                  condition += builder.threshold_value
                   where(condition.lt(value))
                 end
 
                 klass.scope method_names[:real_finishing_after], ->(value) do
-                  condition = builder.named_function(:upper, arel_attribute) + threshold_sql
+                  condition = builder.named_function(:upper, builder.arel_attribute)
+                  condition += builder.threshold_value
                   where(condition.gt(value))
                 end
 
                 klass.scope method_names[:real_finishing_before], ->(value) do
-                  condition = builder.named_function(:upper, arel_attribute) + threshold_sql
+                  condition = builder.named_function(:upper, builder.arel_attribute)
+                  condition += builder.threshold_value
                   where(condition.lt(value))
+                end
+              end
+
+              unless type.eql?(:daterange)
+                klass.scope method_names[:containing_date], ->(value) do
+                  value = arel_table[value] if value.is_a?(Symbol)
+                  where(builder.arel_daterange.contains(value))
+                end
+
+                klass.scope method_names[:not_containing_date], ->(value) do
+                  value = arel_table[value] if value.is_a?(Symbol)
+                  where.not(builder.arel_daterange.contains(value))
+                end
+
+                klass.scope method_names[:overlapping_date], ->(value, right = nil) do
+                  value = arel_table[value] if value.is_a?(Symbol)
+                  value = builder.arel_convert_to_type(value, right) if right.present?
+                  where(builder.arel_daterange.overlaps(value))
+                end
+
+                klass.scope method_names[:not_overlapping_date], ->(value, right = nil) do
+                  value = arel_table[value] if value.is_a?(Symbol)
+                  value = builder.arel_convert_to_type(value, right) if right.present?
+                  where.not(builder.arel_daterange.overlaps(value))
                 end
               end
             end

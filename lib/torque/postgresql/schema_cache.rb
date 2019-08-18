@@ -134,7 +134,7 @@ module Torque
         # Find a model by a given max namespaced class name thath matches the
         # given table name
         def find_model(max_name, table_name, scope = Object)
-          pieces = max_name.is_a?(Array) ? max_name : max_name.split(/(::)/)
+          pieces = max_name.is_a?(::Array) ? max_name : max_name.split(/(::)/)
           ns_places = (1..(max_name.size - 1)).step(2).to_a
 
           # Generate all possible combinarions

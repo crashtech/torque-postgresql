@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 43
+  version = 44
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -65,6 +65,7 @@ begin
     end
 
     create_table "texts", force: :cascade do |t|
+      t.integer  "user_id"
       t.string   "content"
       t.enum     "conflict",  subtype: :conflicts
     end

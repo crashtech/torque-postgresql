@@ -141,7 +141,7 @@ module Torque
 
         # Change the inspection to show the enum name
         def inspect
-          "#<#{self.class.name} #{map(&:to_s).join(', ')}>"
+          map(&:inspect).inspect
         end
 
         # Replace the setter by instantiating the value
@@ -165,9 +165,11 @@ module Torque
         %i[add delete include? subtract].each do |method_name|
           define_method(method_name) do |other|
             other =
-              if other.is_a?(Array)
+              if other.is_a?(self.class)
+                other
+              elsif other.is_a?(::Enumerable)
                 other.map(&method(:instantiate))
-              elsif !other.is_a?(self.class)
+              else
                 instantiate(other)
               end
 
@@ -194,7 +196,7 @@ module Torque
 
           # Turn all the values into their respective Enum representations
           def transform_values(values)
-            values = values.first if values.size.eql?(1) && values.first.is_a?(Array)
+            values = values.first if values.size.eql?(1) && values.first.is_a?(::Enumerable)
             values.map(&method(:instantiate))
           end
 

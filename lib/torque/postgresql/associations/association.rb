@@ -11,6 +11,17 @@ module Torque
           @inversed = self.target.present?
         end
 
+        private
+
+          def set_owner_attributes(record)
+            return super unless reflection.connected_through_array?
+
+            add_id = owner[reflection.active_record_primary_key]
+            record_fk = reflection.foreign_key
+
+            record[record_fk].push(add_id) unless (record[record_fk] ||= []).include?(add_id)
+          end
+
       end
 
       ::ActiveRecord::Associations::Association.prepend(Association)

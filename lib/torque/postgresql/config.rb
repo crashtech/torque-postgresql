@@ -138,27 +138,34 @@ module Torque
       # Define the list of methods that will be created by default while setting
       # up a new period field
       period.method_names = {
-        current_on:            '%s_on',
-        current:               'current_%s',
-        not_current:           'not_current_%s',
-        overlapping:           '%s_overlapping',
-        not_overlapping:       '%s_not_overlapping',
-        starting_after:        '%s_starting_after',
-        starting_before:       '%s_starting_before',
-        finishing_after:       '%s_finishing_after',
-        finishing_before:      '%s_finishing_before',
-        real_starting_after:   '%s_real_starting_after',
-        real_starting_before:  '%s_real_starting_before',
-        real_finishing_after:  '%s_real_finishing_after',
-        real_finishing_before: '%s_real_finishing_before',
+        current_on:            '%s_on',                       # 0
+        current:               'current_%s',                  # 1
+        not_current:           'not_current_%s',              # 2
+        containing:            '%s_containing',               # 3
+        not_containing:        '%s_not_containing',           # 4
+        overlapping:           '%s_overlapping',              # 5
+        not_overlapping:       '%s_not_overlapping',          # 6
+        starting_after:        '%s_starting_after',           # 7
+        starting_before:       '%s_starting_before',          # 8
+        finishing_after:       '%s_finishing_after',          # 9
+        finishing_before:      '%s_finishing_before',         # 10
+        real_starting_after:   '%s_real_starting_after',      # 11
+        real_starting_before:  '%s_real_starting_before',     # 12
+        real_finishing_after:  '%s_real_finishing_after',     # 13
+        real_finishing_before: '%s_real_finishing_before',    # 14
 
-        current?:              'current_%s?',
-        current_on?:           'current_%s_on?',
-        start:                 '%s_start',
-        finish:                '%s_finish',
-        real:                  'real_%s',
-        real_start:            '%s_real_start',
-        real_finish:           '%s_real_finish',
+        containing_date:       '%s_containing_date',          # 15
+        not_containing_date:   '%s_not_containing_date',      # 16
+        overlapping_date:      '%s_overlapping_date',         # 17
+        not_overlapping_date:  '%s_not_overlapping_date',     # 18
+
+        current?:              'current_%s?',                 # 19
+        current_on?:           'current_%s_on?',              # 20
+        start:                 '%s_start',                    # 21
+        finish:                '%s_finish',                   # 22
+        real:                  'real_%s',                     # 23
+        real_start:            '%s_real_start',               # 24
+        real_finish:           '%s_real_finish',              # 25
       }
 
     end

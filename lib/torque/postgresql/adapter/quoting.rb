@@ -18,7 +18,7 @@ module Torque
         end
 
         def quote_default_expression(value, column)
-          if value.is_a?(Array)
+          if value.is_a?(::Enumerable)
             quote(value) + '::' + column.sql_type
           else
             super
@@ -28,13 +28,15 @@ module Torque
         private
 
           def _quote(value)
-            case value
-            when Array
-              values = value.map(&method(:quote))
-              "ARRAY[#{values.join(',')}]"
-            else
-              super
-            end
+            return super unless value.is_a?(Array)
+
+            values = value.map(&method(:quote))
+            "ARRAY[#{values.join(','.freeze)}]"
+          end
+
+          def _type_cast(value)
+            return super unless value.is_a?(Array)
+            value.map(&method(:quote)).join(','.freeze)
           end
       end
     end

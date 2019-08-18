@@ -169,7 +169,7 @@ module Torque
 
         # Change the inspection to show the enum name
         def inspect
-          nil? ? 'nil' : "#<#{self.class.name} #{super}>"
+          nil? ? 'nil' : ":#{to_s}"
         end
 
         private

@@ -31,6 +31,12 @@ module Torque
           owner[reflection.active_record_primary_key]
         end
 
+        def ids_writer(new_ids)
+          column = reflection.active_record_primary_key
+          owner.update_column(column, owner[column] = new_ids.presence)
+          @association_scope = nil
+        end
+
         def insert_record(record, *)
           super
 
@@ -58,9 +64,10 @@ module Torque
 
           # When the idea is to nulligy the association, then just set the owner
           # +primary_key+ as empty
-          def delete_count(method, scope)
-            remove_stash_records(scope.where_values_hash[klass_fk])
+          def delete_count(method, scope, ids = nil)
+            ids ||= scope.pluck(klass_fk)
             scope.delete_all if method == :delete_all
+            remove_stash_records(ids)
           end
 
           def delete_or_nullify_all_records(method)
@@ -69,21 +76,26 @@ module Torque
 
           # Deletes the records according to the <tt>:dependent</tt> option.
           def delete_records(records, method)
+            ids = Array.wrap(records).each_with_object(klass_fk).map(&:[])
+
             if method == :destroy
-              remove_stash_records(records_or_ids)
               records.each(&:destroy!)
+              remove_stash_records(ids)
             else
               scope = self.scope.where(klass_fk => records)
-              delete_count(method, scope)
+              delete_count(method, scope, ids)
             end
           end
 
-          def remove_stash_records(records_or_ids)
-            records_or_ids.map! do |item|
-              item.is_a?(::ActiveRecord::Base) ? item[klass_fk] : item.to_i
-            end
+          def concat_records(*)
+            result = super
+            ids_writer(ids_reader)
+            result
+          end
 
-            Array.wrap(records_or_ids).each(&ids_reader.method(:delete))
+          def remove_stash_records(ids)
+            return if ids_reader.nil?
+            ids_writer(ids_reader - Array.wrap(ids))
           end
 
           def klass_fk
