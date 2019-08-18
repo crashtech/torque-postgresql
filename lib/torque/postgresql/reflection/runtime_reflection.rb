@@ -3,7 +3,7 @@ module Torque
     module Reflection
       module RuntimeReflection
         delegate :klass, :active_record, :connected_through_array?, :macro, :name,
-          to: :@reflection
+          :build_id_constraint, to: :@reflection
       end
 
       ::ActiveRecord::Reflection::RuntimeReflection.include(RuntimeReflection)

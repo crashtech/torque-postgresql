@@ -10,7 +10,8 @@ module Torque
           define_non_cyclic_method(save_method) { save_belongs_to_many_array(reflection) }
 
           before_save(:before_save_collection_association)
-          after_save(:after_save_collection_association)
+          after_save(:after_save_collection_association) if ::ActiveRecord::Base
+            .instance_methods.include?(:after_save_collection_association)
 
           before_create(save_method)
           before_update(save_method)
