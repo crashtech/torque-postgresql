@@ -31,7 +31,7 @@ module Torque
     def add(other)
       raise ArgumentError, 'value must be a Range' unless other.kind_of?(Range)
 
-      union(other) if intersection(other)
+      intersection(other) ? union(other) : self
     end
     alias_method :+, :add
   end
