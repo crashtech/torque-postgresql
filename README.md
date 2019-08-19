@@ -31,7 +31,7 @@ $ bundle
 Or, for non-Gemfile related usage, simply:
 
 ```
-gem intall torque-postgresql
+gem install torque-postgresql
 ```
 
 # Usage
