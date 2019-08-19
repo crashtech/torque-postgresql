@@ -16,7 +16,7 @@ A short rundown of some of the major features:
 It creates a separated class to hold each enum set that can be used by multiple
 models, it also keeps the database consistent. The enum type is known to have
 better performance against string- and integer-like enums.
-{PostgreSQL Docs}[https://www.postgresql.org/docs/9.2/static/datatype-enum.html]
+{PostgreSQL Docs}[https://www.postgresql.org/docs/9.6/static/datatype-enum.html]
 
    create_enum :roles, %i(visitor manager admin)
 
@@ -28,11 +28,84 @@ better performance against string- and integer-like enums.
 
   {Learn more}[link:classes/Torque/PostgreSQL/Attributes/Enum.html]
 
+* Enum set type manager
+
+The enum type is known to have a better performance against string- and integer-
+like enums. Now with the array option, which behaves like binary assignment,
+each record can have multiple enum values.
+{PostgreSQL Docs}[https://www.postgresql.org/docs/9.6/static/datatype-enum.html]
+
+   create_enum :permissions, %i(read write exec)
+
+   add_column :posts, :creator_permissions, :permissions, array: true
+
+   Enum::PermissionsSet.new(3) # [:read, :write]
+
+   post.creator_permissions.write?
+
+  {Learn more}[link:classes/Torque/PostgreSQL/Attributes/EnumSet.html]
+
+* Period complex queries
+
+This provides extended and complex calculations over date and time ranges. In a
+few words, you can now store `start_time` and `finish_time` in the same column
+and relies on the methods provided here to fo your magic.
+{PostgreSQL Docs}[https://www.postgresql.org/docs/9.6/functions-range.html]
+
+   add_column :events, :period, :tsrange
+   add_column :events, :interval, :interval
+
+   Event.create(title: 'Test', period: ['2019-01-01 12:00:00', '2019-01-01 14:00:00'], interval: 15.minutes)
+
+   Event.overlapping('2019-01-01 13:00:00', '2019-01-01 15:00:00').count
+
+   Event.not_real_overlapping('2019-01-01 11:00:00', '2019-01-01 13:00:00').empty?
+
+  {Learn more}[link:classes/Torque/PostgreSQL/Attributes/Builder/Period.html]
+
+* Has many array association
+
+The idea is simple, one table stores all the ids and the other one says that
+`has many` records on that table because its records ids exist in the column of
+the array. Like: `Tag has many Videos connected through an array`.
+{PostgreSQL Docs}[https://www.postgresql.org/docs/9.6/arrays.html]
+
+   add_column :videos, :tag_ids, :bigint, array: true
+
+   Tag.has_many :videos, array: true
+
+   Tag.videos.size
+
+   Tag.videos << another_video
+
+  {Learn more}[link:classes/Torque/PostgreSQL/Reflection/AbstractReflection.html]
+
+* Belongs to many association
+
+The original `belongs_to` associations define a `SingularAssociation`, which
+means that it could be extended with `array: true`. In this case, I decided to
+create my own `CollectionAssociation` called `belongs_to_many`, which behaves
+similar to the single one, but storing and returning a list of records.
+
+With this, now you can say things like `Project belongs to many employees`,
+which is more syntactically correct than `Project has many employees`
+{PostgreSQL Docs}[https://www.postgresql.org/docs/9.6/arrays.html]
+
+   add_column :videos, :tag_ids, :bigint, array: true
+
+   Video.belongs_to_many :tags
+
+   Video.tags.size
+
+   Video.tags << Tag.new(title: 'rails')
+
+  {Learn more}[link:classes/Torque/PostgreSQL/Reflection/BelongsToManyReflection.html]
+
 * Distinct On
 
 MySQL-like group by statement on queries. It keeps only the first row of each
 set of rows where the given expressions evaluate to equal.
-{PostgreSQL Docs}[https://www.postgresql.org/docs/9.5/static/sql-select.html#SQL-DISTINCT]
+{PostgreSQL Docs}[https://www.postgresql.org/docs/9.6/static/sql-select.html#SQL-DISTINCT]
 
    User.distinct_on(:name).all
 
@@ -42,7 +115,7 @@ set of rows where the given expressions evaluate to equal.
 
 Provides a way to write auxiliary statements for use in a larger query. It's
 reconfigured on the model, and then can be used during querying process.
-{PostgreSQL Docs}[https://www.postgresql.org/docs/9.1/static/queries-with.html]
+{PostgreSQL Docs}[https://www.postgresql.org/docs/9.6/static/queries-with.html]
 
    class User < ActiveRecord::Base
      auxiliary_statement :last_comment do |cte|
