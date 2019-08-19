@@ -19,7 +19,7 @@
 
 To install torque-postgresql you need to add the following to your Gemfile:
 ```ruby
-gem 'torque-postgresql', '~> 0.2'
+gem 'torque-postgresql', '~> 1.0'
 ```
 
 Also, run:
@@ -39,13 +39,26 @@ These are the currently available features:
 
 * [Configuring](https://github.com/crashtech/torque-postgresql/wiki/Configuring)
 
+## Core Extensions
+
+* [Range](https://github.com/crashtech/torque-postgresql/wiki/Range)
+
 ## Data types
 
 * [Enum](https://github.com/crashtech/torque-postgresql/wiki/Enum)
+* [EnumSet](https://github.com/crashtech/torque-postgresql/wiki/EnumSet)
 * [Interval](https://github.com/crashtech/torque-postgresql/wiki/Interval)
+* [Date/Time Range](https://github.com/crashtech/torque-postgresql/wiki/Date-Time-Range)
+* [Box](https://github.com/crashtech/torque-postgresql/wiki/Box)
+* [Circle](https://github.com/crashtech/torque-postgresql/wiki/Circle)
+* [Line](https://github.com/crashtech/torque-postgresql/wiki/Line)
+* [Segment](https://github.com/crashtech/torque-postgresql/wiki/Segment)
 
 ## Querying
 
+* [Arel](https://github.com/crashtech/torque-postgresql/wiki/Arel)
+* [Has Many](https://github.com/crashtech/torque-postgresql/wiki/Has-Many)
+* [Belongs to Many](https://github.com/crashtech/torque-postgresql/wiki/Belongs-to-Many)
 * [Dynamic Attributes](https://github.com/crashtech/torque-postgresql/wiki/Dynamic-Attributes)
 * [Distinct On](https://github.com/crashtech/torque-postgresql/wiki/Distinct-On)
 * [Auxiliary Statements](https://github.com/crashtech/torque-postgresql/wiki/Auxiliary-Statements)

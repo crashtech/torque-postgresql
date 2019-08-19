@@ -4,7 +4,11 @@ module Torque
       module Nodes
 
         class Cast < ::Arel::Nodes::Binary
+          include ::Arel::Expressions
           include ::Arel::Predications
+          include ::Arel::AliasPredication
+          include ::Arel::OrderPredications
+          include ::Arel::Math
 
           def initialize(left, right, array = false)
             right = right.to_s

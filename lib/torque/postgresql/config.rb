@@ -29,7 +29,8 @@ module Torque
     # Configure associations features
     config.nested(:associations) do |assoc|
 
-      # Define if belongs to many associations are marked as required by default
+      # Define if +belongs_to_many+ associations are marked as required by
+      # default. False means that no validation will be performed
       assoc.belongs_to_many_required_by_default = false
 
     end
@@ -41,7 +42,8 @@ module Torque
       # arguments to format string or send on a proc
       cte.send_arguments_key = :args
 
-      # Specify the namespace of each enum type of value
+      # Estipulate a class name (which may contain namespace) that expose the
+      # auxiliary statement in order to perform detached CTEs
       cte.exposed_class = 'TorqueCTE'
 
     end
@@ -90,13 +92,13 @@ module Torque
       # it. Any class provided here must respond to 'x', and 'y'
       geometry.point_class = ActiveRecord::Point
 
-      # Define the class that will be handling Circle data types after decoding
-      # it. Any class provided here must respond to 'x', 'y', and 'r'
-      geometry.circle_class = nil
-
       # Define the class that will be handling Box data types after decoding it.
       # Any class provided here must respond to 'x1', 'y1', 'x2', and 'y2'
       geometry.box_class = nil
+
+      # Define the class that will be handling Circle data types after decoding
+      # it. Any class provided here must respond to 'x', 'y', and 'r'
+      geometry.circle_class = nil
 
       # Define the class that will be handling Line data types after decoding
       # it. Any class provided here must respond to 'a', 'b', and 'c'
@@ -172,6 +174,5 @@ module Torque
       }
 
     end
-
   end
 end

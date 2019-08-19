@@ -27,7 +27,7 @@ module Torque
         when ::Hash
           build_klass(*value.symbolize_keys.slice(*pieces).values)
         when ::Array
-          build_klass(*value)
+          build_klass(*(value.flatten))
         else
           value
         end
@@ -41,7 +41,7 @@ module Torque
           when ::Hash
             value.symbolize_keys.slice(*pieces).values
           when ::Array
-            value
+            value.flatten
           end
 
         parts = parts&.compact&.flatten

@@ -209,11 +209,13 @@ module Torque
 
               klass.scope method_names[:containing], ->(value) do
                 value = arel_table[value] if value.is_a?(Symbol)
+                value = ::Arel.sql(connection.quote(value)) unless value.respond_to?(:cast)
                 where(builder.arel_attribute.contains(value))
               end
 
               klass.scope method_names[:not_containing], ->(value) do
                 value = arel_table[value] if value.is_a?(Symbol)
+                value = ::Arel.sql(connection.quote(value)) unless value.respond_to?(:cast)
                 where.not(builder.arel_attribute.contains(value))
               end
 
@@ -224,6 +226,8 @@ module Torque
                   value = ::Arel.sql(connection.quote(value))
                   right = ::Arel.sql(connection.quote(right))
                   value = builder.arel_convert_to_type(value, right)
+                elsif !value.respond_to?(:cast)
+                  value = ::Arel.sql(connection.quote(value))
                 end
 
                 where(builder.arel_attribute.overlaps(value))
@@ -236,6 +240,8 @@ module Torque
                   value = ::Arel.sql(connection.quote(value))
                   right = ::Arel.sql(connection.quote(right))
                   value = builder.arel_convert_to_type(value, right)
+                elsif !value.respond_to?(:cast)
+                  value = ::Arel.sql(connection.quote(value))
                 end
 
                 where.not(builder.arel_attribute.overlaps(value))
@@ -276,6 +282,7 @@ module Torque
               if threshold.present?
                 klass.scope method_names[:real_containing], ->(value) do
                   value = arel_table[value] if value.is_a?(Symbol)
+                  value = ::Arel.sql(connection.quote(value)) unless value.respond_to?(:cast)
                   where(builder.real_arel_attribute.contains(value))
                 end
 
@@ -286,6 +293,8 @@ module Torque
                     value = ::Arel.sql(connection.quote(value))
                     right = ::Arel.sql(connection.quote(right))
                     value = builder.arel_convert_to_type(value, right)
+                  elsif !value.respond_to?(:cast)
+                    value = ::Arel.sql(connection.quote(value))
                   end
 
                   where(builder.real_arel_attribute.overlaps(value))
@@ -327,11 +336,13 @@ module Torque
               unless type.eql?(:daterange)
                 klass.scope method_names[:containing_date], ->(value) do
                   value = arel_table[value] if value.is_a?(Symbol)
+                  value = ::Arel.sql(connection.quote(value)) unless value.respond_to?(:cast)
                   where(builder.arel_daterange.contains(value))
                 end
 
                 klass.scope method_names[:not_containing_date], ->(value) do
                   value = arel_table[value] if value.is_a?(Symbol)
+                  value = ::Arel.sql(connection.quote(value)) unless value.respond_to?(:cast)
                   where.not(builder.arel_daterange.contains(value))
                 end
 
@@ -342,6 +353,8 @@ module Torque
                     value = ::Arel.sql(connection.quote(value))
                     right = ::Arel.sql(connection.quote(right))
                     value = builder.arel_convert_to_type(value, right, :daterange)
+                  elsif !value.respond_to?(:cast)
+                    value = ::Arel.sql(connection.quote(value))
                   end
 
                   where(builder.arel_daterange.overlaps(value))
@@ -354,6 +367,8 @@ module Torque
                     value = ::Arel.sql(connection.quote(value))
                     right = ::Arel.sql(connection.quote(right))
                     value = builder.arel_convert_to_type(value, right, :daterange)
+                  elsif !value.respond_to?(:cast)
+                    value = ::Arel.sql(connection.quote(value))
                   end
 
                   where.not(builder.arel_daterange.overlaps(value))

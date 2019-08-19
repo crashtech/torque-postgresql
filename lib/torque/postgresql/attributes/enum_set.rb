@@ -9,7 +9,7 @@ module Torque
         class << self
           include Enumerable
 
-          delegate :each, :sample, to: :members
+          delegate :each, to: :members
           delegate :values, :members, :texts, :to_options, :valid?, :size,
             :length, :connection_specification_name, to: :enum_source
 
@@ -39,6 +39,11 @@ module Torque
           # The original Enum implementation, for individual values
           def enum_source
             const_get('EnumSource')
+          end
+
+          # Use the power to get a sample of the value
+          def sample
+            new(rand(0..((2 ** size) - 1)))
           end
 
           # Overpass new so blank values return only nil

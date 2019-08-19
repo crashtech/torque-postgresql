@@ -183,6 +183,11 @@ RSpec.describe 'Enum' do
     it 'accepts values turn into an array of integer by index' do
       expect((subject.B | subject.C).map(&:to_i)).to be_eql([1, 2])
     end
+
+    it 'can return a sample for resting purposes' do
+      expect(subject).to receive(:new).with(Numeric)
+      subject.sample
+    end
   end
 
   context 'on OID' do
