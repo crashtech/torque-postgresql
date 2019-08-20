@@ -3,8 +3,7 @@ module Torque
     module AutosaveAssociation
       module ClassMethods
         def add_autosave_association_callbacks(reflection)
-          return super unless reflection.connected_through_array? &&
-            reflection.macro.eql?(:belongs_to_many)
+          return super unless reflection.macro.eql?(:belongs_to_many)
 
           save_method = :"autosave_associated_records_for_#{reflection.name}"
           define_non_cyclic_method(save_method) { save_belongs_to_many_array(reflection) }

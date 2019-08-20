@@ -19,8 +19,8 @@ module Torque
 
         # Manually build the join constraint
         def build_join_constraint(table, foreign_table)
-          klass_attr = table[torque_join_keys.key]
-          source_attr = foreign_table[torque_join_keys.foreign_key]
+          klass_attr = table[torque_join_keys.key.to_s]
+          source_attr = foreign_table[torque_join_keys.foreign_key.to_s]
 
           result = build_id_constraint(klass_attr, source_attr)
           result = table.create_and([result, klass.send(:type_condition, table)]) \
@@ -34,9 +34,9 @@ module Torque
           return klass_attr.eq(source_attr) unless connected_through_array?
 
           # Klass and key are associated with the reflection Class
-          klass_type = klass.columns_hash[torque_join_keys.key]
+          klass_type = klass.columns_hash[torque_join_keys.key.to_s]
           # active_record and foreign_key are associated with the source Class
-          source_type = active_record.columns_hash[torque_join_keys.foreign_key]
+          source_type = active_record.columns_hash[torque_join_keys.foreign_key.to_s]
 
           # If both are attributes but the left side is not an array, and the
           # right side is, use the ANY operation

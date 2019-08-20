@@ -7,7 +7,7 @@ module Torque
 
       def type
         return self.class.const_get('TYPE') if self.class.const_defined?('TYPE')
-        self.class.const_set('TYPE', self.class.name.demodulize.underscore)
+        self.class.const_set('TYPE', self.class.name.demodulize.underscore.to_sym)
       end
 
       def pieces
