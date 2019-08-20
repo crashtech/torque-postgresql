@@ -18,9 +18,9 @@ RSpec.describe 'Geometries' do
       end
 
       it 'creates the type constant based on the name' do
-        expect(instance.type).to be_eql('test_sample')
+        expect(instance.type).to be_eql(:test_sample)
         expect(klass.constants).to include(:TYPE)
-        expect(klass::TYPE).to be_eql('test_sample')
+        expect(klass::TYPE).to be_eql(:test_sample)
       end
 
       it 'returns the constant value' do
