@@ -137,19 +137,23 @@ module Torque
       # initialize model-based period features
       period.base_method = :period_for
 
+      # The default name for a threshold attribute, which will automatically
+      # enable threshold features
+      period.auto_threshold = :threshold
+
       # Define the list of methods that will be created by default while setting
       # up a new period field
       period.method_names = {
-        current_on:            '%s_on',                       # 0
-        current:               'current_%s',                  # 1
-        not_current:           'not_current_%s',              # 2
-        containing:            '%s_containing',               # 3
-        not_containing:        '%s_not_containing',           # 4
-        overlapping:           '%s_overlapping',              # 5
-        not_overlapping:       '%s_not_overlapping',          # 6
-        starting_after:        '%s_starting_after',           # 7
-        starting_before:       '%s_starting_before',          # 8
-        finishing_after:       '%s_finishing_after',          # 9
+        current_on:            '%s_on',                       # 00
+        current:               'current_%s',                  # 01
+        not_current:           'not_current_%s',              # 02
+        containing:            '%s_containing',               # 03
+        not_containing:        '%s_not_containing',           # 04
+        overlapping:           '%s_overlapping',              # 05
+        not_overlapping:       '%s_not_overlapping',          # 06
+        starting_after:        '%s_starting_after',           # 07
+        starting_before:       '%s_starting_before',          # 08
+        finishing_after:       '%s_finishing_after',          # 09
         finishing_before:      '%s_finishing_before',         # 10
 
         real_containing:       '%s_real_containing',          # 11
@@ -163,14 +167,35 @@ module Torque
         not_containing_date:   '%s_not_containing_date',      # 18
         overlapping_date:      '%s_overlapping_date',         # 19
         not_overlapping_date:  '%s_not_overlapping_date',     # 20
+        real_containing_date:  '%s_real_containing_date',     # 21
+        real_overlapping_date: '%s_real_overlapping_date',    # 22
 
-        current?:              'current_%s?',                 # 21
-        current_on?:           'current_%s_on?',              # 22
-        start:                 '%s_start',                    # 23
-        finish:                '%s_finish',                   # 24
-        real:                  'real_%s',                     # 25
-        real_start:            '%s_real_start',               # 26
-        real_finish:           '%s_real_finish',              # 27
+        current?:              'current_%s?',                 # 23
+        current_on?:           'current_%s_on?',              # 24
+        start:                 '%s_start',                    # 25
+        finish:                '%s_finish',                   # 26
+        real:                  'real_%s',                     # 27
+        real_start:            '%s_real_start',               # 28
+        real_finish:           '%s_real_finish',              # 29
+      }
+
+      # If the period is marked as direct access, without the field name,
+      # then these method names will replace the default ones
+      period.direct_method_names = {
+        current_on:          'happening_in',
+        containing:          'during',
+        not_containing:      'not_during',
+        real_containing:     'real_during',
+
+        containing_date:     'during_date',
+        not_containing_date: 'not_during_date',
+
+        current_on?:         'happening_in?',
+        start:               'start_at',
+        finish:              'finish_at',
+        real:                'real_time',
+        real_start:          'real_start_at',
+        real_finish:         'real_finish_at',
       }
 
     end

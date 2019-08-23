@@ -9,7 +9,7 @@ module Torque
         def drop_type(name, options = {})
           force = options.fetch(:force, '').upcase
           check = 'IF EXISTS' if options.fetch(:check, true)
-          execute <<-SQL
+          execute <<-SQL.squish
             DROP TYPE #{check}
             #{quote_type_name(name, options[:schema])} #{force}
           SQL
@@ -17,7 +17,7 @@ module Torque
 
         # Renames a type.
         def rename_type(type_name, new_name)
-          execute <<-SQL
+          execute <<-SQL.squish
             ALTER TYPE #{quote_type_name(type_name)}
             RENAME TO #{Quoting::Name.new(nil, new_name.to_s).quoted}
           SQL
@@ -32,7 +32,7 @@ module Torque
         #   create_enum 'status', ['foo', 'bar'], force: true
         def create_enum(name, values, options = {})
           drop_type(name, options) if options[:force]
-          execute <<-SQL
+          execute <<-SQL.squish
             CREATE TYPE #{quote_type_name(name, options[:schema])} AS ENUM
             (#{quote_enum_values(name, values, options).join(', ')})
           SQL
@@ -56,7 +56,7 @@ module Torque
           quote_enum_values(name, values, options).each do |value|
             reference = "BEFORE #{before}" unless before == false
             reference = "AFTER  #{after}"  unless after == false
-            execute <<-SQL
+            execute <<-SQL.squish
               ALTER TYPE #{quote_type_name(name, options[:schema])}
               ADD VALUE #{value} #{reference}
             SQL

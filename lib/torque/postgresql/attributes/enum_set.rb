@@ -27,11 +27,17 @@ module Torque
 
           # Provide a method on the given class to setup which enum sets will be
           # manually initialized
-          def include_on(klass)
-            method_name = Torque::PostgreSQL.config.enum.set_method
-            klass.singleton_class.class_eval do
-              define_method(method_name) do |*args, **options|
-                Torque::PostgreSQL::Attributes::TypeMap.decorate(self, args, **options)
+          def include_on(klass, method_name = nil)
+            method_name ||= Torque::PostgreSQL.config.enum.set_method
+            klass.define_singleton_method(method_name) do |*args, **options|
+              args.each do |attribute|
+                # Generate methods on self class
+                builder = Builder::Enum.new(self, attribute, options)
+                builder.conflicting?
+                builder.build
+
+                # Mark the enum as defined
+                defined_enums[attribute] = builder.subtype.set_klass
               end
             end
           end
@@ -239,17 +245,6 @@ module Torque
           def raise_comparison(other)
             raise EnumSetError, "Comparison of #{self.class.name} with #{self.inspect} failed"
           end
-      end
-
-      # Create the methods related to the attribute to handle the enum type
-      TypeMap.register_type Adapter::OID::EnumSet do |subtype, attribute, options = nil|
-        # Generate methods on self class
-        builder = Builder::Enum.new(self, attribute, subtype, options || {})
-        break if builder.conflicting?
-        builder.build
-
-        # Mark the enum as defined
-        defined_enums[attribute] = subtype.klass
       end
     end
   end

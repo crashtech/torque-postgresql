@@ -2,7 +2,12 @@ require 'spec_helper'
 
 RSpec.describe 'Enum' do
   let(:connection) { ActiveRecord::Base.connection }
-  let(:type_map) { Torque::PostgreSQL::Attributes::TypeMap }
+  let(:attribute_klass) { Torque::PostgreSQL::Attributes::Enum }
+
+  def decorate(model, field, options = {})
+    attribute_klass.include_on(model, :pg_enum)
+    model.pg_enum(field, **options)
+  end
 
   before :each do
     Torque::PostgreSQL.config.enum.base_method = :pg_enum
@@ -412,7 +417,7 @@ RSpec.describe 'Enum' do
   end
 
   context 'on model' do
-    before(:each) { type_map.decorate!(User, :role) }
+    before(:each) { decorate(User, :role) }
 
     subject { User }
     let(:instance) { FactoryBot.build(:user) }
@@ -460,7 +465,7 @@ RSpec.describe 'Enum' do
       author = FactoryBot.create(:author)
       FactoryBot.create(:post, author: author)
 
-      type_map.decorate!(Post, :status)
+      decorate(Post, :status)
       expect(author.posts).to respond_to(:test_scope)
 
       Enum::ContentStatus.each do |value|
@@ -495,7 +500,7 @@ RSpec.describe 'Enum' do
       AText = Class.new(ActiveRecord::Base)
       AText.table_name = 'texts'
 
-      expect { type_map.decorate!(AText, :conflict) }.to raise_error(ArgumentError, /already exists in/)
+      expect { decorate(AText, :conflict) }.to raise_error(ArgumentError, /already exists in/)
     end
 
     context 'on inherited classes' do
@@ -520,13 +525,6 @@ RSpec.describe 'Enum' do
       subject { Author }
       let(:instance) { FactoryBot.build(:author) }
 
-      it 'configurating an enum should not invoke a query' do
-        klass = Torque::PostgreSQL::Adapter::SchemaStatements
-        expect_any_instance_of(klass).to_not receive(:enum_values).with('types')
-        Activity.pg_enum :type
-        expect(Activity.defined_enums).to_not include('type')
-      end
-
       it 'has both rails original enum and the new pg_enum' do
         expect(subject).to respond_to(:enum)
         expect(subject).to respond_to(:pg_enum)
@@ -550,7 +548,7 @@ RSpec.describe 'Enum' do
       end
 
       it 'can be manually initiated' do
-        type_map.decorate!(Author, :specialty)
+        decorate(Author, :specialty)
         expect(subject).to  respond_to(:specialties)
         expect(subject).to  respond_to(:specialties_texts)
         expect(subject).to  respond_to(:specialties_options)
@@ -565,7 +563,7 @@ RSpec.describe 'Enum' do
     end
 
     context 'with prefix' do
-      before(:each) { type_map.decorate!(Author, :specialty, prefix: 'in') }
+      before(:each) { decorate(Author, :specialty, prefix: 'in') }
       subject { Author }
       let(:instance) { FactoryBot.build(:author) }
 
@@ -585,8 +583,7 @@ RSpec.describe 'Enum' do
 
     context 'with suffix, only, and except' do
       before(:each) do
-        type_map.decorate!(Author, :specialty, suffix: 'expert', only: %w(books movies),
-          except: 'books')
+        decorate(Author, :specialty, suffix: 'expert', only: %w(books movies), except: 'books')
       end
 
       subject { Author }

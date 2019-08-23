@@ -3,12 +3,11 @@ module Torque
     module Adapter
       module OID
         class EnumSet < Enum
-
-          attr_reader :enum_klass
-
           def initialize(name, enum_klass)
             @name  = name + '[]'
             @klass = Attributes::EnumSet.lookup(name, enum_klass)
+
+            @set_klass = self
             @enum_klass = enum_klass
           end
 

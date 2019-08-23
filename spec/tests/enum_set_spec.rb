@@ -2,7 +2,12 @@ require 'spec_helper'
 
 RSpec.describe 'Enum' do
   let(:connection) { ActiveRecord::Base.connection }
-  let(:type_map) { Torque::PostgreSQL::Attributes::TypeMap }
+  let(:attribute_klass) { Torque::PostgreSQL::Attributes::EnumSet }
+
+  def decorate(model, field, options = {})
+    attribute_klass.include_on(model, :enum_set)
+    model.enum_set(field, **options)
+  end
 
   before :each do
     Torque::PostgreSQL.config.enum.set_method = :pg_set_enum
@@ -259,7 +264,7 @@ RSpec.describe 'Enum' do
   end
 
   context 'on model' do
-    before(:each) { type_map.decorate!(Course, :types) }
+    before(:each) { decorate(Course, :types) }
 
     subject { Course }
     let(:instance) { Course.new }

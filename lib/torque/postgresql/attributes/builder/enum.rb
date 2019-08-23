@@ -6,10 +6,10 @@ module Torque
           attr_accessor :klass, :attribute, :subtype, :options, :values, :enum_module
 
           # Start a new builder of methods for enum values on ActiveRecord::Base
-          def initialize(klass, attribute, subtype, options)
+          def initialize(klass, attribute, options)
             @klass     = klass
             @attribute = attribute.to_s
-            @subtype   = subtype
+            @subtype   = klass.attribute_types[@attribute]
             @options   = options
 
             @values    = subtype.klass.values
@@ -49,7 +49,7 @@ module Torque
           # Check if any of the methods that will be created get in conflict
           # with the base class methods
           def conflicting?
-            return false if options[:force] == true
+            return if options[:force] == true
             attributes = attribute.pluralize
 
             dangerous?(attributes, true)
@@ -60,11 +60,9 @@ module Torque
             values_methods.each do |attr, list|
               list.map(&method(:dangerous?))
             end
-
-            return false
           rescue Interrupt => err
             raise ArgumentError, <<-MSG.squish
-              #{subtype.class.name} was not able to generate requested
+              Enum #{subtype.name} was not able to generate requested
               methods because the method #{err} already exists in
               #{klass.name}.
             MSG

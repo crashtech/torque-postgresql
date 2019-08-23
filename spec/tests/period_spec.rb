@@ -6,40 +6,63 @@ RSpec.describe 'Period' do
   let(:instance) { model.new }
   let(:fields) { %i[available period tzperiod] }
   let(:method_names) { Torque::PostgreSQL::config.period.method_names }
+  let(:attribute_klass) { Torque::PostgreSQL::Attributes::Period }
 
   let(:true_value) { Torque::PostgreSQL::AR521 ? 'TRUE' : "'t'" }
   let(:false_value) { Torque::PostgreSQL::AR521 ? 'FALSE' : "'f'" }
 
-  let(:klass_method_names) { method_names.to_a[0..20].to_h }
-  let(:instance_method_names) { method_names.to_a[21..27].to_h }
+  let(:klass_methods_range) { (0..22) }
+  let(:instance_methods_range) { (23..29) }
+
+  let(:klass_method_names) { method_names.to_a[klass_methods_range].to_h }
+  let(:instance_method_names) { method_names.to_a[instance_methods_range].to_h }
 
   before { Time.zone = 'UTC' }
 
   def decorate(model, field, options = {})
-    Torque::PostgreSQL::Attributes::Builder::Period.new(model, field, nil, options).build
+    attribute_klass.include_on(model, :period_for)
+    model.period_for(field, **options)
   end
 
   context 'on config' do
-    let(:method_names) do
-      Torque::PostgreSQL::config.period.method_names.transform_values.with_index do |_, idx|
-        "p__#{idx}"
-      end
+    let(:direct_method_names) do
+      list = method_names.dup
+      list.merge!(Torque::PostgreSQL::config.period.direct_method_names)
+      list.values.map { |v| v.gsub(/_?%s_?/, '') }
+    end
+
+    let(:other_method_names) do
+      method_names.transform_values.with_index { |_, idx| "p__#{idx}" }
     end
 
     it 'has definition method on the model' do
-      Torque::PostgreSQL::Attributes::Period.include_on(ActiveRecord::Base)
+      attribute_klass.include_on(ActiveRecord::Base, :period_for)
       expect(model).to respond_to(:period_for)
+      ActiveRecord::Base.singleton_class.send(:undef_method, :period_for)
     end
 
     it 'create the methods with custom names' do
-      decorate(model, :tzperiod, threshold: 5.minutes, methods: method_names)
+      decorate(model, :tzperiod, threshold: 5.minutes, methods: other_method_names)
 
       klass_method_names.size.times do |i|
         expect(model).to respond_to("p__#{i}")
       end
 
+      initial = instance_methods_range.min
       instance_method_names.size.times do |i|
-        expect(instance).to respond_to("p__#{21 + i}")
+        expect(instance).to respond_to("p__#{initial + i}")
+      end
+    end
+
+    it 'creates non prefixed methods if requested' do
+      decorate(model, :tzperiod, prefixed: false, threshold: 5.minutes)
+
+      direct_method_names[klass_methods_range].each do |m|
+        expect(model).to respond_to(m)
+      end
+
+      direct_method_names[instance_methods_range].each do |m|
+        expect(instance).to respond_to(m)
       end
     end
   end
@@ -170,19 +193,19 @@ RSpec.describe 'Period' do
       end
 
       it 'does not have real starting after for period' do
-        expect(model).not_to respond_to(:real_starting_after)
+        expect(model.all).not_to respond_to(:real_starting_after)
       end
 
       it 'does not have real starting before for period' do
-        expect(model).not_to respond_to(:real_starting_before)
+        expect(model.all).not_to respond_to(:real_starting_before)
       end
 
       it 'does not have real finishing after for period' do
-        expect(model).not_to respond_to(:real_finishing_after)
+        expect(model.all).not_to respond_to(:real_finishing_after)
       end
 
       it 'does not have real finishing before for period' do
-        expect(model).not_to respond_to(:real_finishing_before)
+        expect(model.all).not_to respond_to(:real_finishing_before)
       end
 
       it 'queries containing date period' do
@@ -223,6 +246,14 @@ RSpec.describe 'Period' do
         expect(model.period_not_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
           NOT (#{date_db_field} && #{date_type}(#{db_value}, #{db_value}))
         SQL
+      end
+
+      it 'does not have real containing date period' do
+        expect(model.all).not_to respond_to(:period_real_containing_date)
+      end
+
+      it 'does not have real overlapping date period' do
+        expect(model.all).not_to respond_to(:period_real_overlapping_date)
       end
     end
 
@@ -265,11 +296,14 @@ RSpec.describe 'Period' do
     context 'with field threshold' do
       before { decorate(model, :period, threshold: :th) }
 
-      let(:original_db_field) { '"time_keepers"."period"' }
-      let(:lower_db_field) { "(lower(#{original_db_field}) - #{threshold_value})" }
-      let(:upper_db_field) { "(upper(#{original_db_field}) + #{threshold_value})" }
+      let(:lower_db_field) { "(lower(#{db_field}) - #{threshold_value})" }
+      let(:upper_db_field) { "(upper(#{db_field}) + #{threshold_value})" }
       let(:threshold_value) { '"time_keepers"."th"' }
-      let(:db_field) { "#{type}(#{lower_db_field}, #{upper_db_field})" }
+      let(:threshold_db_field) { "#{type}(#{lower_db_field}, #{upper_db_field})" }
+      let(:nullif_condition) { "nullif(#{threshold_db_field}, #{empty_condition})" }
+      let(:threshold_date_db_field) do
+        "daterange(#{lower_db_field}::date, #{upper_db_field}::date)"
+      end
 
       context 'on model' do
         it 'queries current on period' do
@@ -300,21 +334,21 @@ RSpec.describe 'Period' do
 
         it 'queries real containing period' do
           expect(model.period_real_containing(:test).to_sql).to include(<<-SQL.squish)
-            #{db_field} @> "time_keepers"."test"
+            #{threshold_db_field} @> "time_keepers"."test"
           SQL
 
           expect(model.period_real_containing(value).to_sql).to include(<<-SQL.squish)
-            #{db_field} @> #{db_value}
+            #{threshold_db_field} @> #{db_value}
           SQL
         end
 
         it 'queries real overlapping period' do
           expect(model.period_real_overlapping(:test).to_sql).to include(<<-SQL.squish)
-            #{db_field} && "time_keepers"."test"
+            #{threshold_db_field} && "time_keepers"."test"
           SQL
 
           expect(model.period_real_overlapping(value, value).to_sql).to include(<<-SQL.squish)
-            #{db_field} && #{type}(#{db_value}, #{db_value})
+            #{threshold_db_field} && #{type}(#{db_value}, #{db_value})
           SQL
         end
 
@@ -397,6 +431,26 @@ RSpec.describe 'Period' do
             NOT (#{date_db_field} && #{date_type}(#{db_value}, #{db_value}))
           SQL
         end
+
+        it 'queries real containing date period' do
+          expect(model.period_real_containing_date(:test).to_sql).to include(<<-SQL.squish)
+            #{threshold_date_db_field} @> "time_keepers"."test"
+          SQL
+
+          expect(model.period_real_containing_date(value).to_sql).to include(<<-SQL.squish)
+            #{threshold_date_db_field} @> #{db_value}
+          SQL
+        end
+
+        it 'queries real overlapping date period' do
+          expect(model.period_real_overlapping_date(:test).to_sql).to include(<<-SQL.squish)
+            #{threshold_date_db_field} && "time_keepers"."test"
+          SQL
+
+          expect(model.period_real_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
+            #{threshold_date_db_field} && #{date_type}(#{db_value}, #{db_value})
+          SQL
+        end
       end
 
       context 'on instance' do
@@ -449,11 +503,11 @@ RSpec.describe 'Period' do
     context 'with value threshold' do
       before { decorate(model, :period, threshold: 5.minutes) }
 
-      let(:original_db_field) { '"time_keepers"."period"' }
-      let(:lower_db_field) { "(lower(#{original_db_field}) - #{threshold_value})" }
-      let(:upper_db_field) { "(upper(#{original_db_field}) + #{threshold_value})" }
+      let(:lower_db_field) { "(lower(#{db_field}) - #{threshold_value})" }
+      let(:upper_db_field) { "(upper(#{db_field}) + #{threshold_value})" }
       let(:threshold_value) { "'300 seconds'::interval" }
-      let(:db_field) { "#{type}(#{lower_db_field}, #{upper_db_field})" }
+      let(:threshold_db_field) { "#{type}(#{lower_db_field}, #{upper_db_field})" }
+      let(:nullif_condition) { "nullif(#{threshold_db_field}, #{empty_condition})" }
 
       context 'on model' do
         it 'queries current on period' do
@@ -484,21 +538,21 @@ RSpec.describe 'Period' do
 
         it 'queries real containing period' do
           expect(model.period_real_containing(:test).to_sql).to include(<<-SQL.squish)
-            #{db_field} @> "time_keepers"."test"
+            #{threshold_db_field} @> "time_keepers"."test"
           SQL
 
           expect(model.period_real_containing(value).to_sql).to include(<<-SQL.squish)
-            #{db_field} @> #{db_value}
+            #{threshold_db_field} @> #{db_value}
           SQL
         end
 
         it 'queries real overlapping period' do
           expect(model.period_real_overlapping(:test).to_sql).to include(<<-SQL.squish)
-            #{db_field} && "time_keepers"."test"
+            #{threshold_db_field} && "time_keepers"."test"
           SQL
 
           expect(model.period_real_overlapping(value, value).to_sql).to include(<<-SQL.squish)
-            #{db_field} && #{type}(#{db_value}, #{db_value})
+            #{threshold_db_field} && #{type}(#{db_value}, #{db_value})
           SQL
         end
 
@@ -816,19 +870,27 @@ RSpec.describe 'Period' do
       end
 
       it 'does not query containing date available' do
-        expect(model).not_to respond_to(:available_containing_date)
+        expect(model.all).not_to respond_to(:available_containing_date)
       end
 
       it 'does not query not containing date available' do
-        expect(model).not_to respond_to(:available_not_containing_date)
+        expect(model.all).not_to respond_to(:available_not_containing_date)
       end
 
       it 'does not query overlapping date available' do
-        expect(model).not_to respond_to(:available_overlapping_date)
+        expect(model.all).not_to respond_to(:available_overlapping_date)
       end
 
       it 'does not query not overlapping date available' do
-        expect(model).not_to respond_to(:available_not_overlapping_date)
+        expect(model.all).not_to respond_to(:available_not_overlapping_date)
+      end
+
+      it 'does not query real containing date available' do
+        expect(model.all).not_to respond_to(:available_real_containing_date)
+      end
+
+      it 'does not query real overlapping date available' do
+        expect(model.all).not_to respond_to(:available_real_overlapping_date)
       end
     end
 
