@@ -33,12 +33,13 @@ module Torque
           end
 
           def derive_primary_key
-            ActiveSupport::Inflector.pluralize(klass.name.foreign_key)
+            "#{name}_ids"
           end
       end
 
-      ::ActiveRecord::Reflection::AssociationReflection::VALID_AUTOMATIC_INVERSE_MACROS.push(:belongs_to_many)
       ::ActiveRecord::Reflection.const_set(:BelongsToManyReflection, BelongsToManyReflection)
+      ::ActiveRecord::Reflection::AssociationReflection::VALID_AUTOMATIC_INVERSE_MACROS
+        .push(:belongs_to_many)
     end
   end
 end

@@ -273,7 +273,7 @@ module Torque
 
             # Create an arel named function
             def arel_named_function(name, *args)
-              result = "::Arel::Nodes::NamedFunction.new(#{name.inspect}"
+              result = "::Arel::Nodes::NamedFunction.new(#{name.to_s.inspect}"
               result << ', [' << args.join(', ') << ']' if args.present?
               result << ')'
             end

@@ -18,7 +18,7 @@ module Torque
         end
 
         def quote_default_expression(value, column)
-          if value.is_a?(::Enumerable)
+          if value.respond_to?(:array?)
             quote(value) + '::' + column.sql_type
           else
             super
