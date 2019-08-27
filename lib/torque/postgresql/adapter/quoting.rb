@@ -18,7 +18,7 @@ module Torque
         end
 
         def quote_default_expression(value, column)
-          if value.respond_to?(:array?)
+          if value.class <= Array
             quote(value) + '::' + column.sql_type
           else
             super

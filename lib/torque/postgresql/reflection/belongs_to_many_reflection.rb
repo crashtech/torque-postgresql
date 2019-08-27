@@ -33,7 +33,7 @@ module Torque
           end
 
           def derive_primary_key
-            "#{name}_ids"
+            "#{name.to_s.singularize}_ids"
           end
       end
 
