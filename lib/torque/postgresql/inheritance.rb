@@ -33,7 +33,28 @@ module Torque
           @inheritance_merged_attributes ||= begin
             list = attribute_names
             list += casted_dependents.values.map(&:attribute_names)
-            list.flatten.to_set.freeze
+            list.flatten.freeze
+          end
+        end
+
+        # Get the list of attributes that can be merged while querying because
+        # they all have the same type
+        def inheritance_mergeable_attributes
+          @inheritance_mergeable_attributes ||= begin
+            base = inheritance_merged_attributes - attribute_names
+            types = base.zip(base.size.times.map { [] }).to_h
+
+            casted_dependents.values.each do |klass|
+              klass.attribute_types.each do |column, type|
+                types[column]&.push(type)
+              end
+            end
+
+            result = types.select do
+              |_, types| types.each_with_object(types.shift).all?(&:==)
+            end.keys + attribute_names
+
+            result.freeze
           end
         end
 
@@ -128,7 +149,7 @@ module Torque
             record_class = _record_class_attribute.to_s
 
             return super unless record.key?(record_class) &&
-              record[auto_cast] === true && record[record_class] != table_name
+              record.delete(auto_cast) && record[record_class] != table_name
 
             klass = casted_dependents[record[record_class]]
             raise_unable_to_cast(record[record_class]) if klass.nil?
@@ -139,8 +160,17 @@ module Torque
           # Filter the record attributes to be loaded to not included those from
           # another inherited dependent
           def filter_attributes_for_cast(record, klass)
-            remove_attrs = (inheritance_merged_attributes - klass.attribute_names)
-            record.reject!{ |attribute| remove_attrs.include?(attribute) }
+            new_record = record.slice(*klass.attribute_names)
+            table = new_record[_record_class_attribute.to_s] = klass.table_name
+
+            # Recover aliased attributes
+            (klass.attribute_names - inheritance_mergeable_attributes).each do |attribute|
+              new_record[attribute] = record["#{table}__#{attribute}"]
+            end
+
+            # Add any additional columns and replace the record with the new record data
+            new_record.merge!(record.slice(*(record.keys - inheritance_merged_attributes)))
+            record.replace(new_record)
           end
 
       end

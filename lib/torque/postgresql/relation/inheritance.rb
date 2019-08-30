@@ -68,15 +68,22 @@ module Torque
           def build_inheritances(arel)
             return unless self.cast_records_value.present?
 
+            mergeable = inheritance_mergeable_attributes
+
             columns = build_inheritances_joins(arel, self.cast_records_value)
             columns = columns.map do |column, arel_tables|
               next arel_tables.first[column] if arel_tables.size == 1
-              list = arel_tables.each_with_object(column).map(&:[])
-              ::Arel::Nodes::NamedFunction.new('COALESCE', list).as(column)
+
+              if mergeable.include?(column)
+                list = arel_tables.each_with_object(column).map(&:[])
+                ::Arel::Nodes::NamedFunction.new('COALESCE', list).as(column)
+              else
+                arel_tables.map { |table| table[column].as("#{table.left.name}__#{column}") }
+              end
             end
 
             columns.push(build_auto_caster_marker(arel, self.cast_records_value))
-            self.select_extra_values += columns if columns.any?
+            self.select_extra_values += columns.flatten if columns.any?
           end
 
           # Build as many left outer join as necessary for each dependent table

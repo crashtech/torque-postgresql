@@ -45,6 +45,12 @@ module Torque
             cast_value(value).to_sym.inspect
           end
 
+          def ==(other)
+            self.class == other.class &&
+              other.klass == klass &&
+              other.type == type
+          end
+
           private
 
             def cast_value(value)

@@ -46,7 +46,7 @@ module Torque
             @threshold ||= begin
               option = options[:threshold]
               return if option.eql?(false)
-              return option unless option.eql?(true)
+              return option.to_sym unless option.eql?(true)
 
               attributes = klass.attribute_names
               default_name = Torque::PostgreSQL.config.period.auto_threshold.to_s
@@ -61,7 +61,7 @@ module Torque
                 Expected :interval got #{check_type.inspect} in #{klass.name} model.
               MSG
 
-              default_name
+              default_name.to_sym
             end
           end
 
@@ -215,7 +215,7 @@ module Torque
               @arel_threshold_value ||= begin
                 case threshold
                 when Symbol, String
-                  "arel_attribute(#{threshold.inspect})"
+                  "arel_attribute('#{threshold}')"
                 when ActiveSupport::Duration
                   value = "'#{threshold.to_i} seconds'"
                   "::Arel.sql(\"#{value}\").cast(:interval)"
