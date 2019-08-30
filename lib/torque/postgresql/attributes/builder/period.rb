@@ -299,6 +299,7 @@ module Torque
                 'daterange',
                 (real ? arel_real_start_at : arel_start_at) + '.cast(:date)',
                 (real ? arel_real_finish_at : arel_finish_at) + '.cast(:date)',
+                '::Arel.sql("\'[]\'")',
               )
             end
 
@@ -308,22 +309,23 @@ module Torque
               arel_coalesce(checker, arel_default_sql)
             end
 
-            def arel_formatting_value(condition = nil, value = 'value')
-              unless_cond = "unless #{value}.respond_to?(:cast)"
-
+            def arel_formatting_value(condition = nil, value = 'value', cast: nil)
               [
                 "#{value} = arel_table[#{value}] if #{value}.is_a?(Symbol)",
-                "#{value} = ::Arel.sql(connection.quote(#{value})) #{unless_cond}",
+                "unless #{value}.respond_to?(:cast)",
+                "  #{value} = ::Arel.sql(connection.quote(#{value}))",
+                ("  #{value} = #{value}.cast(#{cast.inspect})" if cast),
+                'end',
                 condition,
               ].compact.join("\n")
             end
 
-            def arel_formatting_left_right(condition, set_type = nil)
+            def arel_formatting_left_right(condition, set_type = nil, cast: nil)
               [
-                arel_formatting_value(nil, 'left'),
+                arel_formatting_value(nil, 'left', cast: cast),
                 '',
                 'if right.present?',
-                '  ' + arel_formatting_value(nil, 'right'),
+                '  ' + arel_formatting_value(nil, 'right', cast: cast),
                 "  value = #{arel_convert_to_type('left', 'right', set_type)}",
                 'else',
                 '  value = left',
@@ -409,30 +411,33 @@ module Torque
             end
 
             def klass_containing_date
-              arel_formatting_value("where(#{arel_daterange}.contains(value))")
+              arel_formatting_value("where(#{arel_daterange}.contains(value))",
+                cast: :date)
             end
 
             def klass_not_containing_date
-              arel_formatting_value("where.not(#{arel_daterange}.contains(value))")
+              arel_formatting_value("where.not(#{arel_daterange}.contains(value))",
+                cast: :date)
             end
 
             def klass_overlapping_date
               arel_formatting_left_right("where(#{arel_daterange}.overlaps(value))",
-                :daterange)
+                :daterange, cast: :date)
             end
 
             def klass_not_overlapping_date
               arel_formatting_left_right("where.not(#{arel_daterange}.overlaps(value))",
-                :daterange)
+                :daterange, cast: :date)
             end
 
             def klass_real_containing_date
-              arel_formatting_value("where(#{arel_daterange(true)}.contains(value))")
+              arel_formatting_value("where(#{arel_daterange(true)}.contains(value))",
+                cast: :date)
             end
 
             def klass_real_overlapping_date
               arel_formatting_left_right("where(#{arel_daterange(true)}.overlaps(value))",
-                :daterange)
+                :daterange, cast: :date)
             end
 
             def instance_current?

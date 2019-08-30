@@ -25,6 +25,13 @@ module Torque
             end
           end
 
+          def map(value) # :nodoc:
+            return value unless value.respond_to?(:first)
+            from = yield(value.first)
+            to = yield(value.last)
+            cast_custom(from, to)
+          end
+
           private
 
             def cast_custom(from, to)

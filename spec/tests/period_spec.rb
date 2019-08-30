@@ -81,7 +81,7 @@ RSpec.describe 'Period' do
     let(:date_type) { :daterange }
     let(:lower_date) { "lower(#{db_field})::date" }
     let(:upper_date) { "upper(#{db_field})::date" }
-    let(:date_db_field) { "#{date_type}(#{lower_date}, #{upper_date})" }
+    let(:date_db_field) { "#{date_type}(#{lower_date}, #{upper_date}, '[]')" }
 
     context 'on model' do
       before { decorate(model, :period) }
@@ -214,7 +214,7 @@ RSpec.describe 'Period' do
         SQL
 
         expect(model.period_containing_date(value).to_sql).to include(<<-SQL.squish)
-          #{date_db_field} @> #{db_value}
+          #{date_db_field} @> #{db_value}::date
         SQL
       end
 
@@ -224,7 +224,7 @@ RSpec.describe 'Period' do
         SQL
 
         expect(model.period_not_containing_date(value).to_sql).to include(<<-SQL.squish)
-          NOT (#{date_db_field} @> #{db_value})
+          NOT (#{date_db_field} @> #{db_value}::date)
         SQL
       end
 
@@ -234,7 +234,7 @@ RSpec.describe 'Period' do
         SQL
 
         expect(model.period_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-          #{date_db_field} && #{date_type}(#{db_value}, #{db_value})
+          #{date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date)
         SQL
       end
 
@@ -244,7 +244,7 @@ RSpec.describe 'Period' do
         SQL
 
         expect(model.period_not_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-          NOT (#{date_db_field} && #{date_type}(#{db_value}, #{db_value}))
+          NOT (#{date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date))
         SQL
       end
 
@@ -302,7 +302,7 @@ RSpec.describe 'Period' do
       let(:threshold_db_field) { "#{type}(#{lower_db_field}, #{upper_db_field})" }
       let(:nullif_condition) { "nullif(#{threshold_db_field}, #{empty_condition})" }
       let(:threshold_date_db_field) do
-        "daterange(#{lower_db_field}::date, #{upper_db_field}::date)"
+        "daterange(#{lower_db_field}::date, #{upper_db_field}::date, '[]')"
       end
 
       context 'on model' do
@@ -398,7 +398,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_containing_date(value).to_sql).to include(<<-SQL.squish)
-            #{date_db_field} @> #{db_value}
+            #{date_db_field} @> #{db_value}::date
           SQL
         end
 
@@ -408,7 +408,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_not_containing_date(value).to_sql).to include(<<-SQL.squish)
-            NOT (#{date_db_field} @> #{db_value})
+            NOT (#{date_db_field} @> #{db_value}::date)
           SQL
         end
 
@@ -418,7 +418,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-            #{date_db_field} && #{date_type}(#{db_value}, #{db_value})
+            #{date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date)
           SQL
         end
 
@@ -428,7 +428,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_not_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-            NOT (#{date_db_field} && #{date_type}(#{db_value}, #{db_value}))
+            NOT (#{date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date))
           SQL
         end
 
@@ -438,7 +438,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_real_containing_date(value).to_sql).to include(<<-SQL.squish)
-            #{threshold_date_db_field} @> #{db_value}
+            #{threshold_date_db_field} @> #{db_value}::date
           SQL
         end
 
@@ -448,7 +448,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_real_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-            #{threshold_date_db_field} && #{date_type}(#{db_value}, #{db_value})
+            #{threshold_date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date)
           SQL
         end
       end
@@ -612,7 +612,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_not_containing_date(value).to_sql).to include(<<-SQL.squish)
-            NOT (#{date_db_field} @> #{db_value})
+            NOT (#{date_db_field} @> #{db_value}::date)
           SQL
         end
 
@@ -622,7 +622,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-            #{date_db_field} && #{date_type}(#{db_value}, #{db_value})
+            #{date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date)
           SQL
         end
 
@@ -632,7 +632,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_not_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-            NOT (#{date_db_field} && #{date_type}(#{db_value}, #{db_value}))
+            NOT (#{date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date))
           SQL
         end
       end

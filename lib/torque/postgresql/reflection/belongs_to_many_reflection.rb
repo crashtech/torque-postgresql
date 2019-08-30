@@ -18,12 +18,16 @@ module Torque
           Associations::BelongsToManyAssociation
         end
 
+        def foreign_key
+          @foreign_key ||= options[:primary_key] || derive_foreign_key.freeze
+        end
+
         def association_foreign_key
           @association_foreign_key ||= foreign_key
         end
 
         def active_record_primary_key
-          @active_record_primary_key ||= options[:primary_key] || derive_primary_key
+          @active_record_primary_key ||= options[:foreign_key] || derive_primary_key
         end
 
         private
