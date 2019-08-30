@@ -46,7 +46,10 @@ module Torque
             @threshold ||= begin
               option = options[:threshold]
               return if option.eql?(false)
-              return option.to_sym unless option.eql?(true)
+
+              unless option.eql?(true)
+                return option.is_a?(String) ? option.to_sym : option
+              end
 
               attributes = klass.attribute_names
               default_name = Torque::PostgreSQL.config.period.auto_threshold.to_s

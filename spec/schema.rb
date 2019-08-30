@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 46
+  version = 47
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -120,11 +120,13 @@ begin
     create_table "activity_books", force: :cascade, inherits: :activities do |t|
       t.text     "description"
       t.string   "url"
+      t.boolean  "activated"
     end
 
     create_table "activity_posts", force: :cascade, inherits: [:activities, :images] do |t|
       t.integer  "post_id"
       t.string   "url"
+      t.integer  "activated"
     end
 
     create_table "activity_post_samples", force: :cascade, inherits: :activity_posts

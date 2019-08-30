@@ -183,11 +183,16 @@ RSpec.describe 'TableInheritance' do
     let(:child2) { ActivityBook }
     let(:other) { AuthorJournalist }
 
+    it 'identifies mergeable attributes' do
+      result_base = %w(id author_id title active kind created_at updated_at description url file post_id)
+      expect(base.inheritance_mergeable_attributes.sort).to eql(result_base.sort)
+    end
+
     it 'has a merged version of attributes' do
-      result_base = %w(id author_id title active kind created_at updated_at description url file post_id).to_set
-      result_child = %w(id author_id title active kind created_at updated_at file post_id url).to_set
-      result_child2 = %w(id author_id title active kind created_at updated_at description url).to_set
-      result_other = %w(id name type specialty).to_set
+      result_base = %w(id author_id title active kind created_at updated_at description url activated file post_id)
+      result_child = %w(id author_id title active kind created_at updated_at file post_id url activated)
+      result_child2 = %w(id author_id title active kind created_at updated_at description url activated)
+      result_other = %w(id name type specialty)
 
       expect(base.inheritance_merged_attributes).to eql(result_base)
       expect(child.inheritance_merged_attributes).to eql(result_child)
@@ -278,8 +283,9 @@ RSpec.describe 'TableInheritance' do
 
       it 'adds all statements to load all the necessary records' do
         result = 'WITH "record_class" AS (SELECT "pg_class"."oid", "pg_class"."relname" AS _record_class FROM "pg_class")'
-        result << ' SELECT "activities".*, "record_class"."_record_class"'
-        result << ', "i_0"."description", COALESCE("i_0"."url", "i_1"."url", "i_2"."url") AS url'
+        result << ' SELECT "activities".*, "record_class"."_record_class", "i_0"."description"'
+        result << ', COALESCE("i_0"."url", "i_1"."url", "i_2"."url") AS url, "i_0"."activated" AS activity_books__activated'
+        result << ', "i_1"."activated" AS activity_posts__activated, "i_2"."activated" AS activity_post_samples__activated'
         result << ', COALESCE("i_1"."file", "i_2"."file") AS file, COALESCE("i_1"."post_id", "i_2"."post_id") AS post_id'
         result << ", \"record_class\".\"_record_class\" IN ('activity_books', 'activity_posts', 'activity_post_samples') AS _auto_cast"
         result << ' FROM "activities"'
@@ -293,7 +299,7 @@ RSpec.describe 'TableInheritance' do
       it 'can be have simplefied joins' do
         result = 'WITH "record_class" AS (SELECT "pg_class"."oid", "pg_class"."relname" AS _record_class FROM "pg_class")'
         result << ' SELECT "activities".*, "record_class"."_record_class"'
-        result << ', "i_0"."description", "i_0"."url"'
+        result << ', "i_0"."description", "i_0"."url", "i_0"."activated"'
         result << ", \"record_class\".\"_record_class\" IN ('activity_books') AS _auto_cast"
         result << ' FROM "activities"'
         result << ' INNER JOIN "record_class" ON "record_class"."oid" = "activities"."tableoid"'
@@ -304,7 +310,7 @@ RSpec.describe 'TableInheritance' do
       it 'can be filtered by record type' do
         result = 'WITH "record_class" AS (SELECT "pg_class"."oid", "pg_class"."relname" AS _record_class FROM "pg_class")'
         result << ' SELECT "activities".*, "record_class"."_record_class"'
-        result << ', "i_0"."description", "i_0"."url"'
+        result << ', "i_0"."description", "i_0"."url", "i_0"."activated"'
         result << ", \"record_class\".\"_record_class\" IN ('activity_books') AS _auto_cast"
         result << ' FROM "activities"'
         result << ' INNER JOIN "record_class" ON "record_class"."oid" = "activities"."tableoid"'

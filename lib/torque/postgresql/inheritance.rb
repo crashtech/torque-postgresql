@@ -33,7 +33,7 @@ module Torque
           @inheritance_merged_attributes ||= begin
             list = attribute_names
             list += casted_dependents.values.map(&:attribute_names)
-            list.flatten.freeze
+            list.flatten.uniq.freeze
           end
         end
 
