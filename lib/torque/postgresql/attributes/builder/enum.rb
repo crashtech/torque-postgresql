@@ -3,6 +3,8 @@ module Torque
     module Attributes
       module Builder
         class Enum
+          VALID_TYPES = %i[enum enum_set].freeze
+
           attr_accessor :klass, :attribute, :subtype, :options, :values, :enum_module
 
           # Start a new builder of methods for enum values on ActiveRecord::Base
@@ -12,6 +14,7 @@ module Torque
             @subtype   = klass.attribute_types[@attribute]
             @options   = options
 
+            raise Interrupt unless subtype.respond_to?(:klass)
             @values    = subtype.klass.values
 
             if @options[:only]

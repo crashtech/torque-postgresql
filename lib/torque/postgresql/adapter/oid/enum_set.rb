@@ -15,10 +15,18 @@ module Torque
             :enum_set
           end
 
+          def deserialize(value)
+            return unless value.present?
+            value = value[1..-2].split(',') if value.is_a?(String)
+            cast_value(value)
+          end
+
           def serialize(value)
             return if value.blank?
             value = cast_value(value)
-            value.map(&:to_s) unless value.blank?
+
+            return if value.blank?
+            "{#{value.map(&:to_s).join(',')}}"
           end
 
           # Always use symbol values for schema dumper
@@ -32,7 +40,7 @@ module Torque
               return if value.blank?
               return value if value.is_a?(@klass)
               @klass.new(value)
-            rescue Attributes::EnumSet::EnumError
+            rescue Attributes::EnumSet::EnumSetError
               nil
             end
 

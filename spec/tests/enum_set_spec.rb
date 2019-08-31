@@ -206,7 +206,7 @@ RSpec.describe 'Enum' do
       end
 
       it 'returns enum' do
-        value = subject.deserialize(['B', 'C'])
+        value = subject.deserialize('{B,C}')
         expect(value).to be_a(enum)
         expect(value).to be_eql(enum.B | enum.C)
       end
@@ -219,8 +219,8 @@ RSpec.describe 'Enum' do
       end
 
       it 'returns as string' do
-        expect(subject.serialize(enum.B | enum.C)).to be_eql(['B', 'C'])
-        expect(subject.serialize(3)).to be_eql(['A', 'B'])
+        expect(subject.serialize(enum.B | enum.C)).to be_eql('{B,C}')
+        expect(subject.serialize(3)).to be_eql('{A,B}')
       end
     end
 

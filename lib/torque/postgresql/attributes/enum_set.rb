@@ -28,18 +28,7 @@ module Torque
           # Provide a method on the given class to setup which enum sets will be
           # manually initialized
           def include_on(klass, method_name = nil)
-            method_name ||= Torque::PostgreSQL.config.enum.set_method
-            klass.define_singleton_method(method_name) do |*args, **options|
-              args.each do |attribute|
-                # Generate methods on self class
-                builder = Builder::Enum.new(self, attribute, options)
-                builder.conflicting?
-                builder.build
-
-                # Mark the enum as defined
-                defined_enums[attribute] = builder.subtype.set_klass
-              end
-            end
+            Enum.include_on(klass, method_name || Torque::PostgreSQL.config.enum.set_method)
           end
 
           # The original Enum implementation, for individual values
@@ -152,7 +141,7 @@ module Torque
 
         # Change the inspection to show the enum name
         def inspect
-          map(&:inspect).inspect
+          "[#{map(&:inspect).join(',')}]"
         end
 
         # Replace the setter by instantiating the value
@@ -208,7 +197,7 @@ module Torque
           # Turn all the values into their respective Enum representations
           def transform_values(values)
             values = values.first if values.size.eql?(1) && values.first.is_a?(::Enumerable)
-            values.map(&method(:instantiate))
+            values.map(&method(:instantiate)).reject(&:nil?)
           end
 
           # Check for valid '?' and '!' methods

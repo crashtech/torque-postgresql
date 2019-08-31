@@ -16,24 +16,6 @@ module Torque
       ([min, other.min].min)..([max, other.max].max)
     end
     alias_method :|, :union
-
-    def subtract(other)
-      raise ArgumentError, 'value must be a Range' unless other.kind_of?(Range)
-      return if other.eql?(self)
-
-      other = intersection(other)
-      return self if other.nil?
-
-      min.eql?(other.min) ? other.max..max : min..other.min
-    end
-    alias_method :-, :subtract
-
-    def add(other)
-      raise ArgumentError, 'value must be a Range' unless other.kind_of?(Range)
-
-      intersection(other) ? union(other) : self
-    end
-    alias_method :+, :add
   end
 
   ::Range.include(Range)

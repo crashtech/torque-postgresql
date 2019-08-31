@@ -26,16 +26,8 @@ module Torque
           # manually initialized
           def include_on(klass, method_name = nil)
             method_name ||= Torque::PostgreSQL.config.enum.base_method
-            klass.define_singleton_method(method_name) do |*args, **options|
-              args.each do |attribute|
-                # Generate methods on self class
-                builder = Builder::Enum.new(self, attribute, options)
-                builder.conflicting?
-                builder.build
-
-                # Mark the enum as defined
-                defined_enums[attribute] = builder.subtype
-              end
+            Builder.include_on(klass, method_name, Builder::Enum) do |builder|
+              defined_enums[builder.attribute.to_sym] = builder.subtype
             end
           end
 

@@ -8,13 +8,7 @@ module Torque
           # will be manually initialized
           def include_on(klass, method_name = nil)
             method_name ||= Torque::PostgreSQL.config.period.base_method
-            klass.define_singleton_method(method_name) do |*args, **options|
-              args.each do |attribute|
-                builder = Builder::Period.new(self, attribute, options)
-                builder.conflicting?
-                builder.build
-              end
-            end
+            Builder.include_on(klass, method_name, Builder::Period)
           end
         end
       end
