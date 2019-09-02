@@ -141,7 +141,7 @@ module Torque
 
         # Change the inspection to show the enum name
         def inspect
-          "[#{map(&:inspect).join(',')}]"
+          "[#{map(&:inspect).join(', ')}]"
         end
 
         # Replace the setter by instantiating the value
