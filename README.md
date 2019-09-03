@@ -19,7 +19,7 @@
 
 To install torque-postgresql you need to add the following to your Gemfile:
 ```ruby
-gem 'torque-postgresql', '~> 1.0'
+gem 'torque-postgresql', '~> 1.1'
 ```
 
 Also, run:
