@@ -164,7 +164,7 @@ module Torque
             method_content = define_string_method(method_name, method_content, args)
 
             source_module = send("#{type}_module")
-            source_module.class_eval(method_content)
+            source_module.module_eval(method_content)
           end
 
           private

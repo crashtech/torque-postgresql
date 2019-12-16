@@ -5,6 +5,11 @@ module Torque
     # Stores a version check for compatibility purposes
     AR521 = (ActiveRecord.gem_version >= Gem::Version.new('5.2.1'))
 
+    # Use the same logger as the Active Record one
+    def self.logger
+      ActiveRecord::Base.logger
+    end
+
     # Allow nested configurations
     # :TODO: Rely on +inheritable_copy+ to make nested configurations
     config.define_singleton_method(:nested) do |name, &block|
@@ -62,6 +67,10 @@ module Torque
       # Indicates if bang methods like 'disabled!' should update the record on
       # database or not
       enum.save_on_bang = true
+
+      # Indicates if it should raise errors when a generated method would
+      # conflict with an existing one
+      enum.raise_conflicting = false
 
       # Specify the namespace of each enum type of value
       enum.namespace = ::Object.const_set('Enum', Module.new)

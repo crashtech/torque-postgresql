@@ -51,9 +51,14 @@ module Torque
             end
           end
 
+          # List of valus as symbols
+          def keys
+            values.map(&:to_sym)
+          end
+
           # Different from values, it returns the list of items already casted
           def members
-            values.dup.map(&method(:new))
+            values.map(&method(:new))
           end
 
           # Get the list of the values translated by I18n

@@ -5,7 +5,8 @@ module Torque
         class Enum
           VALID_TYPES = %i[enum enum_set].freeze
 
-          attr_accessor :klass, :attribute, :subtype, :options, :values, :enum_module
+          attr_accessor :klass, :attribute, :subtype, :options, :values,
+            :klass_module, :instance_module
 
           # Start a new builder of methods for enum values on ActiveRecord::Base
           def initialize(klass, attribute, options)
@@ -40,13 +41,18 @@ module Torque
 
             @values_methods = begin
               values.map do |val|
-                val   = val.tr('-', '_')
-                scope = base % val
+                key   = val.downcase.tr('- ', '__')
+                scope = base % key
                 ask   = scope + '?'
                 bang  = scope + '!'
-                [val, [scope, ask, bang]]
+                [key, [scope, ask, bang, val]]
               end.to_h
             end
+          end
+
+          # Check if it's building the methods for sets
+          def set_features?
+            options[:set_features].present?
           end
 
           # Check if any of the methods that will be created get in conflict
@@ -56,12 +62,20 @@ module Torque
             attributes = attribute.pluralize
 
             dangerous?(attributes, true)
-            dangerous?("#{attributes}_options", true)
+            dangerous?("#{attributes}_keys", true)
             dangerous?("#{attributes}_texts", true)
+            dangerous?("#{attributes}_options", true)
             dangerous?("#{attribute}_text")
 
-            values_methods.each do |attr, list|
-              list.map(&method(:dangerous?))
+            if set_features?
+              dangerous?("has_#{attributes}", true)
+              dangerous?("has_any_#{attributes}", true)
+            end
+
+            values_methods.each do |attr, (scope, ask, bang, *)|
+              dangerous?(scope, true)
+              dangerous?(bang)
+              dangerous?(ask)
             end
           rescue Interrupt => err
             raise ArgumentError, <<-MSG.squish
@@ -73,14 +87,16 @@ module Torque
 
           # Create all methods needed
           def build
-            @enum_module = Module.new
+            @klass_module = Module.new
+            @instance_module = Module.new
 
             plural
             stringify
             all_values
+            set_scopes if set_features?
 
-            klass.include enum_module
-            klass.extend enum_module::ClassMethods
+            klass.extend klass_module
+            klass.include instance_module
           end
 
           private
@@ -96,78 +112,99 @@ module Torque
                   raise Interrupt, method_name.to_s
                 end
               end
+            rescue Interrupt => e
+              raise e if Torque::PostgreSQL.config.enum.raise_conflicting
+              type = class_method ? 'class method' : 'instance method'
+              indicator = class_method ? '.' : '#'
+
+              Torque::PostgreSQL.logger.info(<<~MSG.squish)
+                Creating #{class_method} :#{method_name} for enum.
+                Overwriting existing method #{klass.name}#{indicator}#{method_name}.
+              MSG
             end
 
             # Create the method that allow access to the list of values
             def plural
-              attr = attribute
-              enum_klass = subtype.klass
+              enum_klass = subtype.klass.name
+              klass_module.module_eval <<-RUBY, __FILE__, __LINE__ + 1
+                def #{attribute.pluralize}                                  # def roles
+                  ::#{enum_klass}.values                                    #   Enum::Roles.values
+                end                                                         # end
 
-              # TODO: Rewrite these as string
-              enum_module.const_set('ClassMethods', Module.new)
-              enum_module::ClassMethods.module_eval do
-                # def self.statuses() statuses end
-                define_method(attr.pluralize) do
-                  enum_klass.values
-                end
+                def #{attribute.pluralize}_keys                             # def roles_keys
+                  ::#{enum_klass}.keys                                      #   Enum::Roles.keys
+                end                                                         # end
 
-                # def self.statuses_texts() members.map(&:text) end
-                define_method(attr.pluralize + '_texts') do
-                  enum_klass.members.map do |member|
-                    member.text(attr, self)
-                  end
-                end
+                def #{attribute.pluralize}_texts                            # def roles_texts
+                  ::#{enum_klass}.members.map do |member|                   #   Enum::Roles.members do |member|
+                    member.text('#{attribute}', self)                       #     member.text('role', self)
+                  end                                                       #   end
+                end                                                         # end
 
-                # def self.statuses_options() statuses_texts.zip(statuses) end
-                define_method(attr.pluralize + '_options') do
-                  public_send(attr.pluralize + '_texts').zip(enum_klass.values)
-                end
-              end
+                def #{attribute.pluralize}_options                          # def roles_options
+                  #{attribute.pluralize}_texts.zip(::#{enum_klass}.values)  #   roles_texts.zip(Enum::Roles.values)
+                end                                                         # end
+              RUBY
+            end
+
+            # Create additional methods when the enum is a set, which needs
+            # better ways to check if values are present or not
+            def set_scopes
+              cast_type = subtype.name.chomp('[]')
+              klass_module.module_eval <<-RUBY, __FILE__, __LINE__ + 1
+                def has_#{attribute.pluralize}(*values)                             # def has_roles(*values)
+                  attr = arel_attribute('#{attribute}')                             #   attr = arel_attribute('role')
+                  where(attr.contains(::Arel.array(values, cast: '#{cast_type}')))  #   where(attr.contains(::Arel.array(values, cast: 'roles')))
+                end                                                                 # end
+
+                def has_any_#{attribute.pluralize}(*values)                         # def has_roles(*values)
+                  attr = arel_attribute('#{attribute}')                             #   attr = arel_attribute('role')
+                  where(attr.overlaps(::Arel.array(values, cast: '#{cast_type}')))  #   where(attr.overlaps(::Arel.array(values, cast: 'roles')))
+                end                                                                 # end
+              RUBY
             end
 
             # Create the method that turn the attribute value into text using
             # the model scope
             def stringify
-              attr = attribute
-
-              # TODO: Rewrite these as string
-              enum_module.module_eval do
-                # def status_text() status.text('status', self) end
-                define_method("#{attr}_text") { send(attr)&.text(attr, self) }
-              end
+              instance_module.module_eval <<-RUBY, __FILE__, __LINE__ + 1
+                def #{attribute}_text                      # def role_text
+                  #{attribute}.text('#{attribute}', self)  #   role.text('role', self)
+                end                                        # end
+              RUBY
             end
 
             # Create all the methods that represent actions related to the
             # attribute value
             def all_values
-              attr = attribute
-              vals = values_methods
+              klass_content = ''
+              instance_content = ''
+              enum_klass = subtype.klass.name
 
-              enum_klass = subtype.klass
-              model_klass = klass
+              values_methods.each do |key, (scope, ask, bang, val)|
+                klass_content += <<-RUBY
+                  def #{scope}                                    # def admin
+                    attr = arel_attribute('#{attribute}')         #   attr = arel_attribute('role')
+                    where(::#{enum_klass}.scope(attr, '#{val}'))  #   where(Enum::Roles.scope(attr, 'admin'))
+                  end                                             # end
+                RUBY
 
-              # TODO: Rewrite these as string
-              enum_module.module_eval do
-                vals.each do |val, list|
-                  # scope :disabled, -> { where(status: 'disabled') }
-                  model_klass.scope list[0], -> do
-                    where(enum_klass.scope(arel_table[attr], val))
-                  end
+                instance_content += <<-RUBY
+                  def #{ask}                                      # def admin?
+                    #{attribute}.#{key}?                          #   role.admin?
+                  end                                             # end
 
-                  # def disabled? status.disabled? end
-                  define_method(list[1]) { send(attr).public_send("#{val}?") }
-
-                  # def disabled!
-                  # changed = send(attr).public_send("#{val}!")
-                  # save! if changed && enum_save_on_bang
-                  # true
-                  define_method(list[2]) do
-                    changed = send(attr).public_send("#{val}!")
-                    return save! if changed && enum_save_on_bang
-                    true
-                  end
-                end
+                  def #{bang}                                     # admin!
+                    self.#{attribute} = '#{val}'                  #   self.role = 'admin'
+                    return unless #{attribute}_changed?           #   return unless role_changed?
+                    return save! if Torque::PostgreSQL.config.enum.save_on_bang
+                    true                                          #   true
+                  end                                             # end
+                RUBY
               end
+
+              klass_module.module_eval(klass_content)
+              instance_module.module_eval(instance_content)
             end
         end
       end

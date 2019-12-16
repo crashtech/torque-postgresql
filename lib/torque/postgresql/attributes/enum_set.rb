@@ -10,7 +10,7 @@ module Torque
           include Enumerable
 
           delegate :each, to: :members
-          delegate :values, :members, :texts, :to_options, :valid?, :size,
+          delegate :values, :keys, :members, :texts, :to_options, :valid?, :size,
             :length, :connection_specification_name, to: :enum_source
 
           # Find or create the class that will handle the value
@@ -28,7 +28,10 @@ module Torque
           # Provide a method on the given class to setup which enum sets will be
           # manually initialized
           def include_on(klass, method_name = nil)
-            Enum.include_on(klass, method_name || Torque::PostgreSQL.config.enum.set_method)
+            method_name ||= Torque::PostgreSQL.config.enum.set_method
+            Builder.include_on(klass, method_name, Builder::Enum, set_features: true) do |builder|
+              defined_enums[builder.attribute.to_sym] = builder.subtype
+            end
           end
 
           # The original Enum implementation, for individual values
@@ -73,7 +76,7 @@ module Torque
 
           # Build an active record scope for a given atribute agains a value
           def scope(attribute, value)
-            attribute.contains(Array.wrap(value))
+            attribute.contains(::Arel.array(value, cast: enum_source.type_name))
           end
 
           private

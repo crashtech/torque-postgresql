@@ -5,14 +5,14 @@ module Torque
   module PostgreSQL
     module Attributes
       module Builder
-        def self.include_on(klass, method_name, builder_klass, &block)
+        def self.include_on(klass, method_name, builder_klass, **extra, &block)
           klass.define_singleton_method(method_name) do |*args, **options|
             return unless connection.table_exists?(table_name)
 
             args.each do |attribute|
               begin
                 # Generate methods on self class
-                builder = builder_klass.new(self, attribute, options)
+                builder = builder_klass.new(self, attribute, extra.merge(options))
                 builder.conflicting?
                 builder.build
 

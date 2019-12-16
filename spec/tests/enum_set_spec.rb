@@ -271,15 +271,36 @@ RSpec.describe 'Enum' do
 
     it 'has all enum set methods' do
       expect(subject).to  respond_to(:types)
+      expect(subject).to  respond_to(:types_keys)
       expect(subject).to  respond_to(:types_texts)
       expect(subject).to  respond_to(:types_options)
+
+      expect(subject).to  respond_to(:has_types)
+      expect(subject).to  respond_to(:has_any_types)
+
       expect(instance).to respond_to(:types_text)
 
       subject.types.each do |value|
+        value = value.underscore
         expect(subject).to  respond_to(value)
         expect(instance).to respond_to(value + '?')
         expect(instance).to respond_to(value + '!')
       end
+    end
+
+    it 'scope the model correctly' do
+      query = subject.a.to_sql
+      expect(query).to match(/"courses"."types" @> ARRAY\['A'\]::types\[\]/)
+    end
+
+    it 'has a match all scope' do
+      query = subject.has_types('B', 'A').to_sql
+      expect(query).to match(/"courses"."types" @> ARRAY\['B', 'A'\]::types\[\]/)
+    end
+
+    it 'has a match any scope' do
+      query = subject.has_any_types('B', 'A').to_sql
+      expect(query).to match(/"courses"."types" && ARRAY\['B', 'A'\]::types\[\]/)
     end
   end
 end

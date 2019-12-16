@@ -424,6 +424,7 @@ RSpec.describe 'Enum' do
 
     it 'has all enum methods' do
       expect(subject).to  respond_to(:roles)
+      expect(subject).to  respond_to(:roles_keys)
       expect(subject).to  respond_to(:roles_texts)
       expect(subject).to  respond_to(:roles_options)
       expect(instance).to respond_to(:role_text)
@@ -486,8 +487,9 @@ RSpec.describe 'Enum' do
       expect(instance.persisted?).to be_truthy
 
       updated_at = instance.updated_at
-      subject.enum_save_on_bang = false
+      Torque::PostgreSQL.config.enum.save_on_bang = false
       instance.visitor!
+      Torque::PostgreSQL.config.enum.save_on_bang = true
 
       expect(instance.role).to be_eql(:visitor)
       expect(instance.updated_at).to be_eql(updated_at)
@@ -497,10 +499,17 @@ RSpec.describe 'Enum' do
     end
 
     it 'raises when starting an enum with conflicting methods' do
+      Torque::PostgreSQL.config.enum.raise_conflicting = true
       AText = Class.new(ActiveRecord::Base)
       AText.table_name = 'texts'
 
       expect { decorate(AText, :conflict) }.to raise_error(ArgumentError, /already exists in/)
+      Torque::PostgreSQL.config.enum.raise_conflicting = false
+    end
+
+    it 'scope the model correctly' do
+      query = subject.manager.to_sql
+      expect(query).to match(/"users"."role" = 'manager'/)
     end
 
     context 'on inherited classes' do
@@ -509,6 +518,7 @@ RSpec.describe 'Enum' do
         instance = klass.new
 
         expect(klass).to    respond_to(:roles)
+        expect(klass).to    respond_to(:roles_keys)
         expect(klass).to    respond_to(:roles_texts)
         expect(klass).to    respond_to(:roles_options)
         expect(instance).to respond_to(:role_text)
@@ -536,6 +546,7 @@ RSpec.describe 'Enum' do
         AAuthor.table_name = 'authors'
 
         expect(AAuthor).to_not respond_to(:specialties)
+        expect(AAuthor).to_not respond_to(:specialties_keys)
         expect(AAuthor).to_not respond_to(:specialties_texts)
         expect(AAuthor).to_not respond_to(:specialties_options)
         expect(AAuthor.instance_methods).to_not include(:specialty_text)
@@ -550,6 +561,7 @@ RSpec.describe 'Enum' do
       it 'can be manually initiated' do
         decorate(Author, :specialty)
         expect(subject).to  respond_to(:specialties)
+        expect(subject).to  respond_to(:specialties_keys)
         expect(subject).to  respond_to(:specialties_texts)
         expect(subject).to  respond_to(:specialties_options)
         expect(instance).to respond_to(:specialty_text)
@@ -569,6 +581,7 @@ RSpec.describe 'Enum' do
 
       it 'creates all methods correctly' do
         expect(subject).to  respond_to(:specialties)
+        expect(subject).to  respond_to(:specialties_keys)
         expect(subject).to  respond_to(:specialties_texts)
         expect(subject).to  respond_to(:specialties_options)
         expect(instance).to respond_to(:specialty_text)
