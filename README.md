@@ -46,7 +46,7 @@ These are the currently available features:
 ## Data types
 
 * [Enum](https://github.com/crashtech/torque-postgresql/wiki/Enum)
-* [EnumSet](https://github.com/crashtech/torque-postgresql/wiki/EnumSet)
+* [EnumSet](https://github.com/crashtech/torque-postgresql/wiki/Enum-Set)
 * [Interval](https://github.com/crashtech/torque-postgresql/wiki/Interval)
 * [Date/Time Range](https://github.com/crashtech/torque-postgresql/wiki/Date-Time-Range)
 * [Box](https://github.com/crashtech/torque-postgresql/wiki/Box)
