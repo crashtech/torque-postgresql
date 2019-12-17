@@ -20,6 +20,7 @@ module Torque
             # 5.2 reflection, owner
 
             reflection = args.size.eql?(2) ? args[0] : args[1]
+            puts reflection.connected_through_array?.inspect
             return super unless reflection.connected_through_array?
 
             table = args[0] if args.size > 2

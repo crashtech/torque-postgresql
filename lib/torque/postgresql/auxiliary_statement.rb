@@ -205,9 +205,16 @@ module Torque
             end
 
             # Add the scopes defined by the reflection
+            # Possibilities:
+            # table
+            # table, foreign_klass
+            # table, foreign_table, foreign_klass
             if association.respond_to?(:join_scope)
-              args = [@query.arel_table]
-              args << base if association.method(:join_scope).arity.eql?(2)
+              arity = association.method(:join_scope).arity
+              args = [@query.arel_table, foreign_table, base]
+              args.delete_at(1) if arity <= 2 # Delete foreign_table
+              args.delete_at(1) if arity <= 1 # Delete base (foreign_klass)
+
               @query.merge(association.join_scope(*args))
             end
 

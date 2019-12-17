@@ -17,12 +17,28 @@ module Torque
           method(:join_keys).arity.eql?(0) ? join_keys : join_keys(klass)
         end
 
+        # Fix for rails 5.2.3 where the join_scope method is the one now
+        # responsible for building the join condition
+        if Torque::PostgreSQL::AR523
+          def join_scope(table, foreign_table, foreign_klass)
+            return super unless connected_through_array?
+
+            predicate_builder = predicate_builder(table)
+            scope_chain_items = join_scopes(table, predicate_builder)
+            klass_scope       = klass_join_scope(table, predicate_builder)
+
+            klass_scope.where!(build_id_constraint_between(table, foreign_table))
+            klass_scope.where!(type => foreign_klass.polymorphic_name) if type
+            klass_scope.where!(klass.send(:type_condition, table)) \
+              if klass.finder_needs_type_condition?
+
+            scope_chain_items.inject(klass_scope, &:merge!)
+          end
+        end
+
         # Manually build the join constraint
         def build_join_constraint(table, foreign_table)
-          klass_attr = table[torque_join_keys.key.to_s]
-          source_attr = foreign_table[torque_join_keys.foreign_key.to_s]
-
-          result = build_id_constraint(klass_attr, source_attr)
+          result = build_id_constraint_between(table, foreign_table)
           result = table.create_and([result, klass.send(:type_condition, table)]) \
             if klass.finder_needs_type_condition?
 
@@ -60,6 +76,13 @@ module Torque
         end
 
         private
+
+          def build_id_constraint_between(table, foreign_table)
+            klass_attr  = table[torque_join_keys.key.to_s]
+            source_attr = foreign_table[torque_join_keys.foreign_key.to_s]
+
+            build_id_constraint(klass_attr, source_attr)
+          end
 
           # Prepare a value for an array constraint overlap condition
           def cast_constraint_to_array(type, value, should_cast)
