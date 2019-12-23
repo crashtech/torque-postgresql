@@ -163,12 +163,12 @@ RSpec.describe 'TableInheritance' do
       end
 
       {
-        'activities' => Activity,
-        'activity_posts' => ActivityPost,
-        'activity_post_samples' => ActivityPost::Sample,
+        'activities' => 'Activity',
+        'activity_posts' => 'ActivityPost',
+        'activity_post_samples' => 'ActivityPost::Sample',
       }.each do |table_name, expected_model|
-        it "translate the table name #{table_name} to #{expected_model.name} model" do
-          expect(subject.lookup_model(table_name)).to eql(expected_model)
+        it "translate the table name #{table_name} to #{expected_model} model" do
+          expect(subject.lookup_model(table_name)).to eql(expected_model.constantize)
         end
       end
     end

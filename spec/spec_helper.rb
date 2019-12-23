@@ -10,6 +10,11 @@ Dotenv.load
 
 ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'])
 
+cache = ActiveRecord::Base.connection.schema_cache
+cache.instance_variable_set(:@inheritance_loaded, false)
+cache.instance_variable_set(:@inheritance_dependencies, {})
+cache.instance_variable_set(:@inheritance_associations, {})
+
 load File.join('schema.rb')
 Dir.glob(File.join('spec', '{models,factories,mocks}', '*.rb')) do |file|
   require file[5..-4]
@@ -49,10 +54,6 @@ RSpec.configure do |config|
     cache = ActiveRecord::Base.connection.schema_cache
     cache.instance_variable_set(:@inheritance_loaded, false)
     cache.instance_variable_set(:@inheritance_dependencies, {})
-    cache.instance_variable_set(:@inheritance_dependencies, {})
-
-    ActivityBook.instance_variable_set(:@physically_inherited, nil)
-    ActivityPost.instance_variable_set(:@physically_inherited, nil)
-    ActivityPost::Sample.instance_variable_set(:@physically_inherited, nil)
+    cache.instance_variable_set(:@inheritance_associations, {})
   end
 end
