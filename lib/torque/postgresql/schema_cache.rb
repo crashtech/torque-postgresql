@@ -11,6 +11,7 @@ module Torque
         @data_sources_model_names = {}
         @inheritance_dependencies = {}
         @inheritance_associations = {}
+        @inheritance_loaded = false
       end
 
       def initialize_dup(*) # :nodoc:
@@ -22,16 +23,16 @@ module Torque
 
       def encode_with(coder) # :nodoc:
         super
-        coder["data_sources_model_names"] = @data_sources_model_names
-        coder["inheritance_dependencies"] = @inheritance_dependencies
-        coder["inheritance_associations"] = @inheritance_associations
+        coder['data_sources_model_names'] = @data_sources_model_names
+        coder['inheritance_dependencies'] = @inheritance_dependencies
+        coder['inheritance_associations'] = @inheritance_associations
       end
 
       def init_with(coder) # :nodoc:
         super
-        @data_sources_model_names = coder["data_sources_model_names"]
-        @inheritance_dependencies = coder["inheritance_dependencies"]
-        @inheritance_associations = coder["inheritance_associations"]
+        @data_sources_model_names = coder['data_sources_model_names']
+        @inheritance_dependencies = coder['inheritance_dependencies']
+        @inheritance_associations = coder['inheritance_associations']
       end
 
       def add(table_name, *) # :nodoc:
@@ -41,6 +42,7 @@ module Torque
         if @data_sources.key?(table_name)
           @inheritance_dependencies.clear
           @inheritance_associations.clear
+          @inheritance_loaded = false
         end
       end
 
@@ -49,6 +51,7 @@ module Torque
         @data_sources_model_names.clear
         @inheritance_dependencies.clear
         @inheritance_associations.clear
+        @inheritance_loaded = false
       end
 
       def size # :nodoc:
@@ -71,10 +74,12 @@ module Torque
           @inheritance_dependencies,
           @inheritance_associations,
           @data_sources_model_names,
+          @inheritance_loaded,
         ]
       end
 
       def marshal_load(array) # :nodoc:
+        @inheritance_loaded = array.pop
         @data_sources_model_names = array.pop
         @inheritance_associations = array.pop
         @inheritance_dependencies = array.pop
@@ -101,13 +106,13 @@ module Torque
       end
 
       # Try to find a model based on a given table
-      def lookup_model(table_name, scopred_class = '')
-        scopred_class = scopred_class.name if scopred_class.is_a?(Class)
+      def lookup_model(table_name, scoped_class = '')
+        scoped_class = scoped_class.name if scoped_class.is_a?(Class)
         return @data_sources_model_names[table_name] \
           if @data_sources_model_names.key?(table_name)
 
         # Get all the possible scopes
-        scopes = scopred_class.scan(/(?:::)?[A-Z][a-z]+/)
+        scopes = scoped_class.scan(/(?:::)?[A-Z][a-z]+/)
         scopes.unshift('Object::')
 
         # Consider the maximum namespaced possible model name
@@ -164,14 +169,17 @@ module Torque
         # Reload information about tables inheritance and dependencies, uses a
         # cache to not perform additional checkes
         def reload_inheritance_data!
-          return if @inheritance_dependencies.present?
+          return if @inheritance_loaded
           @inheritance_dependencies = connection.inherited_tables
           @inheritance_associations = generate_associations
+          @inheritance_loaded = true
         end
 
         # Calculates the inverted dependency (association), where even indirect
         # inheritance comes up in the list
         def generate_associations
+          return {} if @inheritance_dependencies.empty?
+
           result = Hash.new{ |h, k| h[k] = [] }
           masters = @inheritance_dependencies.values.flatten.uniq
 
@@ -200,7 +208,7 @@ module Torque
           super
           @data_sources_model_names = Torque::PostgreSQL.config
             .irregular_models.slice(*@data_sources.keys).map do |table_name, model_name|
-            [table_name, model_name.constantize]
+            [table_name, (model_name.is_a?(Class) ? model_name : model_name.constantize)]
           end.to_h
         end
 

@@ -121,6 +121,7 @@ RSpec.describe 'TableInheritance' do
         'G' => %w(E H),
       }
 
+      subject.instance_variable_set(:@inheritance_loaded, true)
       subject.instance_variable_set(:@inheritance_dependencies, scenario)
       subject.instance_variable_set(:@inheritance_associations, subject.send(:generate_associations))
       expect(subject.instance_variable_get(:@inheritance_associations)).to eql({
@@ -132,9 +133,9 @@ RSpec.describe 'TableInheritance' do
         'H' => %w(G),
       })
 
-      subject.instance_variable_set(:@inheritance_cache, nil)
-      subject.instance_variable_set(:@inheritance_dependencies, nil)
-      subject.instance_variable_set(:@inheritance_associations, nil)
+      subject.instance_variable_set(:@inheritance_dependencies, {})
+      subject.instance_variable_set(:@inheritance_dependencies, {})
+      subject.instance_variable_set(:@inheritance_loaded, false)
     end
 
     context 'on looking up models' do
