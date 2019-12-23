@@ -15,10 +15,6 @@ cleaner = ->() do
   cache.instance_variable_set(:@inheritance_loaded, false)
   cache.instance_variable_set(:@inheritance_dependencies, {})
   cache.instance_variable_set(:@inheritance_associations, {})
-
-  ActivityBook.instance_variable_set(:@physically_inherited, nil)
-  ActivityPost.instance_variable_set(:@physically_inherited, nil)
-  ActivityPost::Sample.instance_variable_set(:@physically_inherited, nil)
 end
 
 load File.join('schema.rb')

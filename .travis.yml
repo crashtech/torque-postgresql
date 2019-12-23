@@ -15,11 +15,10 @@ gemfile:
 env: DATABASE_URL=postgres://postgres@localhost/torque_postgresql_test
 
 before_script:
-- psql -c 'create database torque_postgresql_test;' -U postgres -h localhost
+  - psql -c 'DROP DATABASE IF EXISTS torque_postgresql_test;' -U postgres -h localhost
+  - psql -c 'CREATE DATABASE torque_postgresql_test;' -U postgres -h localhost
+  - bundle exec rake dump
 
-# notifications:
-#   email:
-#   - git@danmcclain.net
 addons:
   postgresql: '9.6'
   code_climate:
