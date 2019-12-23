@@ -132,10 +132,6 @@ RSpec.describe 'TableInheritance' do
         'E' => %w(F G),
         'H' => %w(G),
       })
-
-      subject.instance_variable_set(:@inheritance_dependencies, {})
-      subject.instance_variable_set(:@inheritance_dependencies, {})
-      subject.instance_variable_set(:@inheritance_loaded, false)
     end
 
     context 'on looking up models' do

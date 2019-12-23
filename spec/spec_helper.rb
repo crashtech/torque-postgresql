@@ -45,4 +45,14 @@ RSpec.configure do |config|
     DatabaseCleaner.clean
   end
 
+  config.before(:each) do
+    cache = ActiveRecord::Base.connection.schema_cache
+    cache.instance_variable_set(:@inheritance_loaded, false)
+    cache.instance_variable_set(:@inheritance_dependencies, {})
+    cache.instance_variable_set(:@inheritance_dependencies, {})
+
+    ActivityBook.instance_variable_set(:@physically_inherited, nil)
+    ActivityPost.instance_variable_set(:@physically_inherited, nil)
+    ActivityPost::Sample.instance_variable_set(:@physically_inherited, nil)
+  end
 end
