@@ -9,17 +9,24 @@ require 'byebug'
 Dotenv.load
 
 ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'])
-
 cache = ActiveRecord::Base.connection.schema_cache
-cache.instance_variable_set(:@inheritance_loaded, false)
-cache.instance_variable_set(:@inheritance_dependencies, {})
-cache.instance_variable_set(:@inheritance_associations, {})
+
+cleaner = ->() do
+  cache.instance_variable_set(:@inheritance_loaded, false)
+  cache.instance_variable_set(:@inheritance_dependencies, {})
+  cache.instance_variable_set(:@inheritance_associations, {})
+
+  ActivityBook.instance_variable_set(:@physically_inherited, nil)
+  ActivityPost.instance_variable_set(:@physically_inherited, nil)
+  ActivityPost::Sample.instance_variable_set(:@physically_inherited, nil)
+end
 
 load File.join('schema.rb')
 Dir.glob(File.join('spec', '{models,factories,mocks}', '*.rb')) do |file|
   require file[5..-4]
 end
 
+cleaner.call
 I18n.load_path << Pathname.pwd.join('spec', 'en.yml')
 RSpec.configure do |config|
   config.extend Mocks::CreateTable
@@ -51,9 +58,6 @@ RSpec.configure do |config|
   end
 
   config.before(:each) do
-    cache = ActiveRecord::Base.connection.schema_cache
-    cache.instance_variable_set(:@inheritance_loaded, false)
-    cache.instance_variable_set(:@inheritance_dependencies, {})
-    cache.instance_variable_set(:@inheritance_associations, {})
+    cleaner.call
   end
 end
