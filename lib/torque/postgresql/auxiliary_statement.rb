@@ -125,6 +125,10 @@ module Torque
 
       # Build the statement on the given arel and return the WITH statement
       def build(base)
+        @bound_attributes.clear
+        @join_sources.clear
+
+        # Prepare all the data for the statement
         prepare(base)
 
         # Add the join condition to the list
