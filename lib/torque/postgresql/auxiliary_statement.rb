@@ -31,11 +31,12 @@ module Torque
         end
 
         # Fast access to statement build
-        def build(statement, base, options = nil, bound_attributes = [])
+        def build(statement, base, options = nil, bound_attributes = [], join_sources = [])
           klass = instantiate(statement, base, options)
           result = klass.build(base)
 
           bound_attributes.concat(klass.bound_attributes)
+          join_sources.concat(klass.join_sources)
           result
         end
 
@@ -105,7 +106,7 @@ module Torque
       delegate :config, :table, :table_name, :relation, :configure, :relation_query?,
         to: :class
 
-      attr_reader :bound_attributes
+      attr_reader :bound_attributes, :join_sources
 
       # Start a new auxiliary statement giving extra options
       def initialize(*args)
@@ -117,7 +118,9 @@ module Torque
         @where = options.fetch(:where, {})
         @select = options.fetch(:select, {})
         @join_type = options.fetch(:join_type, nil)
+
         @bound_attributes = []
+        @join_sources = []
       end
 
       # Build the statement on the given arel and return the WITH statement
@@ -125,7 +128,7 @@ module Torque
         prepare(base)
 
         # Add the join condition to the list
-        base.joins_values += [build_join(base)]
+        @join_sources << build_join(base)
 
         # Return the statement with its dependencies
         [@dependencies, ::Arel::Nodes::As.new(table, build_query(base))]
@@ -288,7 +291,7 @@ module Torque
               cte.is_a?(dependent_klass)
             end
 
-            AuxiliaryStatement.build(dependent, base, options, bound_attributes)
+            AuxiliaryStatement.build(dependent, base, options, bound_attributes, join_sources)
           end
         end
 

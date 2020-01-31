@@ -47,16 +47,16 @@ module Torque
 
           # Hook arel build to add the distinct on clause
           def build_arel(*)
-            subqueries = build_auxiliary_statements
-            return super if subqueries.nil?
-            super.with(subqueries)
+            arel = super
+            subqueries = build_auxiliary_statements(arel)
+            subqueries.nil? ? arel : arel.with(subqueries)
           end
 
           # Build all necessary data for auxiliary statements
-          def build_auxiliary_statements
-            return unless self.auxiliary_statements_values.present?
-            self.auxiliary_statements_values.map do |klass|
-              klass.build(self)
+          def build_auxiliary_statements(arel)
+            return unless auxiliary_statements_values.present?
+            auxiliary_statements_values.map do |klass|
+              klass.build(self).tap { arel.join_sources.concat(klass.join_sources) }
             end
           end
 
