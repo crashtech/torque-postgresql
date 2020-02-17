@@ -225,5 +225,17 @@ RSpec.describe 'BelongsToMany' do
       expect(query.to_sql).to match(/INNER JOIN "tags"/)
       expect { query.load }.not_to raise_error
     end
+
+    context "When record is not persisted" do
+      let(:initial) { FactoryBot.create(:tag) }
+      before { Video.belongs_to_many :tags }
+      subject { Video.new(title: 'A', tags: [initial]) }
+      after { Video._reflections = {} }
+
+      it 'loads associated records' do
+        expect(subject.tags.load).to be_a(ActiveRecord::Associations::CollectionProxy)
+        expect(subject.tags.to_a).to be_eql([initial])
+      end
+    end
   end
 end
