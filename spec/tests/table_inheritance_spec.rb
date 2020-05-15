@@ -23,14 +23,14 @@ RSpec.describe 'TableInheritance' do
         t.timestamps
       end
 
-      result = 'CREATE TABLE "activities" \('
-      result << '"id" (big)?serial primary key'
+      result = 'CREATE TABLE "activities" ('
+      result << '"id" bigserial primary key'
       result << ', "title" character varying'
       result << ', "active" boolean'
-      result << ', "created_at" timestamp NOT NULL'
-      result << ', "updated_at" timestamp NOT NULL'
-      result << '\)'
-      expect(sql).to match(/#{result}/)
+      result << ', "created_at" timestamp(6) NOT NULL'
+      result << ', "updated_at" timestamp(6) NOT NULL'
+      result << ')'
+      expect(sql).to eql(result)
     end
 
     it 'does not affect temporary table creation based on a query' do
@@ -38,7 +38,7 @@ RSpec.describe 'TableInheritance' do
       sql = connection.create_table(:test, temporary: true, as: query)
 
       result = 'CREATE TEMPORARY TABLE "test"'
-      result << " AS #{query}"
+      result << "  AS #{query}"
       expect(sql).to eql(result)
     end
 
@@ -78,7 +78,6 @@ RSpec.describe 'TableInheritance' do
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
 
       parts = '"activity_books"'
-      parts << ', id: false'
       parts << ', force: :cascade'
       parts << ', inherits: :activities'
       expect(dump_io.string).to match(/create_table #{parts} do /)
@@ -89,7 +88,6 @@ RSpec.describe 'TableInheritance' do
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
 
       parts = '"activity_post_samples"'
-      parts << ', id: false'
       parts << ', force: :cascade'
       parts << ', inherits: :activity_posts'
       expect(dump_io.string).to match(/create_table #{parts}(?! do \|t\|)/)
@@ -100,7 +98,6 @@ RSpec.describe 'TableInheritance' do
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
 
       parts = '"activity_posts"'
-      parts << ', id: false'
       parts << ', force: :cascade'
       parts << ', inherits: (\[:images, :activities\]|\[:activities, :images\])'
       expect(dump_io.string).to match(/create_table #{parts}/)
@@ -274,7 +271,7 @@ RSpec.describe 'TableInheritance' do
 
       it 'does not mess with single table inheritance' do
         result = 'SELECT "authors".* FROM "authors"'
-        result << " WHERE \"authors\".\"type\" IN ('AuthorJournalist')"
+        result << " WHERE \"authors\".\"type\" = 'AuthorJournalist'"
         expect(other.all.to_sql).to eql(result)
       end
 

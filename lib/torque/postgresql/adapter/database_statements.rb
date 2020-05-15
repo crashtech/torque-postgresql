@@ -43,16 +43,9 @@ module Torque
         end
 
         # :nodoc:
-        if Torque::PostgreSQL::AR521
-          def load_additional_types(oids = nil)
-            super
-            torque_load_additional_types(oids)
-          end
-        else
-          def load_additional_types(type_map, oids = nil)
-            super
-            torque_load_additional_types(oids)
-          end
+        def load_additional_types(oids = nil)
+          super
+          torque_load_additional_types(oids)
         end
 
         # Add the composite types to be loaded too.
@@ -80,11 +73,7 @@ module Torque
           SQL
 
           execute_and_clear(query, 'SCHEMA', []) do |records|
-            records.each do |row|
-              case row['typtype']
-              when 'e' then OID::Enum.create(row, type_map)
-              end
-            end
+            records.each { |row| OID::Enum.create(row, type_map) }
           end
         end
 

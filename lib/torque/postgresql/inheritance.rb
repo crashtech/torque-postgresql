@@ -25,7 +25,6 @@ module Torque
         end
 
       module ClassMethods
-
         delegate :_auto_cast_attribute, :_record_class_attribute, to: ActiveRecord::Relation
 
         # Get a full list of all attributes from a model and all its dependents
@@ -101,9 +100,10 @@ module Torque
 
         # Get the final decorated table, regardless of any special condition
         def decorated_table_name
-          if parent < Base && !parent.abstract_class?
-            contained = parent.table_name
-            contained = contained.singularize if parent.pluralize_table_names
+          parent_class = try(:module_parent) || try(:parent)
+          if parent_class < Base && !parent_class.abstract_class?
+            contained = parent_class.table_name
+            contained = contained.singularize if parent_class.pluralize_table_names
             contained += "_"
           end
 

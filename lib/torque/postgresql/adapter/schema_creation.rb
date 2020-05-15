@@ -5,10 +5,11 @@ module Torque
 
         # Redefine original table creation command to ensure PostgreSQL standard
         def visit_TableDefinition(o)
-          create_sql = "CREATE#{' TEMPORARY' if o.temporary}"
-          create_sql << " TABLE #{quote_table_name(o.name)}"
+          create_sql = +"CREATE#{table_modifier_in_create(o)} TABLE "
+          create_sql << "IF NOT EXISTS " if o.if_not_exists
+          create_sql << "#{quote_table_name(o.name)} "
 
-          statements = o.columns.map{ |c| accept c }
+          statements = o.columns.map { |c| accept c }
           statements << accept(o.primary_keys) if o.primary_keys
 
           if supports_indexes_in_create?
@@ -17,36 +18,25 @@ module Torque
             end)
           end
 
-          if supports_foreign_keys_in_create?
+          if supports_foreign_keys?
             statements.concat(o.foreign_keys.map do |to_table, options|
               foreign_key_in_create(o.name, to_table, options)
             end)
           end
 
-          if o.as
-            create_sql << " AS #{@conn.to_sql(o.as)}"
-          else
-            create_sql << " (#{statements.join(', ')})"
-            add_table_options!(create_sql, table_options(o))
+          create_sql << "(#{statements.join(', ')})" \
+            if statements.present? || o.inherits.present?
 
-            if o.inherits.present?
-              tables = o.inherits.map(&method(:quote_table_name))
-              create_sql << " INHERITS ( #{tables.join(' , ')} )"
-            end
+          add_table_options!(create_sql, table_options(o))
+
+          if o.inherits.present?
+            tables = o.inherits.map(&method(:quote_table_name))
+            create_sql << " INHERITS ( #{tables.join(' , ')} )"
           end
 
+          create_sql << " AS #{to_sql(o.as)}" if o.as
           create_sql
         end
-
-        # Keep rails 5.0 and 5.1 compatibility
-        def supports_foreign_keys_in_create?
-          if defined?(super)
-            super
-          else
-            supports_foreign_keys?
-          end
-        end
-
       end
 
       ActiveRecord::ConnectionAdapters::PostgreSQL::SchemaCreation.prepend SchemaCreation

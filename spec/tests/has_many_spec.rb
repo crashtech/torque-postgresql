@@ -5,7 +5,7 @@ RSpec.describe 'HasMany' do
     let(:builder) { ActiveRecord::Associations::Builder::HasMany }
 
     it 'adds the array option' do
-      expect(builder.valid_options([])).to include(:array)
+      expect(builder.send(:valid_options, [])).to include(:array)
     end
   end
 

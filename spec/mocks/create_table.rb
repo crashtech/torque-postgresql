@@ -5,8 +5,7 @@ module Mocks
 
       before :all do
         ActiveRecord::ConnectionAdapters::SchemaStatements.send(:define_method, :create_table) do |table_name, **options, &block|
-          comment = options.delete(:comment)
-          td = create_table_definition table_name, options[:temporary], options[:options], options[:as], comment: comment
+          td = create_table_definition(table_name, **options)
 
           # Does things as the same as schema statements
           if options[:id] != false && !options[:as]
