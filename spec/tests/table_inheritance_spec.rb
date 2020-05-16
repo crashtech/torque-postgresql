@@ -8,7 +8,7 @@ RSpec.describe 'TableInheritance' do
 
     it 'does not affect some basic forms of table creation' do
       sql = connection.create_table('schema_migrations', id: false) do |t|
-        t.string :version, connection.internal_string_options_for_primary_key
+        t.string :version, **connection.internal_string_options_for_primary_key
       end
 
       result = 'CREATE TABLE "schema_migrations"'
@@ -78,6 +78,7 @@ RSpec.describe 'TableInheritance' do
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
 
       parts = '"activity_books"'
+      parts << ', id: false'
       parts << ', force: :cascade'
       parts << ', inherits: :activities'
       expect(dump_io.string).to match(/create_table #{parts} do /)
@@ -88,6 +89,7 @@ RSpec.describe 'TableInheritance' do
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
 
       parts = '"activity_post_samples"'
+      parts << ', id: false'
       parts << ', force: :cascade'
       parts << ', inherits: :activity_posts'
       expect(dump_io.string).to match(/create_table #{parts}(?! do \|t\|)/)
@@ -98,6 +100,7 @@ RSpec.describe 'TableInheritance' do
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
 
       parts = '"activity_posts"'
+      parts << ', id: false'
       parts << ', force: :cascade'
       parts << ', inherits: (\[:images, :activities\]|\[:activities, :images\])'
       expect(dump_io.string).to match(/create_table #{parts}/)

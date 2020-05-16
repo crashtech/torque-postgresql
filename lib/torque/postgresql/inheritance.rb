@@ -18,12 +18,6 @@ module Torque
         klass.find(self.id)
       end
 
-      private
-
-        def using_single_table_inheritance?(record) # :nodoc:
-          self.class.physically_inherited? || super
-        end
-
       module ClassMethods
         delegate :_auto_cast_attribute, :_record_class_attribute, to: ActiveRecord::Relation
 
@@ -144,17 +138,19 @@ module Torque
 
         private
 
-          def discriminate_class_for_record(record) # :nodoc:
+          def instantiate_instance_of(klass, attributes, column_types = {}, &block)
+            return super unless klass.physically_inheritances?
+
             auto_cast = _auto_cast_attribute.to_s
             record_class = _record_class_attribute.to_s
+            return super unless attributes.key?(record_class) &&
+               attributes.delete(auto_cast) && attributes[record_class] != table_name
 
-            return super unless record.key?(record_class) &&
-              record.delete(auto_cast) && record[record_class] != table_name
+            klass = casted_dependents[attributes[record_class]]
+            raise_unable_to_cast(attributes[record_class]) if klass.nil?
+            filter_attributes_for_cast(attributes, klass)
 
-            klass = casted_dependents[record[record_class]]
-            raise_unable_to_cast(record[record_class]) if klass.nil?
-            filter_attributes_for_cast(record, klass)
-            klass
+            super(klass, attributes, column_types, &block)
           end
 
           # Filter the record attributes to be loaded to not included those from

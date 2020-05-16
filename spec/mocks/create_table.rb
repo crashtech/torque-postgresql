@@ -16,7 +16,7 @@ module Mocks
             if pk.is_a?(Array)
               td.primary_keys pk
             else
-              td.primary_key pk, options.fetch(:id, :primary_key), options
+              td.primary_key pk, options.fetch(:id, :primary_key), **options
             end
           end
 
