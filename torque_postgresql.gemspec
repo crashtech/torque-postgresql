@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'rails', '>= 5.0'
   s.add_dependency 'pg', '>= 0.18'
 
-  s.add_development_dependency 'rake', '~> 10.1', '>= 10.1.0'
+  s.add_development_dependency 'rake', '~> 12.3', '>= 12.3.3'
   s.add_development_dependency 'database_cleaner', '~> 1.5', '>= 1.5.3'
   s.add_development_dependency 'dotenv', '~> 2.1', '>= 2.1.1'
   s.add_development_dependency 'rspec', '~> 3.5', '>= 3.5.0'
