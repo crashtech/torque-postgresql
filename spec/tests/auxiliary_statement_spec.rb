@@ -7,7 +7,7 @@ RSpec.describe 'AuxiliaryStatement' do
 
   context 'on relation' do
     let(:klass) { User }
-    let(:true_value) { Torque::PostgreSQL::AR521 ? 'TRUE' : "'t'" }
+    let(:true_value) { 'TRUE' }
     subject { klass.unscoped }
 
     it 'has its method' do

@@ -135,19 +135,17 @@ module Torque
     ActiveRecord::Relation::SINGLE_VALUE_METHODS       += Relation::SINGLE_VALUE_METHODS
     ActiveRecord::Relation::MULTI_VALUE_METHODS        += Relation::MULTI_VALUE_METHODS
     ActiveRecord::Relation::VALUE_METHODS              += Relation::VALUE_METHODS
-    ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES += [:cast_records, :itself_only,
-      :distinct_on, :auxiliary_statements]
+    ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES += %i[cast_records itself_only
+      distinct_on auxiliary_statements]
 
-    if ActiveRecord::QueryMethods.const_defined?('DEFAULT_VALUES')
-      Relation::SINGLE_VALUE_METHODS.each do |value|
-        ActiveRecord::QueryMethods::DEFAULT_VALUES[value] = nil \
-          if ActiveRecord::QueryMethods::DEFAULT_VALUES[value].nil?
-      end
+    Relation::SINGLE_VALUE_METHODS.each do |value|
+      ActiveRecord::QueryMethods::DEFAULT_VALUES[value] = nil \
+        if ActiveRecord::QueryMethods::DEFAULT_VALUES[value].nil?
+    end
 
-      Relation::MULTI_VALUE_METHODS.each do |value|
-        ActiveRecord::QueryMethods::DEFAULT_VALUES[value] ||= \
-          ActiveRecord::QueryMethods::FROZEN_EMPTY_ARRAY
-      end
+    Relation::MULTI_VALUE_METHODS.each do |value|
+      ActiveRecord::QueryMethods::DEFAULT_VALUES[value] ||= \
+        ActiveRecord::QueryMethods::FROZEN_EMPTY_ARRAY
     end
 
     $VERBOSE = warn_level

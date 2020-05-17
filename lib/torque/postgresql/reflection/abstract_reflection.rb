@@ -12,28 +12,21 @@ module Torque
           false
         end
 
-        # Monkey patching for rais 5.0
-        def torque_join_keys
-          method(:join_keys).arity.eql?(0) ? join_keys : join_keys(klass)
-        end
+        # Fix where the join_scope method is the one now responsible for
+        # building the join condition
+        def join_scope(table, foreign_table, foreign_klass)
+          return super unless connected_through_array?
 
-        # Fix for rails 5.2.3 where the join_scope method is the one now
-        # responsible for building the join condition
-        if Torque::PostgreSQL::AR523
-          def join_scope(table, foreign_table, foreign_klass)
-            return super unless connected_through_array?
+          predicate_builder = predicate_builder(table)
+          scope_chain_items = join_scopes(table, predicate_builder)
+          klass_scope       = klass_join_scope(table, predicate_builder)
 
-            predicate_builder = predicate_builder(table)
-            scope_chain_items = join_scopes(table, predicate_builder)
-            klass_scope       = klass_join_scope(table, predicate_builder)
+          klass_scope.where!(build_id_constraint_between(table, foreign_table))
+          klass_scope.where!(type => foreign_klass.polymorphic_name) if type
+          klass_scope.where!(klass.send(:type_condition, table)) \
+            if klass.finder_needs_type_condition?
 
-            klass_scope.where!(build_id_constraint_between(table, foreign_table))
-            klass_scope.where!(type => foreign_klass.polymorphic_name) if type
-            klass_scope.where!(klass.send(:type_condition, table)) \
-              if klass.finder_needs_type_condition?
-
-            scope_chain_items.inject(klass_scope, &:merge!)
-          end
+          scope_chain_items.inject(klass_scope, &:merge!)
         end
 
         # Manually build the join constraint
@@ -50,9 +43,9 @@ module Torque
           return klass_attr.eq(source_attr) unless connected_through_array?
 
           # Klass and key are associated with the reflection Class
-          klass_type = klass.columns_hash[torque_join_keys.key.to_s]
+          klass_type = klass.columns_hash[join_keys.key.to_s]
           # active_record and foreign_key are associated with the source Class
-          source_type = active_record.columns_hash[torque_join_keys.foreign_key.to_s]
+          source_type = active_record.columns_hash[join_keys.foreign_key.to_s]
 
           # If both are attributes but the left side is not an array, and the
           # right side is, use the ANY operation
@@ -78,8 +71,8 @@ module Torque
         private
 
           def build_id_constraint_between(table, foreign_table)
-            klass_attr  = table[torque_join_keys.key.to_s]
-            source_attr = foreign_table[torque_join_keys.foreign_key.to_s]
+            klass_attr  = table[join_keys.key.to_s]
+            source_attr = foreign_table[join_keys.foreign_key.to_s]
 
             build_id_constraint(klass_attr, source_attr)
           end
@@ -105,6 +98,7 @@ module Torque
           # returns either +nil+ or the inverse association name that it finds.
           def automatic_inverse_of
             return super unless connected_through_array?
+
             if can_find_inverse_of_automatically?(self)
               inverse_name = options[:as] || active_record.name.demodulize
               inverse_name = ActiveSupport::Inflector.underscore(inverse_name)

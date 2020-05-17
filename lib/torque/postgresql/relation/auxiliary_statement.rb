@@ -33,14 +33,8 @@ module Torque
         # Get all auxiliary statements bound attributes and the base bound
         # attributes as well
         def bound_attributes
-          if Torque::PostgreSQL::AR521
-            visitor = ::Arel::Visitors::PostgreSQL.new(ActiveRecord::Base.connection)
-            visitor.accept(self.arel.ast, ::Arel::Collectors::Bind.new).value
-          else
-            return super unless self.auxiliary_statements_values.present?
-            bindings = self.auxiliary_statements_values.map(&:bound_attributes)
-            (bindings + super).flatten
-          end
+          visitor = ::Arel::Visitors::PostgreSQL.new(ActiveRecord::Base.connection)
+          visitor.accept(self.arel.ast, ::Arel::Collectors::Bind.new).value
         end
 
         private
