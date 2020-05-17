@@ -1,6 +1,6 @@
 # Torque PostgreSQL
 
-[![Build Status](https://travis-ci.org/crashtech/torque-postgresql.svg?branch=master)](https://travis-ci.org/crashtech/torque-postgresql)
+[![Build Status](https://travis-ci.com/crashtech/torque-postgresql.svg?branch=master)](https://travis-ci.com/crashtech/torque-postgresql)
 [![Code Climate](https://codeclimate.com/github/crashtech/torque-postgresql/badges/gpa.svg)](https://codeclimate.com/github/crashtech/torque-postgresql)
 [![Gem Version](https://badge.fury.io/rb/torque-postgresql.svg)](https://badge.fury.io/rb/torque-postgresql)
 <!--([![Test Coverage](https://codeclimate.com/github/crashtech/torque-postgresql/badges/coverage.svg)](https://codeclimate.com/github/crashtech/torque-postgresql/coverage))-->
@@ -19,7 +19,8 @@
 
 To install torque-postgresql you need to add the following to your Gemfile:
 ```ruby
-gem 'torque-postgresql', '~> 1.1'
+gem 'torque-postgresql', '~> 1.1' # For Rails  < 6.0
+gem 'torque-postgresql', '~> 2.0' # For Rails >= 6.0
 ```
 
 Also, run:

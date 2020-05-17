@@ -52,11 +52,8 @@ module Torque
           when Array
             resolve_column(item, base)
           when Hash
-            raise ArgumentError, "Unsupported Hash for attributes on third level" if base
-            item.map do |key, other_list|
-              other_list = [other_list] unless other_list.kind_of? Enumerable
-              resolve_column(other_list, key)
-            end
+            raise ArgumentError, 'Unsupported Hash for attributes on third level' if base
+            item.map { |key, other_list| resolve_column(Array.wrap(other_list), key) }
           else
             raise ArgumentError, "Unsupported argument type: #{value} (#{value.class})"
           end

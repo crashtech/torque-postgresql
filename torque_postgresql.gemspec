@@ -17,13 +17,13 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
 
   s.files      = Dir['MIT-LICENSE', 'README.rdoc', 'lib/**/*', 'Rakefile']
-  s.test_files = Dir['test/**/*']
+  s.test_files = Dir['spec/**/*']
 
-  s.required_ruby_version     = '>= 2.2.2'
+  s.required_ruby_version     = '>= 2.5.0'
   s.required_rubygems_version = '>= 1.8.11'
 
-  s.add_dependency 'rails', '>= 5.0'
-  s.add_dependency 'pg', '>= 0.18'
+  s.add_dependency 'rails', '>= 6.0'
+  s.add_dependency 'pg', '>= 1.2'
 
   s.add_development_dependency 'rake', '~> 12.3', '>= 12.3.3'
   s.add_development_dependency 'database_cleaner', '~> 1.5', '>= 1.5.3'
