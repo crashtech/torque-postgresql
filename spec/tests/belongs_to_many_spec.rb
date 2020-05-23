@@ -37,9 +37,8 @@ RSpec.describe 'BelongsToMany' do
 
     it 'loads associated records' do
       subject.update(tag_ids: [initial.id])
-      expect(subject.tags.to_sql).to match(Regexp.new(<<-SQL.squish))
-        SELECT "tags"\\.\\* FROM "tags"
-        WHERE \\(?"tags"\\."id" IN \\(#{initial.id}\\)\\)?
+      expect(subject.tags.to_sql).to be_eql(<<-SQL.squish)
+        SELECT "tags".* FROM "tags" WHERE "tags"."id" IN (#{initial.id})
       SQL
 
       expect(subject.tags.load).to be_a(ActiveRecord::Associations::CollectionProxy)

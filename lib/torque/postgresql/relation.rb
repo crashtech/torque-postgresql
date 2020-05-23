@@ -52,11 +52,8 @@ module Torque
           when Array
             resolve_column(item, base)
           when Hash
-            raise ArgumentError, "Unsupported Hash for attributes on third level" if base
-            item.map do |key, other_list|
-              other_list = [other_list] unless other_list.kind_of? Enumerable
-              resolve_column(other_list, key)
-            end
+            raise ArgumentError, 'Unsupported Hash for attributes on third level' if base
+            item.map { |key, other_list| resolve_column(Array.wrap(other_list), key) }
           else
             raise ArgumentError, "Unsupported argument type: #{value} (#{value.class})"
           end
@@ -138,19 +135,17 @@ module Torque
     ActiveRecord::Relation::SINGLE_VALUE_METHODS       += Relation::SINGLE_VALUE_METHODS
     ActiveRecord::Relation::MULTI_VALUE_METHODS        += Relation::MULTI_VALUE_METHODS
     ActiveRecord::Relation::VALUE_METHODS              += Relation::VALUE_METHODS
-    ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES += [:cast_records, :itself_only,
-      :distinct_on, :auxiliary_statements]
+    ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES += %i[cast_records itself_only
+      distinct_on auxiliary_statements]
 
-    if ActiveRecord::QueryMethods.const_defined?('DEFAULT_VALUES')
-      Relation::SINGLE_VALUE_METHODS.each do |value|
-        ActiveRecord::QueryMethods::DEFAULT_VALUES[value] = nil \
-          if ActiveRecord::QueryMethods::DEFAULT_VALUES[value].nil?
-      end
+    Relation::SINGLE_VALUE_METHODS.each do |value|
+      ActiveRecord::QueryMethods::DEFAULT_VALUES[value] = nil \
+        if ActiveRecord::QueryMethods::DEFAULT_VALUES[value].nil?
+    end
 
-      Relation::MULTI_VALUE_METHODS.each do |value|
-        ActiveRecord::QueryMethods::DEFAULT_VALUES[value] ||= \
-          ActiveRecord::QueryMethods::FROZEN_EMPTY_ARRAY
-      end
+    Relation::MULTI_VALUE_METHODS.each do |value|
+      ActiveRecord::QueryMethods::DEFAULT_VALUES[value] ||= \
+        ActiveRecord::QueryMethods::FROZEN_EMPTY_ARRAY
     end
 
     $VERBOSE = warn_level

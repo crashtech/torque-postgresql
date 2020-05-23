@@ -8,8 +8,8 @@ RSpec.describe 'Period' do
   let(:method_names) { Torque::PostgreSQL::config.period.method_names }
   let(:attribute_klass) { Torque::PostgreSQL::Attributes::Period }
 
-  let(:true_value) { Torque::PostgreSQL::AR521 ? 'TRUE' : "'t'" }
-  let(:false_value) { Torque::PostgreSQL::AR521 ? 'FALSE' : "'f'" }
+  let(:true_value) { 'TRUE' }
+  let(:false_value) { 'FALSE' }
 
   let(:klass_methods_range) { (0..22) }
   let(:instance_methods_range) { (23..29) }

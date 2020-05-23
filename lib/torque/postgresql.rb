@@ -6,7 +6,6 @@ require 'active_support'
 
 require 'active_support/core_ext/date/acts_like'
 require 'active_support/core_ext/time/zones'
-require 'active_support/core_ext/hash/compact'
 require 'active_record/connection_adapters/postgresql_adapter'
 
 require 'torque/postgresql/config'
@@ -28,6 +27,5 @@ require 'torque/postgresql/migration'
 require 'torque/postgresql/relation'
 require 'torque/postgresql/reflection'
 require 'torque/postgresql/schema_cache'
-require 'torque/postgresql/schema_dumper'
 
 require 'torque/postgresql/railtie' if defined?(Rails)

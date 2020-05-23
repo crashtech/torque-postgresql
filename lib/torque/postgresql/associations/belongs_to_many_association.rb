@@ -33,8 +33,8 @@ module Torque
 
         def ids_writer(new_ids)
           column = reflection.active_record_primary_key
-          action = owner.persisted? ? :update_column : :write_attribute
-          owner.send(action, column, owner[column] = new_ids.presence)
+          command = owner.persisted? ? :update_column : :write_attribute
+          owner.public_send(command, column, new_ids.presence)
           @association_scope = nil
         end
 

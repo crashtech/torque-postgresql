@@ -8,7 +8,7 @@ RSpec.describe 'TableInheritance' do
 
     it 'does not affect some basic forms of table creation' do
       sql = connection.create_table('schema_migrations', id: false) do |t|
-        t.string :version, connection.internal_string_options_for_primary_key
+        t.string :version, **connection.internal_string_options_for_primary_key
       end
 
       result = 'CREATE TABLE "schema_migrations"'
@@ -23,14 +23,14 @@ RSpec.describe 'TableInheritance' do
         t.timestamps
       end
 
-      result = 'CREATE TABLE "activities" \('
-      result << '"id" (big)?serial primary key'
+      result = 'CREATE TABLE "activities" ('
+      result << '"id" bigserial primary key'
       result << ', "title" character varying'
       result << ', "active" boolean'
-      result << ', "created_at" timestamp NOT NULL'
-      result << ', "updated_at" timestamp NOT NULL'
-      result << '\)'
-      expect(sql).to match(/#{result}/)
+      result << ', "created_at" timestamp(6) NOT NULL'
+      result << ', "updated_at" timestamp(6) NOT NULL'
+      result << ')'
+      expect(sql).to eql(result)
     end
 
     it 'does not affect temporary table creation based on a query' do
@@ -38,7 +38,7 @@ RSpec.describe 'TableInheritance' do
       sql = connection.create_table(:test, temporary: true, as: query)
 
       result = 'CREATE TEMPORARY TABLE "test"'
-      result << " AS #{query}"
+      result << "  AS #{query}"
       expect(sql).to eql(result)
     end
 
@@ -274,7 +274,7 @@ RSpec.describe 'TableInheritance' do
 
       it 'does not mess with single table inheritance' do
         result = 'SELECT "authors".* FROM "authors"'
-        result << " WHERE \"authors\".\"type\" IN ('AuthorJournalist')"
+        result << " WHERE \"authors\".\"type\" = 'AuthorJournalist'"
         expect(other.all.to_sql).to eql(result)
       end
 

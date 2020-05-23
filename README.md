@@ -1,6 +1,6 @@
 # Torque PostgreSQL
 
-[![Build Status](https://travis-ci.org/crashtech/torque-postgresql.svg?branch=master)](https://travis-ci.org/crashtech/torque-postgresql)
+[![Build Status](https://travis-ci.com/crashtech/torque-postgresql.svg?branch=master)](https://travis-ci.com/crashtech/torque-postgresql)
 [![Code Climate](https://codeclimate.com/github/crashtech/torque-postgresql/badges/gpa.svg)](https://codeclimate.com/github/crashtech/torque-postgresql)
 [![Gem Version](https://badge.fury.io/rb/torque-postgresql.svg)](https://badge.fury.io/rb/torque-postgresql)
 <!--([![Test Coverage](https://codeclimate.com/github/crashtech/torque-postgresql/badges/coverage.svg)](https://codeclimate.com/github/crashtech/torque-postgresql/coverage))-->
@@ -11,7 +11,7 @@
 * [TODO](https://github.com/crashtech/torque-postgresql/wiki/TODO)
 
 # Description
-`torque-postgresql` is a plugin that enhances Ruby on Rails enabling easy access to existing PostgreSQL advanced resources, such as data types and queries statements. Its features are designed to be as similar as Rails architecture and they work as smooth as possible.
+`torque-postgresql` is a plugin that enhances Ruby on Rails enabling easy access to existing PostgreSQL advanced resources, such as data types and queries statements. Its features are designed to be as similar to Rails architecture and they work as smoothly as possible.
 
 100% plug-and-play, with optional configurations, so that can be adapted to your project's design pattern.
 
@@ -19,7 +19,8 @@
 
 To install torque-postgresql you need to add the following to your Gemfile:
 ```ruby
-gem 'torque-postgresql', '~> 1.1'
+gem 'torque-postgresql', '~> 1.1' # For Rails  < 6.0
+gem 'torque-postgresql', '~> 2.0' # For Rails >= 6.0
 ```
 
 Also, run:

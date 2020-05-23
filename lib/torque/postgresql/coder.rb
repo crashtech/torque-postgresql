@@ -3,8 +3,7 @@ module Torque
     module Coder
 
       # This class represents an Record to be encoded, instead of a literal Array
-      class Record < Array
-      end
+      Record = Class.new(Array)
 
       class << self
 
