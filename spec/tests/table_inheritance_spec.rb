@@ -231,6 +231,19 @@ RSpec.describe 'TableInheritance' do
       expect(child2.table_name).to eql('activity_books')
       expect(other.table_name).to eql('authors')
     end
+
+    it 'respects the table name prefix and sufix defined on parent module' do
+      mod = Object.const_set('Private', Module.new)
+      mod.define_singleton_method(:table_name_prefix) { 'private.' }
+      mod.define_singleton_method(:table_name_suffix) { '_bundle' }
+      result = 'private.activity_post_others_bundle'
+
+      klass = mod.const_set('Other', Class.new(ActivityPost))
+      allow(klass).to receive(:module_parent).and_return(child)
+      allow(klass).to receive(:module_parents).and_return([mod])
+      allow(klass).to receive(:physically_inherited?).and_return(true)
+      expect(klass.send(:compute_table_name)).to be_eql(result)
+    end
   end
 
   context 'on relation' do

@@ -49,21 +49,21 @@ module Torque
             if inherited_tables.present?
               stream.puts "  # These are tables that has inheritance"
               inherited_tables.each do |table_name, inherits|
-                unless ignored?(table_name)
-                  sub_stream = StringIO.new
-                  table(table_name, sub_stream)
+                next if ignored?(table_name)
 
-                  # Add the inherits setting
-                  sub_stream.rewind
-                  inherits.map!(&:to_sym)
-                  inherits = inherits.first if inherits.size === 1
-                  inherits = ", inherits: #{inherits.inspect} do |t|"
-                  table_dump = sub_stream.read.gsub(/ do \|t\|$/, inherits)
+                sub_stream = StringIO.new
+                table(table_name, sub_stream)
 
-                  # Ensure bodyless definitions
-                  table_dump.gsub!(/do \|t\|\n  end/, '')
-                  stream.print table_dump
-                end
+                # Add the inherits setting
+                sub_stream.rewind
+                inherits.map!(&:to_sym)
+                inherits = inherits.first if inherits.size === 1
+                inherits = ", inherits: #{inherits.inspect} do |t|"
+                table_dump = sub_stream.read.gsub(/ do \|t\|$/, inherits)
+
+                # Ensure bodyless definitions
+                table_dump.gsub!(/do \|t\|\n  end/, '')
+                stream.print table_dump
               end
             end
 
@@ -81,7 +81,7 @@ module Torque
             return unless types.any?
 
             stream.puts "  # These are user-defined types used on this database"
-            types.each { |name, type| send(type.to_sym, name, stream) }
+            types.sort_by(&:first).each { |(name, type)| send(type.to_sym, name, stream) }
             stream.puts
           rescue => e
             stream.puts "# Could not dump user-defined types because of following #{e.class}"

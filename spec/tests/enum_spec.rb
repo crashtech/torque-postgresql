@@ -124,6 +124,13 @@ RSpec.describe 'Enum' do
       expect(dump_io.string).to match /create_enum \"content_status\", \[/
     end
 
+    it 'sorts the enum entries to better consistency' do
+      dump_io = StringIO.new
+      ActiveRecord::SchemaDumper.dump(connection, dump_io)
+      items = dump_io.string.scan(/create_enum "(\w+)"/).flatten
+      expect(items).to be_eql(items.sort)
+    end
+
     it 'do not dump when has none' do
       connection.drop_type(:content_status, force: :cascade)
 
