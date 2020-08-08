@@ -241,7 +241,7 @@ RSpec.describe 'TableInheritance' do
       klass = mod.const_set('Other', Class.new(ActivityPost))
 
       allow(klass).to receive(:parent).and_return(child)
-      allow(klass).to receive(:module_parents).and_return([mod])
+      allow(klass).to receive(:parents).and_return([mod])
       allow(klass).to receive(:physically_inherited?).and_return(true)
       expect(klass.send(:compute_table_name)).to be_eql(result)
     end
