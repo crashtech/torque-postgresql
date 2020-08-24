@@ -39,6 +39,8 @@ module Torque
 
           def tables(stream) # :nodoc:
             inherited_tables = @connection.inherited_tables
+            return super unless inherited_tables.present?
+            
             sorted_tables = @connection.data_sources.sort - @connection.views
 
             stream.puts "  # These are the common tables managed"
