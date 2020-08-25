@@ -67,12 +67,15 @@ module Torque
               end
             end
 
-            # dump foreign keys at the end to make sure all dependent tables exist.
+            # Dump foreign keys at the end to make sure all dependent tables exist.
             if @connection.supports_foreign_keys?
               sorted_tables.each do |tbl|
                 foreign_keys(tbl, stream) unless ignored?(tbl)
               end
             end
+
+            # Scenic integration
+            views(stream) if defined?(::Scenic)
           end
 
           # Dump user defined types like enum
