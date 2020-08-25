@@ -55,6 +55,9 @@ module Torque
               foreign_keys(tbl, stream) unless ignored?(tbl)
             end
           end
+
+          # Scenic integration
+          views(stream) if defined?(::Scenic)
         end
 
         # Dump user defined types like enum
