@@ -34,15 +34,19 @@ module Torque
           @active_record_primary_key ||= options[:primary_key] || derive_primary_key
         end
 
-        def join_primary_key(*)
-          active_record_primary_key
-        end
-
-        def join_foreign_key
-          foreign_key
+        def join_id_for(owner)
+          owner[foreign_key]
         end
 
         private
+
+          def join_pk(*)
+            active_record_primary_key
+          end
+
+          def join_fk
+            foreign_key
+          end
 
           def derive_primary_key
             klass.primary_key

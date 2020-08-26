@@ -5,7 +5,15 @@ unless Torque::PostgreSQL::AR521
     module PostgreSQL
       module Associations
         module Preloader
-          BelongsToMany = Class.new(::ActiveRecord::Associations::Preloader::HasMany)
+          class BelongsToMany < ::ActiveRecord::Associations::Preloader::HasMany
+            def association_key_name
+              reflection.active_record_primary_key
+            end
+
+            def owner_key_name
+              reflection.foreign_key
+            end
+          end
 
           def preloader_for(reflection, owners, *)
             return AlreadyLoaded \
