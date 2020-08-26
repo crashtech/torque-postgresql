@@ -28,11 +28,11 @@ module Torque
         end
 
         def ids_reader
-          owner[reflection.active_record_primary_key]
+          owner[source_attr]
         end
 
         def ids_writer(new_ids)
-          column = reflection.active_record_primary_key
+          column = source_attr
           owner.update_column(column, owner[column] = new_ids.presence)
           @association_scope = nil
         end
@@ -40,8 +40,8 @@ module Torque
         def insert_record(record, *)
           super
 
-          attribute = (ids_reader || owner[reflection.active_record_primary_key] = [])
-          attribute.push(record[klass_fk])
+          attribute = (ids_reader || owner[source_attr] = [])
+          attribute.push(record[klass_attr])
           record
         end
 
@@ -50,8 +50,8 @@ module Torque
         end
 
         def include?(record)
-          list = owner[reflection.active_record_primary_key]
-          ids_reader && ids_reader.include?(record[klass_fk])
+          list = owner[source_attr]
+          ids_reader && ids_reader.include?(record[klass_attr])
         end
 
         private
@@ -65,7 +65,7 @@ module Torque
           # When the idea is to nulligy the association, then just set the owner
           # +primary_key+ as empty
           def delete_count(method, scope, ids = nil)
-            ids ||= scope.pluck(klass_fk)
+            ids ||= scope.pluck(klass_attr)
             scope.delete_all if method == :delete_all
             remove_stash_records(ids)
           end
@@ -76,13 +76,13 @@ module Torque
 
           # Deletes the records according to the <tt>:dependent</tt> option.
           def delete_records(records, method)
-            ids = Array.wrap(records).each_with_object(klass_fk).map(&:[])
+            ids = Array.wrap(records).each_with_object(klass_attr).map(&:[])
 
             if method == :destroy
               records.each(&:destroy!)
               remove_stash_records(ids)
             else
-              scope = self.scope.where(klass_fk => records)
+              scope = self.scope.where(klass_attr => records)
               delete_count(method, scope, ids)
             end
           end
@@ -98,8 +98,12 @@ module Torque
             ids_writer(ids_reader - Array.wrap(ids))
           end
 
-          def klass_fk
+          def source_attr
             reflection.foreign_key
+          end
+
+          def klass_attr
+            reflection.active_record_primary_key
           end
 
           def difference(a, b)
