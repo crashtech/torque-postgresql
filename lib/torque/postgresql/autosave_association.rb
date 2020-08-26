@@ -25,11 +25,11 @@ module Torque
         association = association_instance_get(reflection.name)
         return unless association
 
-        klass_fk = reflection.foreign_key
-        acpk = reflection.active_record_primary_key
+        klass_attr = reflection.active_record_primary_key
+        source_attr = reflection.foreign_key
 
-        records = association.target.each_with_object(klass_fk)
-        write_attribute(acpk, records.map(&:read_attribute).compact)
+        records = association.target.each_with_object(klass_attr)
+        write_attribute(source_attr, records.map(&:read_attribute).compact)
       end
     end
 

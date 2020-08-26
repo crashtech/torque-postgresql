@@ -10,6 +10,10 @@ module Torque
           true
         end
 
+        def belongs_to?
+          true
+        end
+
         def collection?
           true
         end
@@ -19,7 +23,7 @@ module Torque
         end
 
         def foreign_key
-          @foreign_key ||= options[:primary_key] || derive_foreign_key.freeze
+          @foreign_key ||= options[:foreign_key] || derive_foreign_key.freeze
         end
 
         def association_foreign_key
@@ -27,16 +31,24 @@ module Torque
         end
 
         def active_record_primary_key
-          @active_record_primary_key ||= options[:foreign_key] || derive_primary_key
+          @active_record_primary_key ||= options[:primary_key] || derive_primary_key
+        end
+
+        def join_primary_key(*)
+          active_record_primary_key
+        end
+
+        def join_foreign_key
+          foreign_key
         end
 
         private
 
-          def derive_foreign_key
+          def derive_primary_key
             klass.primary_key
           end
 
-          def derive_primary_key
+          def derive_foreign_key
             "#{name.to_s.singularize}_ids"
           end
       end

@@ -21,6 +21,11 @@ RSpec.describe 'HasMany' do
       expect(subject._reflections).to include('texts')
     end
 
+    it 'has correct foreign key' do
+      item = subject._reflections['texts']
+      expect(item.foreign_key).to be_eql('user_id')
+    end
+
     it 'loads associated records' do
       expect(subject.texts.to_sql).to match(Regexp.new(<<-SQL.squish))
         SELECT "texts"\\.\\* FROM "texts" WHERE \\(?"texts"\\."user_id" = #{subject.id}\\)?
@@ -208,6 +213,11 @@ RSpec.describe 'HasMany' do
     it 'has the method' do
       expect(subject).to respond_to(:videos)
       expect(subject._reflections).to include('videos')
+    end
+
+    it 'has correct foreign key' do
+      item = subject._reflections['videos']
+      expect(item.foreign_key).to be_eql('tag_ids')
     end
 
     it 'loads associated records' do

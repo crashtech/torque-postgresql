@@ -35,6 +35,11 @@ RSpec.describe 'BelongsToMany' do
       expect(subject._reflections).to include('tags')
     end
 
+    it 'has correct foreign key' do
+      item = subject._reflections['tags']
+      expect(item.foreign_key).to be_eql('tag_ids')
+    end
+
     it 'loads associated records' do
       subject.update(tag_ids: [initial.id])
       expect(subject.tags.to_sql).to be_eql(<<-SQL.squish)
@@ -116,6 +121,7 @@ RSpec.describe 'BelongsToMany' do
 
       subject.tags.concat(other.new(name: 'Test'))
       subject.tags.reload
+
       expect(subject.tags.size).to be_eql(2)
       expect(subject.tag_ids.size).to be_eql(2)
       expect(subject.tags.last.name).to be_eql('Test')
