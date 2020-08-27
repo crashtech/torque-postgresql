@@ -3,6 +3,8 @@ module Torque
     include ActiveSupport::Configurable
 
     # Stores a version check for compatibility purposes
+    AR510 = (ActiveRecord.gem_version >= Gem::Version.new('5.1.0'))
+    AR520 = (ActiveRecord.gem_version >= Gem::Version.new('5.2.0'))
     AR521 = (ActiveRecord.gem_version >= Gem::Version.new('5.2.1'))
     AR523 = (ActiveRecord.gem_version >= Gem::Version.new('5.2.3'))
 

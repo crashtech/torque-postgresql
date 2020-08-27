@@ -34,18 +34,36 @@ module Torque
           @active_record_primary_key ||= options[:primary_key] || derive_primary_key
         end
 
-        def join_id_for(owner)
-          owner[foreign_key]
+        unless PostgreSQL::AR510
+          def join_keys(*)
+            JoinKeys.new(join_pk, join_fk)
+          end
+        end
+
+        if PostgreSQL::AR520
+          def join_primary_key(*)
+            active_record_primary_key
+          end
+
+          def join_foreign_key
+            foreign_key
+          end
+        else
+          def join_id_for(owner)
+            owner[foreign_key]
+          end
         end
 
         private
 
-          def join_pk(*)
-            active_record_primary_key
-          end
+          unless PostgreSQL::AR520
+            def join_pk(*)
+              active_record_primary_key
+            end
 
-          def join_fk
-            foreign_key
+            def join_fk
+              foreign_key
+            end
           end
 
           def derive_primary_key
