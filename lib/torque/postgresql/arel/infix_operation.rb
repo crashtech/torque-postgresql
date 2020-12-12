@@ -22,6 +22,8 @@ module Torque
       }.freeze
 
       INFLIX_OPERATION.each do |operator_name, operator|
+        next if nodes.const_defined?(operator_name)
+
         klass = Class.new(inflix)
         klass.send(:define_method, :initialize) { |*args| super(operator, *args) }
 

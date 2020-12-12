@@ -2,6 +2,9 @@ module Torque
   module PostgreSQL
     include ActiveSupport::Configurable
 
+    # Stores a version check for compatibility purposes
+    AR561 = (ActiveRecord.gem_version >= Gem::Version.new('5.6.1'))
+
     # Use the same logger as the Active Record one
     def self.logger
       ActiveRecord::Base.logger
