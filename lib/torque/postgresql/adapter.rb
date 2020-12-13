@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'adapter/database_statements'
 require_relative 'adapter/oid'
 require_relative 'adapter/quoting'
@@ -18,6 +20,11 @@ module Torque
         @version ||= Gem::Version.new(
           select_value('SELECT version()').match(/#{Adapter::ADAPTER_NAME} ([\d\.]+)/)[1]
         )
+      end
+
+      # Add `inherits` to the list of extracted table options
+      def extract_table_options!(options)
+        super.merge(options.extract!(:inherits))
       end
     end
 

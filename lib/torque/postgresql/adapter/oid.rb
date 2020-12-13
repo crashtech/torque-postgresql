@@ -17,9 +17,11 @@ module Torque
       ActiveRecord::Type.register(:circle,   OID::Circle,   adapter: :postgresql)
       ActiveRecord::Type.register(:enum,     OID::Enum,     adapter: :postgresql)
       ActiveRecord::Type.register(:enum_set, OID::EnumSet,  adapter: :postgresql)
-      ActiveRecord::Type.register(:interval, OID::Interval, adapter: :postgresql)
       ActiveRecord::Type.register(:line,     OID::Line,     adapter: :postgresql)
       ActiveRecord::Type.register(:segment,  OID::Segment,  adapter: :postgresql)
+
+      ActiveRecord::Type.register(:interval, OID::Interval, adapter: :postgresql) \
+        unless PostgreSQL::AR610
     end
   end
 end

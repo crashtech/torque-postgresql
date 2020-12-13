@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     module Arel
@@ -33,7 +35,7 @@ module Torque
         # Don't worry about quoting here, if the right side is something that
         # doesn't need quoting, it will leave it as it is
         Math.send(:define_method, operator_name.underscore) do |other|
-          klass.new(self, nodes.build_quoted(other, self))
+          klass.new(self, other)
         end
       end
 

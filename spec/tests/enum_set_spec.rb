@@ -48,7 +48,7 @@ RSpec.describe 'Enum' do
       expect(dump_io.string).to match checker
     end
 
-    it 'can have a default value as an array of symbols' do
+    xit 'can have a default value as an array of symbols' do
       dump_io = StringIO.new
       checker = /t\.enum +"types", +default: \[:A, :B\], +array: true, +subtype: :types/
       ActiveRecord::SchemaDumper.dump(connection, dump_io)

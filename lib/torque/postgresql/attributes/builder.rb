@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'builder/enum'
 require_relative 'builder/period'
 

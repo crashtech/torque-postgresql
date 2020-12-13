@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     module Associations
@@ -19,12 +21,14 @@ module Torque
             add_id = owner[reflection.active_record_primary_key]
             record_fk = reflection.foreign_key
 
-            record[record_fk].push(add_id) unless (record[record_fk] ||= []).include?(add_id)
+            list = record[record_fk] ||= []
+            list.push(add_id) unless list.include?(add_id)
           end
 
       end
 
       ::ActiveRecord::Associations::Association.prepend(Association)
+      ::ActiveRecord::Associations::HasManyAssociation.prepend(Association)
     end
   end
 end

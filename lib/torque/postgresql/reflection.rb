@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'reflection/abstract_reflection'
 require_relative 'reflection/association_reflection'
 require_relative 'reflection/belongs_to_many_reflection'

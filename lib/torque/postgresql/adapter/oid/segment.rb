@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     class Segment < Struct.new(:point0, :point1)

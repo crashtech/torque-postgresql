@@ -66,7 +66,7 @@ RSpec.describe 'TableInheritance' do
 
     it 'allows empty-body create table operation' do
       sql = connection.create_table(:activity_posts, inherits: :activities)
-      result = 'CREATE TABLE "activity_posts" ()'
+      result = "CREATE TABLE \"activity_posts\" ()"
       result << ' INHERITS ( "activities" )'
       expect(sql).to eql(result)
     end

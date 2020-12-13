@@ -24,10 +24,17 @@ module Torque
             end)
           end
 
+          if respond_to?(:supports_check_constraints?) && supports_check_constraints?
+            statements.concat(o.check_constraints.map do |expression, options|
+              check_constraint_in_create(o.name, expression, options)
+            end)
+          end
+
           create_sql << "(#{statements.join(', ')})" \
             if statements.present? || o.inherits.present?
 
-          add_table_options!(create_sql, table_options(o))
+          options = PostgreSQL::AR610 ? o : table_options(o)
+          add_table_options!(create_sql, options)
 
           if o.inherits.present?
             tables = o.inherits.map(&method(:quote_table_name))

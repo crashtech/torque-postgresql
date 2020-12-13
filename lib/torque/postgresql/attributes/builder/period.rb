@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     module Attributes
@@ -202,7 +204,7 @@ module Torque
             end
 
             def arel_attribute
-              @arel_attribute ||= "arel_attribute(#{attribute.inspect})"
+              @arel_attribute ||= "arel_table[#{attribute.inspect}]"
             end
 
             def arel_default_sql
@@ -245,7 +247,7 @@ module Torque
             def arel_real_start_at
               return arel_start_at unless threshold.present?
               @arel_real_start_at ||= begin
-                result = "(#{arel_start_at} - #{arel_threshold_value})"
+                result = +"(#{arel_start_at} - #{arel_threshold_value})"
                 result << '.cast(:date)' if  type.eql?(:daterange)
                 result
               end
@@ -255,7 +257,7 @@ module Torque
             def arel_real_finish_at
               return arel_finish_at unless threshold.present?
               @arel_real_finish_at ||= begin
-                result = "(#{arel_finish_at} + #{arel_threshold_value})"
+                result = +"(#{arel_finish_at} + #{arel_threshold_value})"
                 result << '.cast(:date)' if  type.eql?(:daterange)
                 result
               end
@@ -276,7 +278,7 @@ module Torque
 
             # Create an arel named function
             def arel_named_function(name, *args)
-              result = "::Arel::Nodes::NamedFunction.new(#{name.to_s.inspect}"
+              result = +"::Arel::Nodes::NamedFunction.new(#{name.to_s.inspect}"
               result << ', [' << args.join(', ') << ']' if args.present?
               result << ')'
             end

@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 61
+  version = 62
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -83,7 +83,7 @@ begin
     create_table "courses", force: :cascade do |t|
       t.string   "title",      null: false
       t.interval "duration"
-      t.enum     "types", subtype: :types, array: true, default: [:A, :B]
+      t.enum     "types", subtype: :types, array: true
       t.datetime "created_at", null: false
       t.datetime "updated_at", null: false
     end

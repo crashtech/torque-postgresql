@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     class Box < Struct.new(:x1, :y1, :x2, :y2)

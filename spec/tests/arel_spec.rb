@@ -25,7 +25,9 @@ RSpec.describe 'Arel' do
       klass_name = operator.to_s.camelize
 
       context "##{operator}" do
-        let(:instance) { attribute.public_send(operator, value) }
+        let(:instance) do
+          attribute.public_send(operator, value.is_a?(Array) ? ::Arel.array(value) : value)
+        end
 
         context 'for attribute' do
           let(:klass) { ::Arel::Nodes.const_get(klass_name) }

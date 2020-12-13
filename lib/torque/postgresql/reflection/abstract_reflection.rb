@@ -1,11 +1,13 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     module Reflection
       module AbstractReflection
         AREL_ATTR = ::Arel::Attributes::Attribute
 
-        ARR_NO_CAST = 'bigint'.freeze
-        ARR_CAST = 'bigint[]'.freeze
+        ARR_NO_CAST = 'bigint'
+        ARR_CAST = 'bigint[]'
 
         # Check if the foreign key actually exists
         def connected_through_array?
@@ -68,11 +70,18 @@ module Torque
           klass_attr.overlaps(source_attr)
         end
 
+        if PostgreSQL::AR610
+          # TODO: Deprecate this method
+          def join_keys
+            OpenStruct.new(key: join_primary_key, foreign_key: join_foreign_key)
+          end
+        end
+
         private
 
           def build_id_constraint_between(table, foreign_table)
-            klass_attr  = table[join_keys.key.to_s]
-            source_attr = foreign_table[join_keys.foreign_key.to_s]
+            klass_attr  = table[join_primary_key]
+            source_attr = foreign_table[join_foreign_key]
 
             build_id_constraint(klass_attr, source_attr)
           end
@@ -117,7 +126,6 @@ module Torque
                 valid_inverse_reflection?(reflection)
             end
           end
-
       end
 
       ::ActiveRecord::Reflection::AbstractReflection.prepend(AbstractReflection)
