@@ -19,8 +19,9 @@
 
 To install torque-postgresql you need to add the following to your Gemfile:
 ```ruby
-gem 'torque-postgresql', '~> 1.1' # For Rails  < 6.0
-gem 'torque-postgresql', '~> 2.0' # For Rails >= 6.0
+gem 'torque-postgresql', '~> 1.1'   # For Rails  < 6.0
+gem 'torque-postgresql', '~> 2.0'   # For Rails >= 6.0 < 6.1
+gem 'torque-postgresql', '~> 2.0.4' # For Rails >= 6.1
 ```
 
 Also, run:
