@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     module Adapter
@@ -39,7 +41,7 @@ module Torque
 
           def tables(stream) # :nodoc:
             inherited_tables = @connection.inherited_tables
-            sorted_tables = @connection.data_sources.sort - @connection.views
+            sorted_tables = @connection.tables.sort - @connection.views
 
             stream.puts "  # These are the common tables managed"
             (sorted_tables - inherited_tables.keys).each do |table_name|

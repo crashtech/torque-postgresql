@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'relation/distinct_on'
 require_relative 'relation/auxiliary_statement'
 require_relative 'relation/inheritance'
@@ -48,12 +50,12 @@ module Torque
           when String
             ::Arel.sql(klass.send(:sanitize_sql, item.to_s))
           when Symbol
-            base ? base.arel_attribute(item) : klass.arel_attribute(item)
+            base ? base.arel_table[item] : klass.arel_table[item]
           when Array
             resolve_column(item, base)
           when Hash
             raise ArgumentError, 'Unsupported Hash for attributes on third level' if base
-            item.map { |key, other_list| resolve_column(Array.wrap(other_list), key) }
+            item.map { |key, other_list| resolve_column(other_list, key) }
           else
             raise ArgumentError, "Unsupported argument type: #{value} (#{value.class})"
           end
@@ -65,8 +67,8 @@ module Torque
         return unless relation
 
         table = predicate_builder.send(:table)
-        if table.associated_with?(relation)
-          table.associated_table(relation).send(:klass)
+        if table.associated_with?(relation.to_s)
+          table.associated_table(relation.to_s).send(:klass)
         else
           raise ArgumentError, "Relation for #{relation} not found on #{klass}"
         end
@@ -138,14 +140,16 @@ module Torque
     ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES += %i[cast_records itself_only
       distinct_on auxiliary_statements]
 
-    Relation::SINGLE_VALUE_METHODS.each do |value|
-      ActiveRecord::QueryMethods::DEFAULT_VALUES[value] = nil \
-        if ActiveRecord::QueryMethods::DEFAULT_VALUES[value].nil?
-    end
+    unless AR610
+      Relation::SINGLE_VALUE_METHODS.each do |value|
+        ActiveRecord::QueryMethods::DEFAULT_VALUES[value] = nil \
+          if ActiveRecord::QueryMethods::DEFAULT_VALUES[value].nil?
+      end
 
-    Relation::MULTI_VALUE_METHODS.each do |value|
-      ActiveRecord::QueryMethods::DEFAULT_VALUES[value] ||= \
-        ActiveRecord::QueryMethods::FROZEN_EMPTY_ARRAY
+      Relation::MULTI_VALUE_METHODS.each do |value|
+        ActiveRecord::QueryMethods::DEFAULT_VALUES[value] ||= \
+          ActiveRecord::QueryMethods::FROZEN_EMPTY_ARRAY
+      end
     end
 
     $VERBOSE = warn_level

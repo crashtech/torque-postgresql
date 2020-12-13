@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     module Attributes
@@ -16,7 +18,7 @@ module Torque
         end
 
         def inspect
-          'nil'.freeze
+          'nil'
         end
 
         def __class__

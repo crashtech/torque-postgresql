@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     module Attributes
@@ -153,12 +155,12 @@ module Torque
               cast_type = subtype.name.chomp('[]')
               klass_module.module_eval <<-RUBY, __FILE__, __LINE__ + 1
                 def has_#{attribute.pluralize}(*values)                             # def has_roles(*values)
-                  attr = arel_attribute('#{attribute}')                             #   attr = arel_attribute('role')
+                  attr = arel_table['#{attribute}']                                 #   attr = arel_table['role']
                   where(attr.contains(::Arel.array(values, cast: '#{cast_type}')))  #   where(attr.contains(::Arel.array(values, cast: 'roles')))
                 end                                                                 # end
 
                 def has_any_#{attribute.pluralize}(*values)                         # def has_roles(*values)
-                  attr = arel_attribute('#{attribute}')                             #   attr = arel_attribute('role')
+                  attr = arel_table['#{attribute}']                                 #   attr = arel_table['role']
                   where(attr.overlaps(::Arel.array(values, cast: '#{cast_type}')))  #   where(attr.overlaps(::Arel.array(values, cast: 'roles')))
                 end                                                                 # end
               RUBY
@@ -184,7 +186,7 @@ module Torque
               values_methods.each do |key, (scope, ask, bang, val)|
                 klass_content += <<-RUBY
                   def #{scope}                                    # def admin
-                    attr = arel_attribute('#{attribute}')         #   attr = arel_attribute('role')
+                    attr = arel_table['#{attribute}']             #   attr = arel_table['role']
                     where(::#{enum_klass}.scope(attr, '#{val}'))  #   where(Enum::Roles.scope(attr, 'admin'))
                   end                                             # end
                 RUBY

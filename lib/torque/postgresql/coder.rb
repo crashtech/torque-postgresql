@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     module Coder
@@ -8,7 +10,7 @@ module Torque
       class << self
 
         NEED_QUOTE_FOR = /[\\"(){}, \t\n\r\v\f]/m
-        DELIMITER = ','.freeze
+        DELIMITER = ','
 
         # This method replace the +read_array+ method from PG gem
         # See https://github.com/ged/ruby-pg/blob/master/ext/pg_text_decoder.c#L177
@@ -32,7 +34,7 @@ module Torque
             quoted = 0
             escaped = false
             result = []
-            part = ''
+            part = String.new
 
             # Always start getting the non-collection character, the second char
             stream.getc if stream.pos == 0
@@ -59,7 +61,7 @@ module Torque
 
                   escaped = false
                   quoted = 0
-                  part = ''
+                  part = String.new
 
                 when c == '"'
                   quoted = 1

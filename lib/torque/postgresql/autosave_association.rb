@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     module AutosaveAssociation
@@ -8,9 +10,13 @@ module Torque
           save_method = :"autosave_associated_records_for_#{reflection.name}"
           define_non_cyclic_method(save_method) { save_belongs_to_many_array(reflection) }
 
-          before_save(:before_save_collection_association)
-          after_save(:after_save_collection_association) if ::ActiveRecord::Base
-            .instance_methods.include?(:after_save_collection_association)
+          if PostgreSQL::AR610
+            around_save(:around_save_collection_association)
+          else
+            before_save(:before_save_collection_association)
+            after_save(:after_save_collection_association) if ::ActiveRecord::Base
+              .instance_methods.include?(:after_save_collection_association)
+          end
 
           before_create(save_method)
           before_update(save_method)

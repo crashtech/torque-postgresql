@@ -1,4 +1,7 @@
+# frozen_string_literal: true
+
 require 'active_record/associations/collection_association'
+
 # FIXME: build, create
 module Torque
   module PostgreSQL

@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     module Arel
       module Visitors
         # Enclose select manager with parenthesis
         # :TODO: Remove when checking the new version of Arel
-        def visit_Arel_SelectManager o, collector
+        def visit_Arel_SelectManager(o, collector)
           collector << '('
           visit(o.ast, collector) << ')'
         end
@@ -23,8 +25,9 @@ module Torque
 
         # Allow quoted arrays to get here
         def visit_Arel_Nodes_Casted(o, collector)
-          return super unless o.val.is_a?(::Enumerable)
-          quote_array(o.val, collector)
+          value = o.respond_to?(:val) ? o.val : o.value
+          return super unless value.is_a?(::Enumerable)
+          quote_array(value, collector)
         end
 
         ## TORQUE VISITORS

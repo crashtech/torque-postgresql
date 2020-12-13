@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     module Attributes
@@ -31,11 +33,6 @@ module Torque
             end
           end
 
-          # You can specify the connection name for each enum
-          def connection_specification_name
-            return self == Enum ? 'primary' : superclass.connection_specification_name
-          end
-
           # Overpass new so blank values return only nil
           def new(value)
             return Lazy.new(self, LAZY_VALUE) if value.blank?
@@ -45,9 +42,7 @@ module Torque
           # Load the list of values in a lazy way
           def values
             @values ||= self == Enum ? nil : begin
-              conn_name = connection_specification_name
-              conn = connection(conn_name)
-              conn.enum_values(type_name).freeze
+              connection.enum_values(type_name).freeze
             end
           end
 
@@ -110,8 +105,8 @@ module Torque
             end
 
             # Get a connection based on its name
-            def connection(name)
-              ActiveRecord::Base.connection_handler.retrieve_connection(name)
+            def connection
+              ::ActiveRecord::Base.connection
             end
 
         end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     module Relation
@@ -34,7 +36,10 @@ module Torque
         # attributes as well
         def bound_attributes
           visitor = ::Arel::Visitors::PostgreSQL.new(ActiveRecord::Base.connection)
-          visitor.accept(self.arel.ast, ::Arel::Collectors::Bind.new).value
+          visitor.accept(self.arel.ast, ::Arel::Collectors::Composite.new(
+            ::Arel::Collectors::SQLString.new,
+            ::Arel::Collectors::Bind.new,
+          )).value.last
         end
 
         private

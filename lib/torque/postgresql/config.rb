@@ -1,6 +1,11 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     include ActiveSupport::Configurable
+
+    # Stores a version check for compatibility purposes
+    AR610 = (ActiveRecord.gem_version >= Gem::Version.new('6.1.0'))
 
     # Use the same logger as the Active Record one
     def self.logger

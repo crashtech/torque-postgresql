@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Torque
   module PostgreSQL
     class Circle < Struct.new(:x, :y, :r)
