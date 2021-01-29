@@ -57,12 +57,9 @@ module Torque
               end
             end
 
-            unless reflection.counter_cache_column
-              model.after_create callback.call(:saved_changes), if: :saved_changes?
-              model.after_destroy callback.call(:changes_to_save)
-            end
-
+            model.after_create callback.call(:saved_changes), if: :saved_changes?
             model.after_update callback.call(:saved_changes), if: :saved_changes?
+            model.after_destroy callback.call(:changes_to_save)
             model.after_touch callback.call(:changes_to_save)
           end
 
@@ -95,6 +92,10 @@ module Torque
                 end
               end
             end
+          end
+
+          def self.add_destroy_callbacks(model, reflection)
+            model.after_destroy lambda { |o| o.association(reflection.name).handle_dependency }
           end
 
           def self.define_validations(model, reflection)

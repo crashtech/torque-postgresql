@@ -9,10 +9,66 @@ module Torque
       class BelongsToManyAssociation < ::ActiveRecord::Associations::CollectionAssociation
         include ::ActiveRecord::Associations::ForeignAssociation
 
+        ## CUSTOM
+        def ids_reader
+          if loaded?
+            target.pluck(reflection.association_primary_key)
+          elsif !target.empty?
+            load_target.pluck(reflection.association_primary_key)
+          else
+            stale_state
+          end
+        end
+
+        def ids_writer(ids)
+          command = owner.persisted? ? :update_attribute : :_write_attribute
+          owner.public_send(command, source_attr, ids.presence)
+        end
+
+        def size
+          if loaded?
+            target.size
+          elsif !target.empty?
+            unsaved_records = target.select(&:new_record?)
+            unsaved_records.size + stale_state.size
+          else
+            stale_state&.size || 0
+          end
+        end
+
+        def empty?
+          size.zero?
+        end
+
+        def include?(record)
+          return false unless record.is_a?(reflection.klass)
+          return include_in_memory?(record) if record.new_record?
+
+          (!target.empty? && target.include?(record)) ||
+            stale_state.include?(record._read_attribute(klass_attr))
+        end
+
+        def load_target
+          if stale_target? || find_target?
+            @target = merge_target_lists(find_target, target)
+          end
+
+          loaded!
+          target
+        end
+
+        def build_changes
+          @_building_changes = true
+          yield.tap { ids_writer(stale_state) }
+        ensure
+          @_building_changes = nil
+        end
+
+        ## HAS MANY
         def handle_dependency
           case options[:dependent]
           when :restrict_with_exception
-            raise ::ActiveRecord::DeleteRestrictionError.new(reflection.name) unless empty?
+            raise ActiveRecord::DeleteRestrictionError.new(reflection.name) unless empty?
 
           when :restrict_with_error
             unless empty?
@@ -22,84 +78,87 @@ module Torque
             end
 
           when :destroy
-            # No point in executing the counter update since we're going to destroy the parent anyway
             load_target.each { |t| t.destroyed_by_association = reflection }
             destroy_all
+          when :destroy_async
+            load_target.each do |t|
+              t.destroyed_by_association = reflection
+            end
+
+            unless target.empty?
+              association_class = target.first.class
+              primary_key_column = association_class.primary_key.to_sym
+
+              ids = target.collect do |assoc|
+                assoc.public_send(primary_key_column)
+              end
+
+              enqueue_destroy_association(
+                owner_model_name: owner.class.to_s,
+                owner_id: owner.id,
+                association_class: association_class.to_s,
+                association_ids: ids,
+                association_primary_key_column: primary_key_column,
+                ensuring_owner_was_method: options.fetch(:ensuring_owner_was, nil)
+              )
+            end
           else
             delete_all
           end
         end
 
-        def ids_reader
-          owner[source_attr]
-        end
-
-        def ids_writer(new_ids)
-          column = source_attr
-          command = owner.persisted? ? :update_column : :write_attribute
-          owner.public_send(command, column, new_ids.presence)
-          @association_scope = nil
-        end
-
         def insert_record(record, *)
-          super
-
-          attribute = (ids_reader || owner[source_attr] = [])
-          attribute.push(record[klass_attr])
-          record
+          super.tap do |saved|
+            ids_rewriter(record._read_attribute(klass_attr), :<<) if saved
+          end
         end
 
-        def empty?
-          size.zero?
-        end
-
-        def include?(record)
-          list = owner[source_attr]
-          ids_reader && ids_reader.include?(record[klass_attr])
+        ## BELONGS TO
+        def default(&block)
+          writer(owner.instance_exec(&block)) if reader.nil?
         end
 
         private
 
-          # Returns the number of records in this collection, which basically
-          # means count the number of entries in the +primary_key+
-          def count_records
-            ids_reader&.size || (@target ||= []).size
+          ## CUSTOM
+          def _create_record(attributes, raises = false, &block)
+            if attributes.is_a?(Array)
+              attributes.collect { |attr| _create_record(attr, raises, &block) }
+            else
+              build_record(attributes, &block).tap do |record|
+                transaction do
+                  result = nil
+                  add_to_target(record) do
+                    result = insert_record(record, true, raises) { @_was_loaded = loaded? }
+                  end
+                  raise ActiveRecord::Rollback unless result
+                end
+              end
+            end
           end
 
-          # When the idea is to nulligy the association, then just set the owner
+          # When the idea is to nullify the association, then just set the owner
           # +primary_key+ as empty
-          def delete_count(method, scope, ids = nil)
-            ids ||= scope.pluck(klass_attr)
-            scope.delete_all if method == :delete_all
-            remove_stash_records(ids)
+          def delete_count(method, scope, ids)
+            size_cache = scope.delete_all if method == :delete_all
+            (size_cache || ids.size).tap { ids_rewriter(ids, :-) }
           end
 
           def delete_or_nullify_all_records(method)
-            delete_count(method, scope)
+            delete_count(method, scope, ids_reader)
           end
 
           # Deletes the records according to the <tt>:dependent</tt> option.
           def delete_records(records, method)
-            ids = Array.wrap(records).each_with_object(klass_attr).map(&:[])
+            ids = read_records_ids(records)
 
             if method == :destroy
               records.each(&:destroy!)
-              remove_stash_records(ids)
+              ids_rewriter(ids, :-)
             else
               scope = self.scope.where(klass_attr => records)
               delete_count(method, scope, ids)
             end
-          end
-
-          def concat_records(*)
-            result = super
-            ids_writer(ids_reader)
-            result
-          end
-
-          def remove_stash_records(ids)
-            return if ids_reader.nil?
-            ids_writer(ids_reader - Array.wrap(ids))
           end
 
           def source_attr
@@ -110,12 +169,55 @@ module Torque
             reflection.active_record_primary_key
           end
 
+          def read_records_ids(records)
+            return unless records.present?
+            Array.wrap(records).each_with_object(klass_attr).map(&:_read_attribute).presence
+          end
+
+          def ids_rewriter(ids, operator)
+            list = owner[source_attr] ||= []
+            list = list.public_send(operator, ids)
+            owner[source_attr] = list.uniq.compact
+            ids_writer(list) unless @_building_changes
+          end
+
+          ## HAS MANY
+          def replace_records(*)
+            build_changes { super }
+          end
+
+          def concat_records(*)
+            build_changes { super }
+          end
+
           def difference(a, b)
             a - b
           end
 
           def intersection(a, b)
             a & b
+          end
+
+          ## BELONGS TO
+          def scope_for_create
+            super.except!(klass.primary_key)
+          end
+
+          def find_target?
+            !loaded? && foreign_key_present? && klass
+          end
+
+          def foreign_key_present?
+            owner._read_attribute(source_attr).present?
+          end
+
+          def invertible_for?(record)
+            inverse = inverse_reflection_for(record)
+            inverse && (inverse.has_many? && inverse.connected_through_array?)
+          end
+
+          def stale_state
+            owner._read_attribute(source_attr)
           end
       end
 

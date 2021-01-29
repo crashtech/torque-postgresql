@@ -200,8 +200,9 @@ module Torque
         #   belongs_to_many :tags, dependent: :nullify
         #   belongs_to_many :tags, required: true, touch: true
         #   belongs_to_many :tags, default: -> { Tag.default }
-        def belongs_to_many(name, scope = nil, **options)
-          reflection = Associations::Builder::BelongsToMany.build(self, name, scope, options)
+        def belongs_to_many(name, scope = nil, **options, &extension)
+          klass = Associations::Builder::BelongsToMany
+          reflection = klass.build(self, name, scope, options, &extension)
           ::ActiveRecord::Reflection.add_reflection(self, name, reflection)
         end
 

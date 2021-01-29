@@ -26,7 +26,7 @@ RSpec.describe 'BelongsToMany' do
     let(:other) { Tag }
     let(:initial) { FactoryBot.create(:tag) }
 
-    before { Video.belongs_to_many :tags }
+    before { Video.belongs_to_many(:tags) }
     subject { Video.create(title: 'A') }
     after { Video._reflections = {} }
 
@@ -98,8 +98,9 @@ RSpec.describe 'BelongsToMany' do
       expect(record).to be_a(other)
       expect(record).not_to be_persisted
       expect(record.name).to be_eql('Test')
+      expect(subject.tags.target).to be_eql([record])
 
-      expect(subject.save).to be_truthy
+      expect(subject.save && subject.reload).to be_truthy
       expect(subject.tag_ids).to be_eql([record.id])
       expect(subject.tags.size).to be_eql(1)
     end
@@ -120,7 +121,7 @@ RSpec.describe 'BelongsToMany' do
       expect(subject.tags.size).to be_eql(1)
 
       subject.tags.concat(other.new(name: 'Test'))
-      subject.tags.reload
+      subject.reload
 
       expect(subject.tags.size).to be_eql(2)
       expect(subject.tag_ids.size).to be_eql(2)
@@ -131,10 +132,18 @@ RSpec.describe 'BelongsToMany' do
       subject.tags << FactoryBot.create(:tag)
       expect(subject.tags.size).to be_eql(1)
 
-      subject.tags.replace([other.new(name: 'Test 1'), other.new(name: 'Test 2')])
-      expect(subject.tags.size).to be_eql(2)
+      subject.tags = [other.new(name: 'Test 1')]
+      subject.reload
+
+      expect(subject.tags.size).to be_eql(1)
       expect(subject.tags[0].name).to be_eql('Test 1')
-      expect(subject.tags[1].name).to be_eql('Test 2')
+
+      subject.tags.replace([other.new(name: 'Test 2'), other.new(name: 'Test 3')])
+      subject.reload
+
+      expect(subject.tags.size).to be_eql(2)
+      expect(subject.tags[0].name).to be_eql('Test 2')
+      expect(subject.tags[1].name).to be_eql('Test 3')
     end
 
     it 'can delete all records' do
@@ -194,6 +203,9 @@ RSpec.describe 'BelongsToMany' do
       expect(subject.tags.size).to be_eql(1)
 
       subject.tags << other.new(name: 'Test 2')
+      subject.update(title: 'B')
+      subject.reload
+
       expect(subject.tags.size).to be_eql(2)
       expect(subject.tags.last.name).to be_eql('Test 2')
     end
@@ -208,10 +220,18 @@ RSpec.describe 'BelongsToMany' do
 
     it 'can reload records' do
       expect(subject.tags.size).to be_eql(0)
-      subject.tags << FactoryBot.create(:tag)
+      new_tag = FactoryBot.create(:tag)
+      subject.tags << new_tag
 
       subject.tags.reload
       expect(subject.tags.size).to be_eql(1)
+      expect(subject.tags.first.id).to be_eql(new_tag.id)
+
+      record = Video.create(title: 'B', tags: [new_tag])
+      record.reload
+
+      expect(record.tags.size).to be_eql(1)
+      expect(record.tags.first.id).to be_eql(new_tag.id)
     end
 
     it 'can preload records' do
@@ -233,9 +253,8 @@ RSpec.describe 'BelongsToMany' do
 
     context "When record is not persisted" do
       let(:initial) { FactoryBot.create(:tag) }
-      before { Video.belongs_to_many :tags }
+
       subject { Video.new(title: 'A', tags: [initial]) }
-      after { Video._reflections = {} }
 
       it 'loads associated records' do
         expect(subject.tags.load).to be_a(ActiveRecord::Associations::CollectionProxy)
