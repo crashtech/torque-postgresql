@@ -21,7 +21,7 @@ module Torque
         end
 
         def ids_writer(ids)
-          command = owner.persisted? ? :update_attribute : :_write_attribute
+          command = owner.persisted? ? :update_attribute : :write_attribute
           owner.public_send(command, source_attr, ids.presence)
         end
 
@@ -45,7 +45,7 @@ module Torque
           return include_in_memory?(record) if record.new_record?
 
           (!target.empty? && target.include?(record)) ||
-            stale_state.include?(record._read_attribute(klass_attr))
+            stale_state.include?(record.read_attribute(klass_attr))
         end
 
         def load_target
@@ -109,7 +109,7 @@ module Torque
 
         def insert_record(record, *)
           super.tap do |saved|
-            ids_rewriter(record._read_attribute(klass_attr), :<<) if saved
+            ids_rewriter(record.read_attribute(klass_attr), :<<) if saved
           end
         end
 
@@ -171,14 +171,16 @@ module Torque
 
           def read_records_ids(records)
             return unless records.present?
-            Array.wrap(records).each_with_object(klass_attr).map(&:_read_attribute).presence
+            Array.wrap(records).each_with_object(klass_attr).map(&:read_attribute).presence
           end
 
           def ids_rewriter(ids, operator)
             list = owner[source_attr] ||= []
             list = list.public_send(operator, ids)
             owner[source_attr] = list.uniq.compact
-            ids_writer(list) unless @_building_changes
+
+            return if @_building_changes || !owner.persisted?
+            owner.update_attribute(source_attr, list)
           end
 
           ## HAS MANY
@@ -208,7 +210,7 @@ module Torque
           end
 
           def foreign_key_present?
-            owner._read_attribute(source_attr).present?
+            stale_state.present?
           end
 
           def invertible_for?(record)
@@ -217,7 +219,7 @@ module Torque
           end
 
           def stale_state
-            owner._read_attribute(source_attr)
+            owner.read_attribute(source_attr)
           end
       end
 
