@@ -93,6 +93,18 @@ RSpec.describe 'BelongsToMany' do
       expect(records.map(&:id).sort).to be_eql(ids.sort)
     end
 
+    it 'creates the owner record with direct set items' do
+      # Having another association would break this test due to how
+      # +@new_record_before_save+ is set on autosave association
+      Video.has_many(:comments)
+
+      record = Video.create(title: 'A', tags: [initial])
+      record.reload
+
+      expect(record.tags.size).to be_eql(1)
+      expect(record.tags.first.id).to be_eql(initial.id)
+    end
+
     it 'can build an associated record' do
       record = subject.tags.build(name: 'Test')
       expect(record).to be_a(other)

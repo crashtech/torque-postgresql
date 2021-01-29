@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 62
+  version = 63
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -74,6 +74,7 @@ begin
     create_table "comments", force: :cascade do |t|
       t.integer "user_id",    null: false
       t.integer "comment_id"
+      t.integer "video_id"
       t.text    "content",    null: false
       t.string  "kind"
       t.index ["user_id"], name: "index_comments_on_user_id", using: :btree

@@ -13,33 +13,26 @@ module Torque
           save_method = :"autosave_associated_records_for_#{reflection.name}"
           define_non_cyclic_method(save_method) do
             save_belongs_to_many_association(reflection)
-          rescue ::ActiveRecord::RecordInvalid
-            throw(:abort)
           end
 
-          around_save(:around_save_collection_association)
           before_save(save_method)
 
           define_autosave_validation_callbacks(reflection)
         end
       end
 
-      # Build all the changes before actually changing the owner record for a
-      # simpler one-time update
+      # Ensure the right way to execute +save_collection_association+ and also
+      # keep it as a single change using +build_changes+
       def save_belongs_to_many_association(reflection)
+        previously_new_record_before_save = (@new_record_before_save ||= false)
+        @new_record_before_save = new_record?
+
         association = association_instance_get(reflection.name)
         association&.build_changes { save_collection_association(reflection) }
-      end
-
-      unless PostgreSQL::AR610
-        def around_save_collection_association
-          previously_new_record_before_save = (@new_record_before_save ||= false)
-          @new_record_before_save = !previously_new_record_before_save && new_record?
-
-          yield
-        ensure
-          @new_record_before_save = previously_new_record_before_save
-        end
+      rescue ::ActiveRecord::RecordInvalid
+        throw(:abort)
+      ensure
+        @new_record_before_save = previously_new_record_before_save
       end
     end
 
