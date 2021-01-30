@@ -56,7 +56,7 @@ module Torque
             end
           end
 
-          table_extensions
+          table_extensions(stream)
         end
 
         # Dump user defined types like enum
@@ -80,7 +80,7 @@ module Torque
         end
 
         # Add compatibility to other gems that uses +tables+ as base function
-        def table_extensions
+        def table_extensions(stream)
           # Scenic integration
           views(stream) if defined?(::Scenic)
 
