@@ -56,12 +56,7 @@ module Torque
             end
           end
 
-          # Scenic integration
-          views(stream) if defined?(::Scenic)
-
-          # FX integration
-          functions(stream) if defined?(::Fx::SchemaDumper::Function)
-          triggers(stream) if defined?(::Fx::SchemaDumper::Trigger)
+          table_extensions
         end
 
         # Dump user defined types like enum
@@ -82,6 +77,17 @@ module Torque
         def enum(name, stream)
           values = @connection.enum_values(name).map { |v| "\"#{v}\"" }
           stream.puts "  create_enum \"#{name}\", [#{values.join(', ')}], force: :cascade"
+        end
+
+        # Add compatibility to other gems that uses +tables+ as base function
+        def table_extensions
+          # Scenic integration
+          views(stream) if defined?(::Scenic)
+
+          # FX integration
+          functions(stream)  if defined?(::Fx::SchemaDumper::Function)
+          aggregates(stream) if defined?(::Fx::SchemaDumper::Aggregate)
+          triggers(stream)   if defined?(::Fx::SchemaDumper::Trigger)
         end
 
     end
