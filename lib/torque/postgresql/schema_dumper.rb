@@ -58,6 +58,10 @@ module Torque
 
           # Scenic integration
           views(stream) if defined?(::Scenic)
+
+          # FX integration
+          functions(stream) if defined?(::Fx::SchemaDumper::Function)
+          triggers(stream) if defined?(::Fx::SchemaDumper::Trigger)
         end
 
         # Dump user defined types like enum
