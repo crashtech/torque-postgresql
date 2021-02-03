@@ -21,8 +21,10 @@ module Torque
         end
 
         def ids_writer(ids)
-          command = owner.persisted? ? :update_attribute : :write_attribute
-          owner.public_send(command, source_attr, ids.presence)
+          owner.write_attribute(source_attr, ids.presence)
+          return unless owner.persisted? && owner.attribute_changed?(source_attr)
+
+          owner.update_attribute(source_attr, ids.presence)
         end
 
         def size
@@ -59,7 +61,7 @@ module Torque
 
         def build_changes
           @_building_changes = true
-          yield.tap { ids_writer(stale_state) }
+          yield.tap { ids_writer(ids_reader) }
         ensure
           @_building_changes = nil
         end

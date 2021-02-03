@@ -28,7 +28,11 @@ RSpec.describe 'BelongsToMany' do
 
     before { Video.belongs_to_many(:tags) }
     subject { Video.create(title: 'A') }
-    after { Video._reflections = {} }
+
+    after do
+      Video.reset_callbacks(:save)
+      Video._reflections = {}
+    end
 
     it 'has the method' do
       expect(subject).to respond_to(:tags)
@@ -93,7 +97,7 @@ RSpec.describe 'BelongsToMany' do
       expect(records.map(&:id).sort).to be_eql(ids.sort)
     end
 
-    it 'creates the owner record with direct set items' do
+    it 'can create the owner record with direct set items' do
       # Having another association would break this test due to how
       # +@new_record_before_save+ is set on autosave association
       Video.has_many(:comments)
@@ -103,6 +107,44 @@ RSpec.describe 'BelongsToMany' do
 
       expect(record.tags.size).to be_eql(1)
       expect(record.tags.first.id).to be_eql(initial.id)
+    end
+
+    it 'can keep record changes accordingly' do
+      expect(subject.tags.count).to be_eql(0)
+
+      local_previous_changes = nil
+      local_saved_changes = nil
+
+      Video.after_commit do
+        local_previous_changes = self.previous_changes.dup
+        local_saved_changes = self.saved_changes.dup
+      end
+
+      subject.update(title: 'B')
+
+      expect(local_previous_changes).to include('title')
+      expect(local_saved_changes).to include('title')
+
+      subject.tags = FactoryBot.create_list(:tag, 5)
+      subject.update(title: 'C', url: 'X')
+      subject.reload
+
+      expect(local_previous_changes).to include('title', 'url')
+      expect(local_saved_changes).to include('title', 'url')
+      expect(local_previous_changes).not_to include('tag_ids')
+      expect(local_saved_changes).not_to include('tag_ids')
+      expect(subject.tag_ids.size).to be_eql(5)
+      expect(subject.tags.count).to be_eql(5)
+    end
+
+    it 'can assign the record ids during before callback' do
+      Video.before_save { self.tags = FactoryBot.create_list(:tag, 5) }
+
+      record = Video.create(title: 'A')
+
+      expect(Tag.count).to be_eql(5)
+      expect(record.tag_ids.size).to be_eql(5)
+      expect(record.tags.count).to be_eql(5)
     end
 
     it 'can build an associated record' do
