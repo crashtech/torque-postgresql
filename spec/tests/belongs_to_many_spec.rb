@@ -244,6 +244,9 @@ RSpec.describe 'BelongsToMany' do
 
     it 'can check if a record is included on the list' do
       outside = FactoryBot.create(:tag)
+
+      expect(subject.tags.include?(outside)).to be_falsey
+
       inside = FactoryBot.create(:tag)
       subject.tags << inside
 

@@ -47,7 +47,7 @@ module Torque
           return include_in_memory?(record) if record.new_record?
 
           (!target.empty? && target.include?(record)) ||
-            stale_state.include?(record.read_attribute(klass_attr))
+            stale_state&.include?(record.read_attribute(klass_attr))
         end
 
         def load_target
