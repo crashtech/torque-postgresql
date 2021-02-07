@@ -181,7 +181,8 @@ module Torque
           def ids_rewriter(ids, operator)
             list = owner[source_attr] ||= []
             list = list.public_send(operator, ids)
-            owner[source_attr] = list.uniq.compact
+            list = list.uniq.compact.presence
+            owner[source_attr] = list
 
             return if @_building_changes || !owner.persisted?
             owner.update_attribute(source_attr, list)
