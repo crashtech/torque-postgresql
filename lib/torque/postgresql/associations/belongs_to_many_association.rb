@@ -11,6 +11,10 @@ module Torque
 
         ## CUSTOM
         def ids_reader
+          if stale_target?
+            return stale_state
+          end
+
           if loaded?
             target.pluck(reflection.association_primary_key)
           elsif !target.empty?
