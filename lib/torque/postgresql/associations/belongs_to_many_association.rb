@@ -154,6 +154,8 @@ module Torque
           def delete_records(records, method)
             ids = read_records_ids(records)
 
+            @target -= records
+
             if method == :destroy
               records.each(&:destroy!)
               ids_rewriter(ids, :-)

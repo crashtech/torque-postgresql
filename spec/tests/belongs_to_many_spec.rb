@@ -208,6 +208,15 @@ RSpec.describe 'BelongsToMany' do
       expect(subject.tags.size).to be_eql(0)
     end
 
+    it 'can delete specific records' do
+      tag = FactoryBot.create(:tag)
+      subject.tags << tag
+      expect(subject.tags.size).to be_eql(1)
+
+      subject.tags.delete(tag)
+      expect(subject.reload.tags.size).to be_eql(0)
+    end
+
     it 'can destroy all records' do
       subject.tags.concat(FactoryBot.create_list(:tag, 5))
       expect(subject.tags.size).to be_eql(5)
