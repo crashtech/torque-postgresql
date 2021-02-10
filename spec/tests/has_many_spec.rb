@@ -291,6 +291,20 @@ RSpec.describe 'HasMany' do
       expect(record.tag_ids).to be_eql([subject.id])
     end
 
+    it 'can perist after accessed in after_create' do
+      other.belongs_to_many(:tags)
+      other.after_create { self.tags.to_a }
+
+      video = FactoryBot.create(:video)
+      subject.videos << video
+
+      expect(subject.reload.videos.size).to eql(1)
+      expect(video.reload.tags.size).to eql(1)
+
+      other.reset_callbacks(:create)
+      other._reflections = {}
+    end
+
     it 'can concat records' do
       FactoryBot.create(:video, tag_ids: [subject.id])
       expect(subject.videos.size).to be_eql(1)

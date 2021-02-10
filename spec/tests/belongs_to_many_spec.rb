@@ -200,6 +200,15 @@ RSpec.describe 'BelongsToMany' do
       expect(subject.tags[1].name).to be_eql('Test 3')
     end
 
+    it 'can delete specific records' do
+      subject.tags << initial
+      expect(subject.tags.size).to be_eql(1)
+
+      subject.tags.delete(initial)
+      expect(subject.tags.size).to be_eql(0)
+      expect(subject.reload.tags.size).to be_eql(0)
+    end
+
     it 'can delete all records' do
       subject.tags.concat(FactoryBot.create_list(:tag, 5))
       expect(subject.tags.size).to be_eql(5)
@@ -245,11 +254,15 @@ RSpec.describe 'BelongsToMany' do
     it 'can check if a record is included on the list' do
       outside = FactoryBot.create(:tag)
       inside = FactoryBot.create(:tag)
+
+      expect(subject.tags).not_to be_include(inside)
+      expect(subject.tags).not_to be_include(outside)
+
       subject.tags << inside
 
       expect(subject.tags).to respond_to(:include?)
-      expect(subject.tags.include?(inside)).to be_truthy
-      expect(subject.tags.include?(outside)).to be_falsey
+      expect(subject.tags).to be_include(inside)
+      expect(subject.tags).not_to be_include(outside)
     end
 
     it 'can append records' do

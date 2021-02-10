@@ -103,28 +103,6 @@ module Torque
 
             ::Arel::Nodes::NamedFunction.new('ANY', [source_attr])
           end
-
-          # returns either +nil+ or the inverse association name that it finds.
-          def automatic_inverse_of
-            return super unless connected_through_array?
-
-            if can_find_inverse_of_automatically?(self)
-              inverse_name = options[:as] || active_record.name.demodulize
-              inverse_name = ActiveSupport::Inflector.underscore(inverse_name)
-              inverse_name = ActiveSupport::Inflector.pluralize(inverse_name)
-              inverse_name = inverse_name.to_sym
-
-              begin
-                reflection = klass._reflect_on_association(inverse_name)
-              rescue NameError
-                # Give up: we couldn't compute the klass type so we won't be able
-                # to find any associations either.
-                reflection = false
-              end
-
-              return inverse_name if valid_inverse_reflection?(reflection)
-            end
-          end
       end
 
       ::ActiveRecord::Reflection::AbstractReflection.prepend(AbstractReflection)

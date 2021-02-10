@@ -47,7 +47,7 @@ module Torque
           return include_in_memory?(record) if record.new_record?
 
           (!target.empty? && target.include?(record)) ||
-            stale_state.include?(record.read_attribute(klass_attr))
+            stale_state&.include?(record.read_attribute(klass_attr))
         end
 
         def load_target
@@ -179,7 +179,7 @@ module Torque
           def ids_rewriter(ids, operator)
             list = owner[source_attr] ||= []
             list = list.public_send(operator, ids)
-            owner[source_attr] = list.uniq.compact
+            owner[source_attr] = list.uniq.compact.presence
 
             return if @_building_changes || !owner.persisted?
             owner.update_attribute(source_attr, list)
@@ -191,6 +191,10 @@ module Torque
           end
 
           def concat_records(*)
+            build_changes { super }
+          end
+
+          def delete_or_destroy(*)
             build_changes { super }
           end
 
