@@ -16,15 +16,16 @@ module Torque
           elsif !target.empty?
             load_target.pluck(reflection.association_primary_key)
           else
-            stale_state
+            stale_state || column_default_value
           end
         end
 
         def ids_writer(ids)
-          owner.write_attribute(source_attr, ids.presence)
+          ids = ids.presence || column_default_value
+          owner.write_attribute(source_attr, ids)
           return unless owner.persisted? && owner.attribute_changed?(source_attr)
 
-          owner.update_attribute(source_attr, ids.presence)
+          owner.update_attribute(source_attr, ids)
         end
 
         def size
@@ -179,10 +180,14 @@ module Torque
           def ids_rewriter(ids, operator)
             list = owner[source_attr] ||= []
             list = list.public_send(operator, ids)
-            owner[source_attr] = list.uniq.compact.presence
+            owner[source_attr] = list.uniq.compact.presence || column_default_value
 
             return if @_building_changes || !owner.persisted?
             owner.update_attribute(source_attr, list)
+          end
+
+          def column_default_value
+            owner.class.columns_hash[source_attr].default
           end
 
           ## HAS MANY

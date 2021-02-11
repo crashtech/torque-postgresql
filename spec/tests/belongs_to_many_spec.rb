@@ -318,7 +318,36 @@ RSpec.describe 'BelongsToMany' do
       expect { query.load }.not_to raise_error
     end
 
-    context "When record is not persisted" do
+    context 'When the attribute has a default value' do
+      after(:all) { Video.reset_column_information }
+      let(:sql) { %{ALTER TABLE "videos" ALTER COLUMN "tag_ids" SET DEFAULT '{}'::bigint[]} }
+
+      before do
+        Video.connection.execute(sql)
+        Video.reset_column_information
+      end
+
+      it 'will always return the column default value' do
+        expect(subject.tag_ids).to be_a(Array)
+        expect(subject.tag_ids).to be_empty
+      end
+
+      it 'will keep the value as an array even when the association is cleared' do
+        records = FactoryBot.create_list(:tag, 5)
+        subject.tags.concat(records)
+
+        subject.reload
+        expect(subject.tag_ids).to be_a(Array)
+        expect(subject.tag_ids).not_to be_empty
+
+        subject.tags.clear
+        subject.reload
+        expect(subject.tag_ids).to be_a(Array)
+        expect(subject.tag_ids).to be_empty
+      end
+    end
+
+    context 'When record is not persisted' do
       let(:initial) { FactoryBot.create(:tag) }
 
       subject { Video.new(title: 'A', tags: [initial]) }
