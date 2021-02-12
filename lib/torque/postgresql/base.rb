@@ -206,6 +206,12 @@ module Torque
           ::ActiveRecord::Reflection.add_reflection(self, name, reflection)
         end
 
+        # Allow extra keyword arguments to be sent to +InsertAll+
+        def upsert_all(attributes, **xargs)
+          xargs = xargs.merge(on_duplicate: :update)
+          ::ActiveRecord::InsertAll.new(self, attributes, **xargs).execute
+        end
+
         protected
 
           # Allow optional select attributes to be loaded manually when they are
