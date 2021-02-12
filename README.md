@@ -63,6 +63,7 @@ These are the currently available features:
 * [Belongs to Many](https://github.com/crashtech/torque-postgresql/wiki/Belongs-to-Many)
 * [Dynamic Attributes](https://github.com/crashtech/torque-postgresql/wiki/Dynamic-Attributes)
 * [Distinct On](https://github.com/crashtech/torque-postgresql/wiki/Distinct-On)
+* [Insert All](https://github.com/crashtech/torque-postgresql/wiki/Insert-All)
 * [Auxiliary Statements](https://github.com/crashtech/torque-postgresql/wiki/Auxiliary-Statements)
 * [Inherited Tables](https://github.com/crashtech/torque-postgresql/wiki/Inherited-Tables)
 
