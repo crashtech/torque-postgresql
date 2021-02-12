@@ -18,22 +18,16 @@ RSpec.describe 'InsertAll' do
         ON CONFLICT  DO NOTHING RETURNING "id"
       SQL
 
-      result = subject.insert_all(entries, returning: :name)
+      result = subject.insert_all(entries, returning: %i[name])
       expect(result.squish).to be_eql(<<~SQL.squish)
         INSERT INTO "tags" ("name") VALUES ('A'), ('B')
-        ON CONFLICT  DO NOTHING RETURNING name
+        ON CONFLICT  DO NOTHING RETURNING "name"
       SQL
 
       result = subject.insert_all(entries, returning: %i[id name])
       expect(result.squish).to be_eql(<<~SQL.squish)
         INSERT INTO "tags" ("name") VALUES ('A'), ('B')
         ON CONFLICT  DO NOTHING RETURNING "id","name"
-      SQL
-
-      result = subject.insert_all(entries, unique_by: :id)
-      expect(result.squish).to be_eql(<<~SQL.squish)
-        INSERT INTO "tags" ("name") VALUES ('A'), ('B')
-        ON CONFLICT ("id") DO NOTHING RETURNING "id"
       SQL
     end
 
@@ -43,9 +37,9 @@ RSpec.describe 'InsertAll' do
         INSERT INTO "tags" ("name") VALUES ('A'), ('B') RETURNING "id"
       SQL
 
-      result = subject.insert_all!(entries, returning: :name)
+      result = subject.insert_all!(entries, returning: %i[name])
       expect(result.squish).to be_eql(<<~SQL.squish)
-        INSERT INTO "tags" ("name") VALUES ('A'), ('B') RETURNING name
+        INSERT INTO "tags" ("name") VALUES ('A'), ('B') RETURNING "name"
       SQL
     end
 
@@ -57,11 +51,11 @@ RSpec.describe 'InsertAll' do
         RETURNING "id"
       SQL
 
-      result = subject.upsert_all(entries, returning: :name)
+      result = subject.upsert_all(entries, returning: %i[name])
       expect(result.squish).to be_eql(<<~SQL.squish)
         INSERT INTO "tags" ("name") VALUES ('A'), ('B')
         ON CONFLICT ("id") DO UPDATE SET "name"=excluded."name"
-        RETURNING name
+        RETURNING "name"
       SQL
     end
 
