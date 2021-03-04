@@ -43,13 +43,13 @@ module Torque
             inherited_tables = @connection.inherited_tables
             sorted_tables = @connection.tables.sort - @connection.views
 
-            stream.puts "  # These are the common tables managed"
+            stream.puts "  # These are the common tables"
             (sorted_tables - inherited_tables.keys).each do |table_name|
               table(table_name, stream) unless ignored?(table_name)
             end
 
             if inherited_tables.present?
-              stream.puts "  # These are tables that has inheritance"
+              stream.puts "  # These are tables that have inheritance"
               inherited_tables.each do |table_name, inherits|
                 next if ignored?(table_name)
 

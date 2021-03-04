@@ -33,13 +33,13 @@ module Torque
           def values_methods
             return @values_methods if defined?(@values_methods)
 
-            prefix = options.fetch(:prefix, nil).try(:<<, '_')
-            suffix = options.fetch(:suffix, nil).try(:prepend, '_')
+            prefix = options.fetch(:prefix, nil)
+            suffix = options.fetch(:suffix, nil)
 
-            prefix = attribute + '_' if prefix == true
-            suffix = '_' + attribute if suffix == true
+            prefix = attribute if prefix == true
+            suffix = attribute if suffix == true
 
-            base   = "#{prefix}%s#{suffix}"
+            base   = [prefix, '%s', suffix].compact.join('_')
 
             @values_methods = begin
               values.map do |val|

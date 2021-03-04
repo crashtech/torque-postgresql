@@ -29,7 +29,7 @@ module Torque
           def include_on(klass, method_name = nil)
             method_name ||= Torque::PostgreSQL.config.enum.base_method
             Builder.include_on(klass, method_name, Builder::Enum) do |builder|
-              defined_enums[builder.attribute.to_sym] = builder.subtype
+              defined_enums[builder.attribute.to_s] = builder.subtype
             end
           end
 
