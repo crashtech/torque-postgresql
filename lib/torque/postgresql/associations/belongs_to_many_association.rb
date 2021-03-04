@@ -60,9 +60,11 @@ module Torque
           target
         end
 
-        def build_changes
+        def build_changes(from_target = false)
+          return yield if defined?(@_building_changes) && @_building_changes
+
           @_building_changes = true
-          yield.tap { ids_writer(ids_reader) }
+          yield.tap { ids_writer(from_target ? ids_reader : stale_state) }
         ensure
           @_building_changes = nil
         end
@@ -192,15 +194,15 @@ module Torque
 
           ## HAS MANY
           def replace_records(*)
-            build_changes { super }
+            build_changes(true) { super }
           end
 
           def concat_records(*)
-            build_changes { super }
+            build_changes(true) { super }
           end
 
           def delete_or_destroy(*)
-            build_changes { super }
+            build_changes(true) { super }
           end
 
           def difference(a, b)

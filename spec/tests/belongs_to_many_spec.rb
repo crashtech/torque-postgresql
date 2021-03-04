@@ -225,6 +225,17 @@ RSpec.describe 'BelongsToMany' do
       expect(subject.tags.size).to be_eql(0)
     end
 
+    it 'can clear the array' do
+      record = Video.create(title: 'B', tags: [initial])
+      expect(record.tags.size).to be_eql(1)
+
+      record.update(tag_ids: [])
+      record.reload
+
+      expect(record.tag_ids).to be_nil
+      expect(record.tags.size).to be_eql(0)
+    end
+
     it 'can have sum operations' do
       records = FactoryBot.create_list(:tag, 5)
       subject.tags.concat(records)
