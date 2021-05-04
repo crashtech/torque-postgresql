@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 63
+  version = 70
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
@@ -100,6 +100,13 @@ begin
       t.text     "content"
       t.enum     "status",    subtype: :content_status
       t.index ["author_id"], name: "index_posts_on_author_id", using: :btree
+    end
+
+    create_table "items", force: :cascade do |t|
+      t.string   "name"
+      t.bigint   "tag_ids", array: true, default: "{1}"
+      t.datetime "created_at", null: false
+      t.datetime "updated_at", null: false
     end
 
     create_table "users", force: :cascade do |t|

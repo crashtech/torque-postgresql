@@ -8,9 +8,6 @@ module Torque
 
           attr_reader :name, :klass, :set_klass, :enum_klass
 
-          # Delegate all Hash-like methods to the enum class
-          delegate *(Array.public_instance_methods - Object.public_methods), to: :@klass
-
           def self.create(row, type_map)
             name    = row['typname']
             oid     = row['oid'].to_i

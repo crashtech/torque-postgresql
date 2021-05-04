@@ -1,3 +1,4 @@
+
 # Torque PostgreSQL
 
 [![Build Status](https://travis-ci.com/crashtech/torque-postgresql.svg?branch=master)](https://travis-ci.com/crashtech/torque-postgresql)
@@ -43,7 +44,7 @@ These are the currently available features:
 
 ## Core Extensions
 
-* [Range](https://github.com/crashtech/torque-postgresql/wiki/Range)
+* [~~Range~~](https://github.com/crashtech/torque-postgresql/wiki/Range) (DEPRECATED)
 
 ## Data types
 

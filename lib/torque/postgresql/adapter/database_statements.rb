@@ -123,7 +123,7 @@ module Torque
           SQL
 
           tables.map do |(table, refs)|
-            [table, Coder.decode(refs)]
+            [table, PG::TextDecoder::Array.new.decode(refs)]
           end.to_h
         end
 
@@ -145,20 +145,6 @@ module Torque
                  #{local_condition}
                ORDER BY a.attnum
           SQL
-        end
-
-        # Extracts the value from a PostgreSQL column default definition.
-        def extract_value_from_default(default)
-          case default
-            # Array elements
-          when /\AARRAY\[(.*)\]\z/
-            # TODO: Improve this since it's not the most safe approach
-            eval(default.gsub(/ARRAY|::\w+(\[\])?/, ''))
-          else
-            super
-          end
-        rescue SyntaxError
-          # If somethin goes wrong with the eval, just return nil
         end
 
       end

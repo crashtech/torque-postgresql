@@ -113,7 +113,7 @@ module Torque
         end
 
         def insert_record(record, *)
-          super.tap do |saved|
+          (record.persisted? || super).tap do |saved|
             ids_rewriter(record.read_attribute(klass_attr), :<<) if saved
           end
         end

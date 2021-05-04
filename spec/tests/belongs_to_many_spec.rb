@@ -147,6 +147,22 @@ RSpec.describe 'BelongsToMany' do
       expect(record.tags.count).to be_eql(5)
     end
 
+    it 'does not trigger after commit on the associated record' do
+      called = false
+
+      tag = FactoryBot.create(:tag)
+      Tag.after_commit { called = true }
+
+      expect(called).to be_falsey
+
+      subject.tags << tag
+
+      expect(subject.tag_ids).to be_eql([tag.id])
+      expect(called).to be_falsey
+
+      Tag.reset_callbacks(:commit)
+    end
+
     it 'can build an associated record' do
       record = subject.tags.build(name: 'Test')
       expect(record).to be_a(other)
@@ -330,17 +346,11 @@ RSpec.describe 'BelongsToMany' do
     end
 
     context 'When the attribute has a default value' do
-      after(:all) { Video.reset_column_information }
-      let(:sql) { %{ALTER TABLE "videos" ALTER COLUMN "tag_ids" SET DEFAULT '{}'::bigint[]} }
-
-      before do
-        Video.connection.execute(sql)
-        Video.reset_column_information
-      end
+      subject { FactoryBot.create(:item) }
 
       it 'will always return the column default value' do
         expect(subject.tag_ids).to be_a(Array)
-        expect(subject.tag_ids).to be_empty
+        expect(subject.tag_ids).to be_eql([1])
       end
 
       it 'will keep the value as an array even when the association is cleared' do
@@ -349,12 +359,12 @@ RSpec.describe 'BelongsToMany' do
 
         subject.reload
         expect(subject.tag_ids).to be_a(Array)
-        expect(subject.tag_ids).not_to be_empty
+        expect(subject.tag_ids).not_to be_eql([1, *records.map(&:id)])
 
         subject.tags.clear
         subject.reload
         expect(subject.tag_ids).to be_a(Array)
-        expect(subject.tag_ids).to be_empty
+        expect(subject.tag_ids).to be_eql([1])
       end
     end
 
