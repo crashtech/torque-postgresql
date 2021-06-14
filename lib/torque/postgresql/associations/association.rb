@@ -11,6 +11,10 @@ module Torque
           @inversed = self.target.present?
         end
 
+        def skip_statement_cache?(*)
+          super || reflection.connected_through_array?
+        end
+
         private
 
           def set_owner_attributes(record)

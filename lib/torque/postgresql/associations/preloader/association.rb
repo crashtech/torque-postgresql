@@ -33,6 +33,7 @@ module Torque
                 ids.each { |id| records[id].concat(Array.wrap(record)) }
               end
 
+              records.default_proc = nil
               owners.each do |owner|
                 associate_records_to_owner(owner, records[owner[owner_key_name]] || [])
               end
