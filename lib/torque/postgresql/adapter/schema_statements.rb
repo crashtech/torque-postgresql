@@ -70,7 +70,11 @@ module Torque
 
         # Returns all values that an enum type can have.
         def enum_values(name)
-          select_values("SELECT unnest(enum_range(NULL::#{name}))", 'SCHEMA')
+          select_values(<<-SQL.squish, 'SCHEMA')
+            SELECT enumlabel FROM pg_enum
+            WHERE enumtypid = #{quote(name)}::regtype::oid
+            ORDER BY enumsortorder
+          SQL
         end
 
         # Rewrite the method that creates tables to easily accept extra options
