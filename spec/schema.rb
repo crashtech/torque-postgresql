@@ -11,13 +11,14 @@
 # It's strongly recommended that you check this file into your version control system.
 
 begin
-  version = 70
+  version = 72
 
   raise SystemExit if ActiveRecord::Migrator.current_version == version
   ActiveRecord::Schema.define(version: version) do
     self.verbose = false
 
     # These are extensions that must be enabled in order to support this database
+    enable_extension "pgcrypto"
     enable_extension "plpgsql"
 
     # These are user-defined types used on this database
@@ -125,6 +126,12 @@ begin
       t.datetime "updated_at", null: false
     end
 
+    create_table "questions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+      t.string   "title"
+      t.datetime "created_at", null: false
+      t.datetime "updated_at", null: false
+    end
+
     create_table "activity_books", force: :cascade, inherits: :activities do |t|
       t.text     "description"
       t.string   "url"
@@ -138,6 +145,10 @@ begin
     end
 
     create_table "activity_post_samples", force: :cascade, inherits: :activity_posts
+
+    create_table "question_selects", force: :cascade, inherits: :questions do |t|
+      t.string  "options", array: true
+    end
 
     # create_table "activity_blanks", force: :cascade, inherits: :activities
 

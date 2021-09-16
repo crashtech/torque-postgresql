@@ -387,10 +387,10 @@ RSpec.describe 'TableInheritance' do
         base.create(title: 'Activity test')
         child.create(title: 'Activity book')
         other.create(name: 'An author name')
+        base.instance_variable_set(:@casted_dependents, nil)
       end
 
       it 'does not affect normal records' do
-        base.instance_variable_set(:@casted_dependents, {})
         expect(base.first.cast_record).to be_a(base)
         expect(child.first.cast_record).to be_a(child)
         expect(other.first.cast_record).to be_a(other)
@@ -408,8 +408,27 @@ RSpec.describe 'TableInheritance' do
       end
 
       it 'does trigger record casting when accessed through inheritance' do
-        base.instance_variable_set(:@casted_dependents, nil)
         expect(base.second.cast_record).to eql(child.first)
+      end
+
+      context 'using uuid' do
+        let(:base) { Question }
+        let(:child) { QuestionSelect }
+
+        before :each do
+          base.create(title: 'Simple question')
+          child.create(title: 'Select question')
+          base.instance_variable_set(:@casted_dependents, nil)
+        end
+
+        it 'does not affect normal records' do
+          expect(base.first.cast_record).to be_a(base)
+          expect(child.first.cast_record).to be_a(child)
+        end
+
+        it 'does trigger record casting when accessed through inheritance' do
+          expect(base.second.cast_record).to eql(child.first)
+        end
       end
     end
   end

@@ -40,7 +40,7 @@ module Torque
 
             pg_class = ::Arel::Table.new('pg_class')
             source = ::Arel::Table.new(subclass.table_name, as: 'source')
-            quoted_id = ::Arel::Nodes::Quoted.new(self.class.connection.quote(id))
+            quoted_id = ::Arel::Nodes::Quoted.new(id)
 
             query = ::Arel::SelectManager.new(pg_class)
             query.join(source).on(pg_class['oid'].eq(source['tableoid']))
