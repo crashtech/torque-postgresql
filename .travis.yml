@@ -1,24 +1,35 @@
-sudo: false
 language: ruby
-cache: bundler
 rvm:
-- 2.5.8
-- 2.6.6
-- 2.7.2
-- 3.0.1
+  - 2.5.8
+  - 2.6.6
+  - 2.7.2
+  - 3.0.1
 
 gemfile:
   - gemfiles/Gemfile.rails-6.0
   - gemfiles/Gemfile.rails-6.1
 
-env: DATABASE_URL=postgres://postgres@localhost/torque_postgresql_test
+cache:
+  bundler: true
+
+env:
+  global:
+    - CC_TEST_REPORTER_ID=d21c4c9d0d7ba6a27368b8e25edad911eb1daa03202e69fe2bc2e42a3ed21de3
+    - DATABASE_URL=postgres://postgres@localhost/torque_postgresql_test
 
 before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
   - psql -c 'DROP DATABASE IF EXISTS torque_postgresql_test;' -U postgres -h localhost
   - psql -c 'CREATE DATABASE torque_postgresql_test;' -U postgres -h localhost
   - bundle exec rake dump
 
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+
 addons:
-  postgresql: '9.6'
-  code_climate:
-    repo_token: d21c4c9d0d7ba6a27368b8e25edad911eb1daa03202e69fe2bc2e42a3ed21de3
+  postgresql: '12'
+
+services:
+  - postgresql
