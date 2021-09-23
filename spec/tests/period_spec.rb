@@ -266,6 +266,15 @@ RSpec.describe 'Period' do
 
         instance.period = 4.hour.from_now.utc..6.hour.from_now.utc
         expect(instance).not_to be_current_period
+
+        instance.period = [nil, 4.hours.ago.utc]
+        expect(instance).not_to be_current_period
+
+        instance.period = [4.hours.from_now.utc, nil]
+        expect(instance).not_to be_current_period
+
+        instance.period = [nil, nil]
+        expect(instance).to be_current_period
       end
 
       it 'checks fro current based on a value' do

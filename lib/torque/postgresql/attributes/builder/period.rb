@@ -452,12 +452,8 @@ module Torque
             def instance_current_on?
               attr_value = threshold.present? ? method_names[:real] : attribute
               default_value = default.inspect
-              [
-                "return #{default_value} if #{attr_value}.nil?",
-                "return #{default_value} if #{attr_value}.min.try(:infinite?)",
-                "return #{default_value} if #{attr_value}.max.try(:infinite?)",
-                "#{attr_value}.min < value && #{attr_value}.max > value",
-              ].join("\n")
+
+              "#{attr_value}.nil? ? #{default_value} : #{attr_value}.include?(value)"
             end
 
             def instance_start
