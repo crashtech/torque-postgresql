@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'Range' do
+RSpec.xdescribe 'Range' do
   let(:sample) { (5..15) }
 
   it 'has intersection' do

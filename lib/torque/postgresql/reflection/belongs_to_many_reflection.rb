@@ -56,8 +56,10 @@ module Torque
       end
 
       ::ActiveRecord::Reflection.const_set(:BelongsToManyReflection, BelongsToManyReflection)
-      ::ActiveRecord::Reflection::AssociationReflection::VALID_AUTOMATIC_INVERSE_MACROS
-        .push(:belongs_to_many)
+
+      reflection_class = ::ActiveRecord::Reflection::AssociationReflection
+      reflection_class::VALID_AUTOMATIC_INVERSE_MACROS.push(:belongs_to_many) \
+        if reflection_class.const_defined?('VALID_AUTOMATIC_INVERSE_MACROS')
     end
   end
 end

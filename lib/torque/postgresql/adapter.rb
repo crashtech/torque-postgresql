@@ -36,8 +36,8 @@ module Torque
         super.merge(options.extract!(:inherits))
       end
 
-      # Allow filtered bulk insert by adding the where clause. This method is only used by
-      # +InsertAll+, so it somewhat safe to override it
+      # Allow filtered bulk insert by adding the where clause. This method is
+      # only used by +InsertAll+, so it somewhat safe to override it
       def build_insert_sql(insert)
         super.tap do |sql|
           if insert.update_duplicates? && insert.where_condition?
@@ -54,8 +54,9 @@ module Torque
       def extract_value_from_default(default)
         return super unless Torque::PostgreSQL.config.use_extended_defaults
         return super unless default&.match(/ARRAY\[(.*?)\](?:::"?([\w. ]+)"?(?:\[\])+)?$/)
-        arr = $1.split(/(?!\B\[[^\]]*), ?(?![^\[]*\]\B)/).map(&method(:extract_value_from_default))
-        DeduplicatableArray.new(arr)
+
+        arr = $1.split(/(?!\B\[[^\]]*), ?(?![^\[]*\]\B)/)
+        DeduplicatableArray.new(arr.map(&method(:extract_value_from_default)))
       end
     end
 
