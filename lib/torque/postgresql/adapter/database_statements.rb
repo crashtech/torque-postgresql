@@ -42,6 +42,8 @@ module Torque
           m.register_type 'interval', OID::Interval.new
           m.register_type 'line',     OID::Line.new
           m.register_type 'segment',  OID::Segment.new
+
+          m.alias_type 'regclass', 'varchar'
         end
 
         # :nodoc:

@@ -146,7 +146,7 @@ module Torque
             auto_cast = _auto_cast_attribute.to_s
             record_class = _record_class_attribute.to_s
             return super unless attributes.key?(record_class) &&
-               attributes.delete(auto_cast) && attributes[record_class] != table_name
+              attributes.delete(auto_cast) && attributes[record_class] != table_name
 
             klass = casted_dependents[attributes[record_class]]
             raise_unable_to_cast(attributes[record_class]) if klass.nil?

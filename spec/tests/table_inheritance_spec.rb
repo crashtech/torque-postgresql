@@ -292,14 +292,12 @@ RSpec.describe 'TableInheritance' do
       end
 
       it 'adds all statements to load all the necessary records' do
-        result = 'WITH "record_class" AS (SELECT "pg_class"."oid", "pg_class"."relname" AS _record_class FROM "pg_class")'
-        result << ' SELECT "activities".*, "record_class"."_record_class", "i_0"."description"'
+        result = 'SELECT "activities".*, "activities"."tableoid"::regclass AS _record_class, "i_0"."description"'
         result << ', COALESCE("i_0"."url", "i_1"."url", "i_2"."url") AS url, "i_0"."activated" AS activity_books__activated'
         result << ', "i_1"."activated" AS activity_posts__activated, "i_2"."activated" AS activity_post_samples__activated'
         result << ', COALESCE("i_1"."file", "i_2"."file") AS file, COALESCE("i_1"."post_id", "i_2"."post_id") AS post_id'
-        result << ", \"record_class\".\"_record_class\" IN ('activity_books', 'activity_posts', 'activity_post_samples') AS _auto_cast"
+        result << ", \"activities\".\"tableoid\"::regclass::varchar IN ('activity_books', 'activity_posts', 'activity_post_samples') AS _auto_cast"
         result << ' FROM "activities"'
-        result << ' INNER JOIN "record_class" ON "record_class"."oid" = "activities"."tableoid"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
         result << ' LEFT OUTER JOIN "activity_posts" "i_1" ON "activities"."id" = "i_1"."id"'
         result << ' LEFT OUTER JOIN "activity_post_samples" "i_2" ON "activities"."id" = "i_2"."id"'
@@ -307,33 +305,27 @@ RSpec.describe 'TableInheritance' do
       end
 
       it 'can be have simplefied joins' do
-        result = 'WITH "record_class" AS (SELECT "pg_class"."oid", "pg_class"."relname" AS _record_class FROM "pg_class")'
-        result << ' SELECT "activities".*, "record_class"."_record_class"'
+        result = 'SELECT "activities".*, "activities"."tableoid"::regclass AS _record_class'
         result << ', "i_0"."description", "i_0"."url", "i_0"."activated"'
-        result << ", \"record_class\".\"_record_class\" IN ('activity_books') AS _auto_cast"
+        result << ", \"activities\".\"tableoid\"::regclass::varchar IN ('activity_books') AS _auto_cast"
         result << ' FROM "activities"'
-        result << ' INNER JOIN "record_class" ON "record_class"."oid" = "activities"."tableoid"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
         expect(base.cast_records(child).all.to_sql).to eql(result)
       end
 
       it 'can be filtered by record type' do
-        result = 'WITH "record_class" AS (SELECT "pg_class"."oid", "pg_class"."relname" AS _record_class FROM "pg_class")'
-        result << ' SELECT "activities".*, "record_class"."_record_class"'
+        result = 'SELECT "activities".*, "activities"."tableoid"::regclass AS _record_class'
         result << ', "i_0"."description", "i_0"."url", "i_0"."activated"'
-        result << ", \"record_class\".\"_record_class\" IN ('activity_books') AS _auto_cast"
+        result << ", \"activities\".\"tableoid\"::regclass::varchar IN ('activity_books') AS _auto_cast"
         result << ' FROM "activities"'
-        result << ' INNER JOIN "record_class" ON "record_class"."oid" = "activities"."tableoid"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
-        result << " WHERE \"record_class\".\"_record_class\" = 'activity_books'"
+        result << " WHERE \"activities\".\"tableoid\"::regclass::varchar IN ('activity_books')"
         expect(base.cast_records(child, filter: true).all.to_sql).to eql(result)
       end
 
       it 'works with count and does not add extra columns' do
-        result = 'WITH "record_class" AS (SELECT "pg_class"."oid", "pg_class"."relname" AS _record_class FROM "pg_class")'
-        result << ' SELECT COUNT(*)'
+        result = 'SELECT COUNT(*)'
         result << ' FROM "activities"'
-        result << ' INNER JOIN "record_class" ON "record_class"."oid" = "activities"."tableoid"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
         result << ' LEFT OUTER JOIN "activity_posts" "i_1" ON "activities"."id" = "i_1"."id"'
         result << ' LEFT OUTER JOIN "activity_post_samples" "i_2" ON "activities"."id" = "i_2"."id"'
@@ -342,10 +334,8 @@ RSpec.describe 'TableInheritance' do
       end
 
       it 'works with sum and does not add extra columns' do
-        result = 'WITH "record_class" AS (SELECT "pg_class"."oid", "pg_class"."relname" AS _record_class FROM "pg_class")'
-        result << ' SELECT SUM("activities"."id")'
+        result = 'SELECT SUM("activities"."id")'
         result << ' FROM "activities"'
-        result << ' INNER JOIN "record_class" ON "record_class"."oid" = "activities"."tableoid"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
         result << ' LEFT OUTER JOIN "activity_posts" "i_1" ON "activities"."id" = "i_1"."id"'
         result << ' LEFT OUTER JOIN "activity_post_samples" "i_2" ON "activities"."id" = "i_2"."id"'
