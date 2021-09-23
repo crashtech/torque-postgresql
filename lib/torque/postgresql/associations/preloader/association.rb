@@ -41,8 +41,8 @@ module Torque
               end
             end
 
-            if PostgreSQL::AR610
-            # This is how Rails 6.1 now load the records
+            if PostgreSQL::AR604
+            # This is how Rails 6.0.4 and 6.1 now load the records
               def load_records
                 return super unless connected_through_array?
 
