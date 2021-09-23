@@ -15,7 +15,14 @@ module Torque
       include DatabaseStatements
       include SchemaStatements
 
-      INJECT_WHERE_REGEX = /(DO UPDATE SET.*excluded\.[^ ]+) RETURNING/.freeze
+      # :nodoc:
+      class DeduplicatableArray < ::Array
+        def deduplicate
+          map { |value| -value }
+        end
+
+        alias :-@ :deduplicate
+      end
 
       # Get the current PostgreSQL version as a Gem Version.
       def version
@@ -35,12 +42,20 @@ module Torque
         super.tap do |sql|
           if insert.update_duplicates? && insert.where_condition?
             if insert.returning
-              sql.gsub!(INJECT_WHERE_REGEX, "\\1 WHERE #{insert.where} RETURNING")
+              sql.sub!(' RETURNING ', " WHERE #{insert.where} RETURNING ")
             else
               sql << " WHERE #{insert.where}"
             end
           end
         end
+      end
+
+      # Extend the extract default value to support array
+      def extract_value_from_default(default)
+        return super unless Torque::PostgreSQL.config.use_extended_defaults
+        return super unless default&.match(/ARRAY\[(.*?)\](?:::"?([\w. ]+)"?(?:\[\])+)?$/)
+        arr = $1.split(/(?!\B\[[^\]]*), ?(?![^\[]*\]\B)/).map(&method(:extract_value_from_default))
+        DeduplicatableArray.new(arr)
       end
     end
 

@@ -25,6 +25,11 @@ module Torque
     # same configuration is set to true
     config.eager_load = false
 
+    # This allows default values to have extended values like arrays and casted
+    # values. Extended defaults are still experimental, so enable and test it
+    # before using it in prod
+    config.use_extended_defaults = false
+
     # Set a list of irregular model name when associated with table names
     config.irregular_models = {}
     def config.irregular_models=(hash)

@@ -48,6 +48,36 @@ RSpec.describe 'Arel' do
     end
   end
 
+  context 'on default value' do
+    let(:connection) { ActiveRecord::Base.connection }
+
+    before(:context) { Torque::PostgreSQL.config.use_extended_defaults = true }
+    after(:context) { Torque::PostgreSQL.config.use_extended_defaults = false }
+    after { Author.reset_column_information }
+
+    it 'does not break jsonb' do
+      expect { connection.add_column(:authors, :profile, :jsonb, default: []) }.not_to raise_error
+      expect(Author.columns_hash['profile'].default).to eq('[]')
+    end
+
+    it 'works properly when column is an array' do
+      expect { connection.add_column(:authors, :tag_ids, :bigint, array: true, default: []) }.not_to raise_error
+      expect(Author.columns_hash['tag_ids'].default).to eq([])
+    end
+
+    it 'works with an array with enum values' do
+      value = ['visitor', 'assistant']
+      expect { connection.add_column(:authors, :roles, :roles, array: true, default: value) }.not_to raise_error
+      expect(Author.columns_hash['roles'].default).to eq(value)
+    end
+
+    it 'works with multi dimentional array' do
+      value = [['1', '2'], ['3', '4']]
+      expect { connection.add_column(:authors, :tag_ids, :string, array: true, default: value) }.not_to raise_error
+      expect(Author.columns_hash['tag_ids'].default).to eq(value)
+    end
+  end
+
   context 'on cast' do
     it 'provides an array method' do
       sample1 = ::Arel.array(1, 2, 3, 4)

@@ -17,6 +17,4 @@ module Torque
     end
     alias_method :|, :union
   end
-
-  ::Range.include(Range)
 end

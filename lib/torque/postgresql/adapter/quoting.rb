@@ -20,7 +20,7 @@ module Torque
         end
 
         def quote_default_expression(value, column)
-          if value.class <= Array
+          if column.dig(:options, :array) && value.class <= Array
             quote(value) + '::' + column.sql_type
           else
             super
