@@ -117,7 +117,7 @@ module Torque
       # because the type mapper may add new methods to the model. This happens
       # for the given model Klass and its inheritances
       module Initializer
-        def initialize(klass, *)
+        def initialize(klass, *, **)
           super
 
           klass.superclass.send(:relation) if klass.define_attribute_methods &&
