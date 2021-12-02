@@ -6,6 +6,8 @@ module Torque
       module Quoting
 
         Name = ActiveRecord::ConnectionAdapters::PostgreSQL::Name
+        Column = ActiveRecord::ConnectionAdapters::PostgreSQL::Column
+        ColumnDefinition = ActiveRecord::ConnectionAdapters::ColumnDefinition
 
         # Quotes type names for use in SQL queries.
         def quote_type_name(string, schema = nil)
@@ -20,11 +22,12 @@ module Torque
         end
 
         def quote_default_expression(value, column)
-          if column.options.try(:[], :array) && value.class <= Array
-            quote(value) + '::' + column.sql_type
-          else
-            super
-          end
+          return super unless value.class <= Array &&
+            ((column.is_a?(ColumnDefinition) && column.dig(:options, :array)) ||
+            (column.is_a?(Column) && column.array?))
+
+          type = column.is_a?(Column) ? column.sql_type_metadata.sql_type : column.sql_type
+          quote(value) + '::' + type
         end
 
         private

@@ -55,6 +55,12 @@ RSpec.describe 'Arel' do
     after(:context) { Torque::PostgreSQL.config.use_extended_defaults = false }
     after { Author.reset_column_information }
 
+    it 'does not break the change column default value method' do
+      connection.add_column(:authors, :enabled, :boolean)
+      expect { connection.change_column_default(:authors, :enabled, { from: nil, to: true }) }.not_to raise_error
+      expect(Author.columns_hash['enabled'].default).to eq('true')
+    end
+
     it 'does not break jsonb' do
       expect { connection.add_column(:authors, :profile, :jsonb, default: []) }.not_to raise_error
       expect(Author.columns_hash['profile'].default).to eq('[]')
@@ -74,6 +80,13 @@ RSpec.describe 'Arel' do
     it 'works with multi dimentional array' do
       value = [['1', '2'], ['3', '4']]
       expect { connection.add_column(:authors, :tag_ids, :string, array: true, default: value) }.not_to raise_error
+      expect(Author.columns_hash['tag_ids'].default).to eq(value)
+    end
+
+    it 'works with change column default value' do
+      value = ['2', '3']
+      connection.add_column(:authors, :tag_ids, :string, array: true)
+      expect { connection.change_column_default(:authors, :tag_ids, { from: nil, to: value }) }.not_to raise_error
       expect(Author.columns_hash['tag_ids'].default).to eq(value)
     end
   end
