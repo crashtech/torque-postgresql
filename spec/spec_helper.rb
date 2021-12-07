@@ -8,9 +8,13 @@ require 'byebug'
 
 Dotenv.load
 
-ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'])
-cache = ActiveRecord::Base.connection.schema_cache
+ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'] || {
+  adapter: 'postgresql',
+  username: 'travis',
+  port: 5433,
+})
 
+cache = ActiveRecord::Base.connection.schema_cache
 cleaner = ->() do
   cache.instance_variable_set(:@inheritance_loaded, false)
   cache.instance_variable_set(:@inheritance_dependencies, {})
