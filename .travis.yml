@@ -15,14 +15,14 @@ cache:
 env:
   global:
     - CC_TEST_REPORTER_ID=d21c4c9d0d7ba6a27368b8e25edad911eb1daa03202e69fe2bc2e42a3ed21de3
-    - DATABASE_URL=postgres://travis@localhost:5433/torque_postgresql_test
+    - DATABASE_URL=postgres://travis@127.0.0.1:5433/torque_postgresql_test
 
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
-  - psql -c 'DROP DATABASE IF EXISTS torque_postgresql_test;' -U travis -h localhost -p 5433
-  - psql -c 'CREATE DATABASE torque_postgresql_test;' -U travis -h localhost -p 5433
+  - psql -c 'DROP DATABASE IF EXISTS torque_postgresql_test;' -U travis -p 5433
+  - psql -c 'CREATE DATABASE torque_postgresql_test;' -U travis -p 5433
   - bundle exec rake dump
 
 after_script:
