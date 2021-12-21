@@ -6,9 +6,6 @@ module Torque
       module AbstractReflection
         AREL_ATTR = ::Arel::Attributes::Attribute
 
-        ARR_NO_CAST = 'bigint'
-        ARR_CAST = 'bigint[]'
-
         # Check if the foreign key actually exists
         def connected_through_array?
           false
@@ -58,9 +55,7 @@ module Torque
           return klass_attr.in(source_attr) unless klass_type.try(:array)
 
           # Decide if should apply a cast to ensure same type comparision
-          should_cast = klass_type.type.eql?(:integer) && source_type.type.eql?(:integer)
-          should_cast &= !klass_type.sql_type.eql?(source_type.sql_type)
-          should_cast |= !(klass_attr.is_a?(AREL_ATTR) && source_attr.is_a?(AREL_ATTR))
+          should_cast = !klass_type.sql_type.eql?(source_type.sql_type)
 
           # Apply necessary transformations to values
           klass_attr = cast_constraint_to_array(klass_type, klass_attr, should_cast)
@@ -89,10 +84,10 @@ module Torque
           # Prepare a value for an array constraint overlap condition
           def cast_constraint_to_array(type, value, should_cast)
             base_ready = type.try(:array) && value.is_a?(AREL_ATTR)
-            return value if base_ready && (type.sql_type.eql?(ARR_NO_CAST) || !should_cast)
+            return value if base_ready && !should_cast
 
             value = ::Arel::Nodes.build_quoted(Array.wrap(value)) unless base_ready
-            value = value.cast(ARR_CAST) if should_cast
+            value = value.cast("#{type.sql_type}[]") if should_cast
             value
           end
 
