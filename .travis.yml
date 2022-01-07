@@ -8,6 +8,7 @@ rvm:
 gemfile:
   - gemfiles/Gemfile.rails-6.0
   - gemfiles/Gemfile.rails-6.1
+  - gemfiles/Gemfile.rails-7.0
 
 cache:
   bundler: true
