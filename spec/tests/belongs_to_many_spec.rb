@@ -339,6 +339,19 @@ RSpec.describe 'BelongsToMany' do
       expect(entries.first.tags.size).to be_eql(5)
     end
 
+    it 'can preload records using ActiveRecord::Associations::Preloader' do
+      records = FactoryBot.create_list(:tag, 5)
+      subject.tags.concat(records)
+
+      entries = Video.all
+      ActiveRecord::Associations::Preloader.new.preload(entries, :tags, Tag.all)
+      entries = entries.load
+
+      expect(entries.size).to be_eql(1)
+      expect(entries.first.tags).to be_loaded
+      expect(entries.first.tags.size).to be_eql(5)
+    end
+
     it 'can joins records' do
       query = Video.all.joins(:tags)
       expect(query.to_sql).to match(/INNER JOIN "tags"/)
