@@ -53,8 +53,8 @@ module Torque
 
         def load_target
           if stale_target? || find_target?
-            @target = merge_target_lists(find_target, stale_target = target)
-            @target += stale_target.select(&:persisted?) if PostgreSQL::AR615
+            new_records = PostgreSQL::AR615 ? target.extract!(&:persisted?) : []
+            @target = merge_target_lists((find_target || []) + new_records, target)
           end
 
           loaded!
