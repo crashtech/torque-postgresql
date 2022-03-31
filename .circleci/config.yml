@@ -1,0 +1,42 @@
+version: 2.1
+orbs:
+  ruby: circleci/ruby@1.4.0
+
+jobs:
+  test:
+    parameters:
+      ruby-version:
+        type: string
+      bundle-version:
+        type: string
+
+    docker:
+      - image: cimg/ruby:<< parameters.ruby-version >>
+      - image: circleci/postgres:12.9
+        environment:
+          POSTGRES_USER: torque
+          POSTGRES_PASSWORD: torque
+          POSTGRES_DB: torque_postgresql
+
+    steps:
+      - checkout
+      - run: ruby --version
+      - run:
+          command: 'bundle install --gemfile gemfiles/<< parameters.bundle-version >>'
+          name: Install Bundle
+      - run:
+          command: 'bundle exec --gemfile gemfiles/<< parameters.bundle-version >> rspec'
+          name: Run Tests
+
+references:
+  matrix_build: &matrix_build
+    test:
+      matrix:
+        parameters:
+          ruby-version: ['2.6', '2.7', '3.0']
+          bundle-version: ['Gemfile.rails-6.0', 'Gemfile.rails-6.1']
+
+workflows:
+   commit:
+     jobs:
+       - <<: *matrix_build
