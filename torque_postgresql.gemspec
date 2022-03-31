@@ -30,6 +30,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'dotenv', '~> 2.1', '>= 2.1.1'
   s.add_development_dependency 'rspec', '~> 3.5', '>= 3.5.0'
 
-  s.add_development_dependency 'factory_bot', '~> 5.0', '>= 5.0.2'
-  s.add_development_dependency 'faker', '~> 1.5', '>= 1.5.0'
+  s.add_development_dependency 'factory_bot', '~> 6.2', '>= 6.2.1'
+  s.add_development_dependency 'faker', '~> 2.20'
 end

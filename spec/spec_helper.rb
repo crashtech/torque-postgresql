@@ -31,6 +31,7 @@ I18n.load_path << Pathname.pwd.join('spec', 'en.yml')
 RSpec.configure do |config|
   config.extend Mocks::CreateTable
   config.include Mocks::CacheQuery
+  config.include FactoryBot::Syntax::Methods
 
   config.formatter = :documentation
   config.color     = true

@@ -3,6 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Enum' do
   let(:connection) { ActiveRecord::Base.connection }
   let(:attribute_klass) { Torque::PostgreSQL::Attributes::Enum }
+  let(:table_definition) { ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition }
 
   def decorate(model, field, options = {})
     attribute_klass.include_on(model, :pg_enum)
@@ -85,7 +86,7 @@ RSpec.describe 'Enum' do
   end
 
   context 'on table definition' do
-    subject { ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition.new('articles') }
+    subject { table_definition.new(connection, 'articles') }
 
     it 'has the enum method' do
       expect(subject).to respond_to(:enum)

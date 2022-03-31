@@ -3,6 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Enum' do
   let(:connection) { ActiveRecord::Base.connection }
   let(:attribute_klass) { Torque::PostgreSQL::Attributes::EnumSet }
+  let(:table_definition) { ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition }
 
   def decorate(model, field, options = {})
     attribute_klass.include_on(model, :enum_set)
@@ -25,7 +26,7 @@ RSpec.describe 'Enum' do
   end
 
   context 'on table definition' do
-    subject { ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition.new('articles') }
+    subject { table_definition.new(connection, 'articles') }
 
     it 'can be defined as an array' do
       subject.enum(:content_status, array: true)

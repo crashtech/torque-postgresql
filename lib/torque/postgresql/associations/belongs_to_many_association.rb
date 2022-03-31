@@ -53,7 +53,8 @@ module Torque
 
         def load_target
           if stale_target? || find_target?
-            @target = merge_target_lists(find_target, target)
+            @target = merge_target_lists(find_target, stale_target = target)
+            @target += stale_target.select(&:persisted?) if PostgreSQL::AR615
           end
 
           loaded!

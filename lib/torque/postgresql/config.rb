@@ -7,6 +7,7 @@ module Torque
     # Stores a version check for compatibility purposes
     AR604 = (ActiveRecord.gem_version >= Gem::Version.new('6.0.4'))
     AR610 = (ActiveRecord.gem_version >= Gem::Version.new('6.1.0'))
+    AR615 = (ActiveRecord.gem_version >= Gem::Version.new('6.1.5'))
 
     # Use the same logger as the Active Record one
     def self.logger

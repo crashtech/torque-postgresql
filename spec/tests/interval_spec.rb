@@ -2,6 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'Interval' do
   let(:connection) { ActiveRecord::Base.connection }
+  let(:table_definition) { ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition }
 
   context 'on settings' do
     it 'must be set to ISO 8601' do
@@ -10,7 +11,7 @@ RSpec.describe 'Interval' do
   end
 
   context 'on table definition' do
-    subject { ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition.new('articles') }
+    subject { table_definition.new(connection, 'articles') }
 
     it 'has the interval method' do
       expect(subject).to respond_to(:interval)
