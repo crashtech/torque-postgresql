@@ -15,6 +15,7 @@ jobs:
       - image: circleci/postgres:12.9
         environment:
           POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: torque
           POSTGRES_DB: torque_postgresql
 
     steps:
@@ -24,10 +25,13 @@ jobs:
           command: 'bundle install --gemfile gemfiles/<< parameters.bundle-version >>'
           name: Install Bundle
       - run:
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+          name: Wait for DB
+      - run:
           command: 'bundle exec --gemfile gemfiles/<< parameters.bundle-version >> rspec'
           name: Run Tests
           environment:
-            DATABASE_URL: 'postgresql://postgres@localhost/torque_postgresql'
+            DATABASE_URL: 'postgresql://postgres:torque@localhost/torque_postgresql'
 
 references:
   matrix_build: &matrix_build
