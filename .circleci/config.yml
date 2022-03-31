@@ -14,8 +14,7 @@ jobs:
       - image: cimg/ruby:<< parameters.ruby-version >>
       - image: circleci/postgres:12.9
         environment:
-          POSTGRES_USER: torque
-          POSTGRES_PASSWORD: torque
+          POSTGRES_USER: postgres
           POSTGRES_DB: torque_postgresql
 
     steps:
@@ -27,6 +26,8 @@ jobs:
       - run:
           command: 'bundle exec --gemfile gemfiles/<< parameters.bundle-version >> rspec'
           name: Run Tests
+          environment:
+            DATABASE_URL: 'postgresql://postgres@localhost/torque_postgresql'
 
 references:
   matrix_build: &matrix_build
