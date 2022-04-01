@@ -1,7 +1,7 @@
 
 # Torque PostgreSQL
 
-[![Build Status](https://travis-ci.com/crashtech/torque-postgresql.svg?branch=master)](https://travis-ci.com/crashtech/torque-postgresql)
+[![CircleCI](https://circleci.com/gh/crashtech/torque-postgresql/tree/master.svg?style=svg)](https://circleci.com/gh/crashtech/torque-postgresql/tree/master)
 [![Code Climate](https://codeclimate.com/github/crashtech/torque-postgresql/badges/gpa.svg)](https://codeclimate.com/github/crashtech/torque-postgresql)
 [![Gem Version](https://badge.fury.io/rb/torque-postgresql.svg)](https://badge.fury.io/rb/torque-postgresql)
 <!--([![Test Coverage](https://codeclimate.com/github/crashtech/torque-postgresql/badges/coverage.svg)](https://codeclimate.com/github/crashtech/torque-postgresql/coverage))-->
@@ -23,6 +23,7 @@ To install torque-postgresql you need to add the following to your Gemfile:
 gem 'torque-postgresql', '~> 1.1'   # For Rails  < 6.0
 gem 'torque-postgresql', '~> 2.0'   # For Rails >= 6.0 < 6.1
 gem 'torque-postgresql', '~> 2.0.4' # For Rails >= 6.1
+gem 'torque-postgresql', '~> 3.0'   # For Rails >= 7.0
 ```
 
 Also, run:
@@ -41,10 +42,6 @@ gem install torque-postgresql
 These are the currently available features:
 
 * [Configuring](https://github.com/crashtech/torque-postgresql/wiki/Configuring)
-
-## Core Extensions
-
-* [~~Range~~](https://github.com/crashtech/torque-postgresql/wiki/Range) (DEPRECATED)
 
 ## Data types
 
