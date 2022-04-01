@@ -62,11 +62,11 @@ module Torque
 
       # The name of the method to be used on any ActiveRecord::Base to
       # initialize model-based enum features
-      enum.base_method = :enum
+      enum.base_method = :torque_enum
 
       # The name of the method to be used on any ActiveRecord::Base to
       # initialize model-based enum set features
-      enum.set_method = :enum_set
+      enum.set_method = :torque_enum_set
 
       # Indicates if bang methods like 'disabled!' should update the record on
       # database or not
