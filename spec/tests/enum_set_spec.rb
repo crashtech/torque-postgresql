@@ -29,9 +29,10 @@ RSpec.describe 'Enum' do
     subject { table_definition.new(connection, 'articles') }
 
     it 'can be defined as an array' do
-      subject.enum(:content_status, array: true)
+      subject.enum(:content_status, array: true, enum_type: :content_status)
       expect(subject['content_status'].name).to be_eql('content_status')
-      expect(subject['content_status'].type).to be_eql(:content_status)
+      expect(subject['content_status'].type).to be_eql(:enum)
+      expect(subject['content_status'].options[:enum_type]).to be_eql(:content_status)
 
       array = subject['content_status'].respond_to?(:options) \
         ? subject['content_status'].options[:array] \
@@ -44,14 +45,14 @@ RSpec.describe 'Enum' do
   context 'on schema' do
     it 'can be used on tables' do
       dump_io = StringIO.new
-      checker = /t\.enum +"conflicts", +array: true, +subtype: :conflicts/
+      checker = /t\.enum +"conflicts", +array: true, +enum_type: "conflicts"/
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
       expect(dump_io.string).to match checker
     end
 
     xit 'can have a default value as an array of symbols' do
       dump_io = StringIO.new
-      checker = /t\.enum +"types", +default: \[:A, :B\], +array: true, +subtype: :types/
+      checker = /t\.enum +"types", +default: \[:A, :B\], +array: true, +enum_type: "types"/
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
       expect(dump_io.string).to match checker
     end

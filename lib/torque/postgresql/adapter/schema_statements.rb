@@ -25,21 +25,6 @@ module Torque
           SQL
         end
 
-        # Creates a new PostgreSQL enumerator type
-        #
-        # Example:
-        #   create_enum 'status', ['foo', 'bar']
-        #   create_enum 'status', ['foo', 'bar'], prefix: true
-        #   create_enum 'status', ['foo', 'bar'], suffix: 'test'
-        #   create_enum 'status', ['foo', 'bar'], force: true
-        def create_enum(name, values, options = {})
-          drop_type(name, options) if options[:force]
-          execute <<-SQL.squish
-            CREATE TYPE #{quote_type_name(name, options[:schema])} AS ENUM
-            (#{quote_enum_values(name, values, options).join(', ')})
-          SQL
-        end
-
         # Changes the enumerator by adding new values
         #
         # Example:

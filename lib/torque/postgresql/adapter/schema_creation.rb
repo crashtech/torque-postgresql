@@ -33,8 +33,7 @@ module Torque
           create_sql << "(#{statements.join(', ')})" \
             if statements.present? || o.inherits.present?
 
-          options = PostgreSQL::AR610 ? o : table_options(o)
-          add_table_options!(create_sql, options)
+          add_table_options!(create_sql, o)
 
           if o.inherits.present?
             tables = o.inherits.map(&method(:quote_table_name))

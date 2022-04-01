@@ -22,12 +22,6 @@ module Torque
           EXTENDED_DATABASE_TYPES
         end
 
-        # Returns true if type exists.
-        def type_exists?(name)
-          user_defined_types.key? name.to_s
-        end
-        alias data_type_exists? type_exists?
-
         # Configure the interval format
         def configure_connection
           super
@@ -81,37 +75,6 @@ module Torque
           end
         end
 
-        # Gets a list of user defined types.
-        # You can even choose the +category+ filter
-        def user_defined_types(*categories)
-          category_condition = categories.present? \
-            ? "AND t.typtype IN ('#{categories.join("', '")}')" \
-            : "AND t.typtype NOT IN ('b', 'd')"
-
-          select_all(<<-SQL, 'SCHEMA').rows.to_h
-            SELECT t.typname AS name,
-                   CASE t.typtype
-                     WHEN 'e' THEN 'enum'
-                     END     AS type
-            FROM pg_type t
-                   LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-            WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
-              #{category_condition}
-              AND NOT EXISTS(
-                SELECT 1
-                FROM pg_catalog.pg_type el
-                WHERE el.oid = t.typelem
-                  AND el.typarray = t.oid
-              )
-              AND (t.typrelid = 0 OR (
-              SELECT c.relkind = 'c'
-              FROM pg_catalog.pg_class c
-              WHERE c.oid = t.typrelid
-            ))
-            ORDER BY t.typtype DESC
-          SQL
-        end
-
         # Get the list of inherited tables associated with their parent tables
         def inherited_tables
           tables = query(<<-SQL, 'SCHEMA')
@@ -132,7 +95,9 @@ module Torque
         # Get the list of columns, and their definition, but only from the
         # actual table, does not include columns that comes from inherited table
         def column_definitions(table_name) # :nodoc:
+          # Only affects inheritance
           local_condition = 'AND a.attislocal IS TRUE' if @_dump_mode
+
           query(<<-SQL, 'SCHEMA')
               SELECT a.attname, format_type(a.atttypid, a.atttypmod),
                      pg_get_expr(d.adbin, d.adrelid), a.attnotnull, a.atttypid, a.atttypmod,

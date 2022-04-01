@@ -140,18 +140,6 @@ module Torque
     ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES += %i[cast_records itself_only
       distinct_on auxiliary_statements]
 
-    unless AR610
-      Relation::SINGLE_VALUE_METHODS.each do |value|
-        ActiveRecord::QueryMethods::DEFAULT_VALUES[value] = nil \
-          if ActiveRecord::QueryMethods::DEFAULT_VALUES[value].nil?
-      end
-
-      Relation::MULTI_VALUE_METHODS.each do |value|
-        ActiveRecord::QueryMethods::DEFAULT_VALUES[value] ||= \
-          ActiveRecord::QueryMethods::FROZEN_EMPTY_ARRAY
-      end
-    end
-
     $VERBOSE = warn_level
   end
 end

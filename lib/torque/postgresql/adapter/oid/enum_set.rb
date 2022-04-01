@@ -14,7 +14,7 @@ module Torque
           end
 
           def type
-            :enum_set
+            :enum
           end
 
           def deserialize(value)

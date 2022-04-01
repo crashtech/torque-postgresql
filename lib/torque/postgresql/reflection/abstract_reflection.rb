@@ -45,9 +45,9 @@ module Torque
           return klass_attr.eq(source_attr) unless connected_through_array?
 
           # Klass and key are associated with the reflection Class
-          klass_type = klass.columns_hash[join_keys.key.to_s]
+          klass_type = klass.columns_hash[join_primary_key.to_s]
           # active_record and foreign_key are associated with the source Class
-          source_type = active_record.columns_hash[join_keys.foreign_key.to_s]
+          source_type = active_record.columns_hash[join_foreign_key.to_s]
 
           # If both are attributes but the left side is not an array, and the
           # right side is, use the ANY operation
@@ -70,11 +70,9 @@ module Torque
           klass_attr.overlaps(source_attr)
         end
 
-        if PostgreSQL::AR610
-          # TODO: Deprecate this method
-          def join_keys
-            OpenStruct.new(key: join_primary_key, foreign_key: join_foreign_key)
-          end
+        # TODO: Deprecate this method
+        def join_keys
+          OpenStruct.new(key: join_primary_key, foreign_key: join_foreign_key)
         end
 
         private

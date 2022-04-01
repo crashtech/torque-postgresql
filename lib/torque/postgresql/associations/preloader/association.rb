@@ -11,8 +11,22 @@ module Torque
           # For reflections connected through an array, make sure to properly
           # decuple the list of ids and set them as associated with the owner
           def run
+            return self if run?
             return super unless connected_through_array?
+
+            @run = true
             send("run_array_for_#{@reflection.macro}")
+            self
+          end
+
+          # Make sure to change the process when connected through an array
+          def owners_by_key
+            return super unless connected_through_array?
+            @owners_by_key ||= owners.each_with_object({}) do |owner, result|
+              Array.wrap(convert_key(owner[owner_key_name])).each do |key|
+                (result[key] ||= []) << owner
+              end
+            end
           end
 
           private
@@ -38,32 +52,6 @@ module Torque
               records.default_proc = nil
               owners.each do |owner|
                 associate_records_to_owner(owner, records[owner[owner_key_name]] || [])
-              end
-            end
-
-            if PostgreSQL::AR604
-            # This is how Rails 6.0.4 and 6.1 now load the records
-              def load_records
-                return super unless connected_through_array?
-
-                @records_by_owner = {}.compare_by_identity
-                raw_records = owner_keys.empty? ? [] : records_for(owner_keys)
-
-                @preloaded_records = raw_records.select do |record|
-                  assignments = false
-
-                  ids = convert_key(record[association_key_name])
-                  owners_by_key.values_at(*ids).flat_map do |owner|
-                    entries = (@records_by_owner[owner] ||= [])
-
-                    if reflection.collection? || entries.empty?
-                      entries << record
-                      assignments = true
-                    end
-                  end
-
-                  assignments
-                end
               end
             end
 

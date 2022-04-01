@@ -220,7 +220,7 @@ module Torque
               @arel_threshold_value ||= begin
                 case threshold
                 when Symbol, String
-                  "arel_attribute('#{threshold}')"
+                  "arel_table['#{threshold}']"
                 when ActiveSupport::Duration
                   value = "'#{threshold.to_i} seconds'"
                   "::Arel.sql(\"#{value}\").cast(:interval)"
@@ -453,7 +453,11 @@ module Torque
               attr_value = threshold.present? ? method_names[:real] : attribute
               default_value = default.inspect
 
-              "#{attr_value}.nil? ? #{default_value} : #{attr_value}.include?(value)"
+              [
+                "return #{default_value} if #{attr_value}.nil?",
+                "(#{attr_value}.min.try(:infinite?) || #{attr_value}.min <= value) &&",
+                "  (#{attr_value}.max.try(:infinite?) || #{attr_value}.max > value)",
+              ].join("\n")
             end
 
             def instance_start

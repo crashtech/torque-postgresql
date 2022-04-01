@@ -344,7 +344,8 @@ RSpec.describe 'BelongsToMany' do
       subject.tags.concat(records)
 
       entries = Video.all
-      ActiveRecord::Associations::Preloader.new.preload(entries, :tags, Tag.all)
+      arguments = { records: entries, associations: :tags, available_records: Tag.all.to_a }
+      ActiveRecord::Associations::Preloader.new(**arguments).call
       entries = entries.load
 
       expect(entries.size).to be_eql(1)
