@@ -51,8 +51,6 @@ RSpec.describe 'Arel' do
   context 'on default value' do
     let(:connection) { ActiveRecord::Base.connection }
 
-    before(:context) { Torque::PostgreSQL.config.use_extended_defaults = true }
-    after(:context) { Torque::PostgreSQL.config.use_extended_defaults = false }
     after { Author.reset_column_information }
 
     it 'does not break the change column default value method' do

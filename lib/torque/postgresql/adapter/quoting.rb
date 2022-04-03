@@ -6,8 +6,6 @@ module Torque
       module Quoting
 
         Name = ActiveRecord::ConnectionAdapters::PostgreSQL::Name
-        Column = ActiveRecord::ConnectionAdapters::PostgreSQL::Column
-        ColumnDefinition = ActiveRecord::ConnectionAdapters::ColumnDefinition
 
         # Quotes type names for use in SQL queries.
         def quote_type_name(string, schema = nil)

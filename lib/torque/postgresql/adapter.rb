@@ -49,15 +49,6 @@ module Torque
           end
         end
       end
-
-      # Extend the extract default value to support array
-      def extract_value_from_default(default)
-        return super unless Torque::PostgreSQL.config.use_extended_defaults
-        return super unless default&.match(/ARRAY\[(.*?)\](?:::"?([\w. ]+)"?(?:\[\])+)?$/)
-
-        arr = $1.split(/(?!\B\[[^\]]*), ?(?![^\[]*\]\B)/)
-        DeduplicatableArray.new(arr.map(&method(:extract_value_from_default)))
-      end
     end
 
     ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.prepend Adapter
