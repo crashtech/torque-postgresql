@@ -22,7 +22,7 @@ module Torque
         end
 
         def quote_default_expression(value, column)
-          return super unless value.class <= Enumerable
+          return super unless value.class <= Array || value.class <= Set
 
           type =
             if column.is_a?(ColumnDefinition) && column.options.try(:[], :array)
@@ -31,8 +31,7 @@ module Torque
               lookup_cast_type_from_column(column)
             end
 
-          puts column.inspect if type.nil?
-          type.nil? ? super : quote(type.serialize(value))
+          type.nil? ? super : quote(type.serialize(value.to_a))
         end
       end
     end
