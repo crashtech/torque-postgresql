@@ -31,6 +31,7 @@ module Torque
               lookup_cast_type_from_column(column)
             end
 
+          puts column.inspect if type.nil?
           type.nil? ? super : quote(type.serialize(value))
         end
       end
