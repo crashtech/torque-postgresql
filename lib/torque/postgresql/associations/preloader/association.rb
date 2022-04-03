@@ -19,6 +19,45 @@ module Torque
             self
           end
 
+          # Correctly correlate records when they are connected theough an array
+          def set_inverse(record)
+            return super unless connected_through_array? && @reflection.macro == :has_many
+
+            # Only the first owner is associated following the same instruction
+            # on the original implementation
+            convert_key(record[association_key_name])&.each do |key|
+              if owners = owners_by_key[key]
+                association = owners.first.association(reflection.name)
+                association.set_inverse_instance(record)
+              end
+            end
+          end
+
+          # Requires a slight change when running on has many since the value
+          # of the foreign key being an array
+          def load_records(raw_records = nil)
+            return super unless connected_through_array? && @reflection.macro == :has_many
+
+            @records_by_owner = {}.compare_by_identity
+            raw_records ||= loader_query.records_for([self])
+
+            @preloaded_records = raw_records.select do |record|
+              assignments = false
+
+              keys = convert_key(record[association_key_name]) || []
+              owners_by_key.values_at(*keys).each do |owner|
+                entries = (@records_by_owner[owner] ||= [])
+
+                if reflection.collection? || entries.empty?
+                  entries << record
+                  assignments = true
+                end
+              end
+
+              assignments
+            end
+          end
+
           # Make sure to change the process when connected through an array
           def owners_by_key
             return super unless connected_through_array?

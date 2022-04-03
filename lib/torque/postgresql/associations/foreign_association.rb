@@ -3,7 +3,7 @@
 module Torque
   module PostgreSQL
     module Associations
-      module Association
+      module ForeignAssociation
 
         # There is no problem of adding temporary items on target because
         # CollectionProxy will handle memory and persisted relationship
@@ -33,9 +33,6 @@ module Torque
           end
 
       end
-
-      ::ActiveRecord::Associations::Association.prepend(Association)
-      ::ActiveRecord::Associations::HasManyAssociation.prepend(Association)
     end
   end
 end

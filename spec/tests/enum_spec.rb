@@ -26,12 +26,6 @@ RSpec.describe 'Enum' do
   end
 
   context 'on migration' do
-    it 'can be created' do
-      connection.create_enum(:status, %i(foo bar))
-      expect(connection.type_exists?(:status)).to be_truthy
-      expect(connection.enum_values(:status)).to be_eql(['foo', 'bar'])
-    end
-
     it 'can be deleted' do
       connection.create_enum(:status, %i(foo bar))
       expect(connection.type_exists?(:status)).to be_truthy
@@ -44,16 +38,6 @@ RSpec.describe 'Enum' do
       connection.rename_type(:content_status, :status)
       expect(connection.type_exists?(:content_status)).to be_falsey
       expect(connection.type_exists?(:status)).to be_truthy
-    end
-
-    it 'can have prefix' do
-      connection.create_enum(:status, %i(foo bar), prefix: true)
-      expect(connection.enum_values(:status)).to be_eql(['status_foo', 'status_bar'])
-    end
-
-    it 'can have suffix' do
-      connection.create_enum(:status, %i(foo bar), suffix: 'tst')
-      expect(connection.enum_values(:status)).to be_eql(['foo_tst', 'bar_tst'])
     end
 
     it 'inserts values at the end' do
@@ -82,74 +66,6 @@ RSpec.describe 'Enum' do
       connection.add_enum_values(:status, %i(baz), prefix: true)
       connection.add_enum_values(:status, %i(qux), suffix: 'tst')
       expect(connection.enum_values(:status)).to be_eql(['foo', 'bar', 'status_baz', 'qux_tst'])
-    end
-  end
-
-  context 'on table definition' do
-    subject { table_definition.new(connection, 'articles') }
-
-    it 'has the enum method' do
-      expect(subject).to respond_to(:enum)
-    end
-
-    it 'can be used in a single form' do
-      subject.enum('content_status')
-      expect(subject['content_status'].name).to be_eql('content_status')
-      expect(subject['content_status'].type).to be_eql(:content_status)
-    end
-
-    it 'can be used in a multiple form' do
-      subject.enum('foo', 'bar', 'baz', subtype: :content_status)
-      expect(subject['foo'].type).to be_eql(:content_status)
-      expect(subject['bar'].type).to be_eql(:content_status)
-      expect(subject['baz'].type).to be_eql(:content_status)
-    end
-
-    it 'can have custom type' do
-      subject.enum('foo', subtype: :content_status)
-      expect(subject['foo'].name).to be_eql('foo')
-      expect(subject['foo'].type).to be_eql(:content_status)
-    end
-
-    it 'raises StatementInvalid when type isn\'t defined' do
-      subject.enum('foo')
-      creation = connection.send(:schema_creation).accept subject
-      expect{ connection.execute creation }.to raise_error(ActiveRecord::StatementInvalid)
-    end
-  end
-
-  context 'on schema' do
-    it 'dumps when has it' do
-      dump_io = StringIO.new
-      ActiveRecord::SchemaDumper.dump(connection, dump_io)
-      expect(dump_io.string).to match /create_enum \"content_status\", \[/
-    end
-
-    it 'sorts the enum entries to better consistency' do
-      dump_io = StringIO.new
-      ActiveRecord::SchemaDumper.dump(connection, dump_io)
-      items = dump_io.string.scan(/create_enum "(\w+)"/).flatten
-      expect(items).to be_eql(items.sort)
-    end
-
-    it 'do not dump when has none' do
-      connection.drop_type(:content_status, force: :cascade)
-
-      dump_io = StringIO.new
-      ActiveRecord::SchemaDumper.dump(connection, dump_io)
-      expect(dump_io.string).not_to match /create_enum \"content_status\", \[/
-    end
-
-    it 'can be used on tables too' do
-      dump_io = StringIO.new
-      ActiveRecord::SchemaDumper.dump(connection, dump_io)
-      expect(dump_io.string).to match /t\.enum +"status", +subtype: :content_status/
-    end
-
-    it 'can have a default value as symbol' do
-      dump_io = StringIO.new
-      ActiveRecord::SchemaDumper.dump(connection, dump_io)
-      expect(dump_io.string).to match /t\.enum +"role", +default: :visitor, +subtype: :roles/
     end
   end
 

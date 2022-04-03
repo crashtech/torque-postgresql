@@ -109,6 +109,7 @@ module Torque
 
       # Try to find a model based on a given table
       def lookup_model(table_name, scoped_class = '')
+        # byebug if table_name == 'activities'
         scoped_class = scoped_class.name if scoped_class.is_a?(Class)
         return @data_sources_model_names[table_name] \
           if @data_sources_model_names.key?(table_name)
@@ -123,7 +124,7 @@ module Torque
 
         # Test all the possible names against all the possible scopes
         until scopes.size == 0
-          scope = scopes.join.safe_constantize
+          scope = scopes.join.chomp('::').safe_constantize
           model = find_model(max_name, table_name, scope) unless scope.nil?
           return @data_sources_model_names[table_name] = model unless model.nil?
           scopes.pop

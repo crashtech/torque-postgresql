@@ -19,6 +19,8 @@ module Torque
       MULTI_VALUE_METHODS = [:distinct_on, :auxiliary_statements, :cast_records, :select_extra]
       VALUE_METHODS = SINGLE_VALUE_METHODS + MULTI_VALUE_METHODS
 
+      ARColumn = ::ActiveRecord::ConnectionAdapters::PostgreSQL::Column
+
       # :nodoc:
       def select_extra_values; get_value(:select_extra); end
       # :nodoc:
@@ -72,6 +74,14 @@ module Torque
         else
           raise ArgumentError, "Relation for #{relation} not found on #{klass}"
         end
+      end
+
+      # Serialize the given value so it can be used in a condition tha involves
+      # the given column
+      def cast_for_condition(column, value)
+        column = columns_hash[column.to_s] unless column.is_a?(ARColumn)
+        caster = connection.lookup_cast_type_from_column(column)
+        connection.type_cast(caster.serialize(value))
       end
 
       private
