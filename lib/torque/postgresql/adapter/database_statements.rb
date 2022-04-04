@@ -34,6 +34,15 @@ module Torque
           execute("SET SESSION IntervalStyle TO 'iso_8601'", 'SCHEMA')
         end
 
+        # Since enums create new types, type map needs to be rebooted to include
+        # the new ones, both normal and array one
+        def create_enum(name, *)
+          super
+
+          oid = query_value("SELECT #{quote(name)}::regtype::oid", "SCHEMA").to_i
+          load_additional_types([oid])
+        end
+
         # Change some of the types being mapped
         def initialize_type_map(m = type_map)
           super
@@ -54,7 +63,7 @@ module Torque
 
         # Add the composite types to be loaded too.
         def torque_load_additional_types(oids = nil)
-          filter = "AND     a.typelem::integer IN (%s)" % oids.join(", ") if oids
+          filter = ("AND     a.typelem::integer IN (%s)" % oids.join(', ')) if oids
 
           query = <<-SQL
             SELECT      a.typelem AS oid, t.typname, t.typelem,

@@ -69,7 +69,18 @@ RSpec.describe 'Arel' do
       expect(Author.new.tag_ids).to eq([])
     end
 
-    it 'works with an array with enum values' do
+    it 'works with an array with enum values for a new enum' do
+      value = ['a', 'b']
+
+      expect do
+        connection.create_enum(:samples, %i[a b c d])
+        connection.add_column(:authors, :samples, :enum, enum_type: :samples, array: true, default: value)
+      end.not_to raise_error
+
+      expect(Author.new.samples).to eq(value)
+    end
+
+    it 'works with an array with enum values for an existing enum' do
       value = ['visitor', 'assistant']
       expect { connection.add_column(:authors, :roles, :enum, enum_type: :roles, array: true, default: value) }.not_to raise_error
       expect(Author.new.roles).to eq(value)

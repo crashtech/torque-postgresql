@@ -4,6 +4,7 @@ orbs:
 
 jobs:
   test:
+    parallelism: 3
     parameters:
       ruby-version:
         type: string

@@ -26,14 +26,13 @@ module Torque
 
           type =
             if column.is_a?(ColumnDefinition) && column.options.try(:[], :array)
+              # This is the general way
               lookup_cast_type(column.sql_type)
             elsif column.is_a?(Column) && column.array?
+              # When using +change_column_default+
               lookup_cast_type_from_column(column)
             end
 
-          puts column.inspect
-          puts value.inspect
-          puts type.inspect
           type.nil? ? super : quote(type.serialize(value.to_a))
         end
       end
