@@ -99,13 +99,19 @@ RSpec.describe 'Enum' do
     end
 
     it 'can be used in a multiple form' do
-      subject.enum('foo', 'bar', 'baz', subtype: :content_status)
+      subject.enum('foo', 'bar', 'baz', enum_type: :content_status)
       expect(subject['foo'].type).to be_eql(:content_status)
       expect(subject['bar'].type).to be_eql(:content_status)
       expect(subject['baz'].type).to be_eql(:content_status)
     end
 
     it 'can have custom type' do
+      subject.enum('foo', enum_type: :content_status)
+      expect(subject['foo'].name).to be_eql('foo')
+      expect(subject['foo'].type).to be_eql(:content_status)
+    end
+
+    it 'can use the deprecated subtype option' do
       subject.enum('foo', subtype: :content_status)
       expect(subject['foo'].name).to be_eql('foo')
       expect(subject['foo'].type).to be_eql(:content_status)
@@ -143,13 +149,13 @@ RSpec.describe 'Enum' do
     it 'can be used on tables too' do
       dump_io = StringIO.new
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
-      expect(dump_io.string).to match /t\.enum +"status", +subtype: :content_status/
+      expect(dump_io.string).to match /t\.enum +"status", +enum_type: :content_status/
     end
 
     it 'can have a default value as symbol' do
       dump_io = StringIO.new
       ActiveRecord::SchemaDumper.dump(connection, dump_io)
-      expect(dump_io.string).to match /t\.enum +"role", +default: :visitor, +subtype: :roles/
+      expect(dump_io.string).to match /t\.enum +"role", +default: :visitor, +enum_type: :roles/
     end
   end
 

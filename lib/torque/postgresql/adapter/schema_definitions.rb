@@ -12,16 +12,16 @@ module Torque
           args.each { |name| column(name, :interval, **options) }
         end
 
-        # Creates a column with an enum type, needing to specify the subtype,
+        # Creates a column with an enum type, needing to specify the enum_type,
         # which is basically the name of the type defined prior creating the
         # column
         def enum(*args, **options)
-          subtype = options.delete(:subtype)
-          args.each { |name| column(name, (subtype || name), **options) }
+          enum_type = [options.delete(:subtype), options.delete(:enum_type)].compact.first
+          args.each { |name| column(name, (enum_type || name), **options) }
         end
 
         # Creates a column with an enum array type, needing to specify the
-        # subtype, which is basically the name of the type defined prior
+        # enum_type, which is basically the name of the type defined prior
         # creating the column
         def enum_set(*args, **options)
           super(*args, **options.merge(array: true))
@@ -47,7 +47,7 @@ module Torque
 
       if ActiveRecord::ConnectionAdapters::PostgreSQL.const_defined?('ColumnDefinition')
         module ColumnDefinition
-          attr_accessor :subtype
+          attr_accessor :subtype, :enum_type
         end
 
         ActiveRecord::ConnectionAdapters::PostgreSQL::ColumnDefinition.include ColumnDefinition

@@ -68,26 +68,37 @@ RSpec.describe 'Arel' do
 
     it 'works properly when column is an array' do
       expect { connection.add_column(:authors, :tag_ids, :bigint, array: true, default: []) }.not_to raise_error
-      expect(Author.columns_hash['tag_ids'].default).to eq([])
+      expect(Author.new.tag_ids).to eq([])
     end
 
-    it 'works with an array with enum values' do
+    it 'works with an array with enum values for a new enum' do
+      value = ['a', 'b']
+
+      expect do
+        connection.create_enum(:samples, %i[a b c d])
+        connection.add_column(:authors, :samples, :samples, array: true, default: value)
+      end.not_to raise_error
+
+      expect(Author.new.samples).to eq(value)
+    end
+
+    it 'works with an array with enum values for an existing enum' do
       value = ['visitor', 'assistant']
       expect { connection.add_column(:authors, :roles, :roles, array: true, default: value) }.not_to raise_error
-      expect(Author.columns_hash['roles'].default).to eq(value)
+      expect(Author.new.roles).to eq(value)
     end
 
     it 'works with multi dimentional array' do
       value = [['1', '2'], ['3', '4']]
       expect { connection.add_column(:authors, :tag_ids, :string, array: true, default: value) }.not_to raise_error
-      expect(Author.columns_hash['tag_ids'].default).to eq(value)
+      expect(Author.new.tag_ids).to eq(value)
     end
 
     it 'works with change column default value' do
       value = ['2', '3']
       connection.add_column(:authors, :tag_ids, :string, array: true)
       expect { connection.change_column_default(:authors, :tag_ids, { from: nil, to: value }) }.not_to raise_error
-      expect(Author.columns_hash['tag_ids'].default).to eq(value)
+      expect(Author.new.tag_ids).to eq(value)
     end
   end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-version = 77
+version = 2
 
 return if ActiveRecord::Migrator.current_version == version
 ActiveRecord::Schema.define(version: version) do
@@ -20,7 +20,8 @@ ActiveRecord::Schema.define(version: version) do
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
 
-  # These are user-defined types used on this database
+  # Custom types defined in this database.
+  # Note that some types may not work with other database engines. Be careful if changing database.
   create_enum "content_status", ["created", "draft", "published", "archived"], force: :cascade
   create_enum "specialties", ["books", "movies", "plays"], force: :cascade
   create_enum "roles", ["visitor", "assistant", "manager", "admin"], force: :cascade
@@ -53,8 +54,8 @@ ActiveRecord::Schema.define(version: version) do
     t.bigint   "tag_ids", array: true
     t.string   "title"
     t.string   "url"
-    t.enum     "type", subtype: :types
-    t.enum     "conflicts", subtype: :conflicts, array: true
+    t.enum     "type", enum_type: :types
+    t.enum     "conflicts", enum_type: :conflicts, array: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -62,13 +63,13 @@ ActiveRecord::Schema.define(version: version) do
   create_table "authors", force: :cascade do |t|
     t.string   "name"
     t.string   "type"
-    t.enum     "specialty", subtype: :specialties
+    t.enum     "specialty", enum_type: :specialties
   end
 
   create_table "texts", force: :cascade do |t|
     t.integer  "user_id"
     t.string   "content"
-    t.enum     "conflict",  subtype: :conflicts
+    t.enum     "conflict",  enum_type: :conflicts
   end
 
   create_table "comments", force: :cascade do |t|
@@ -84,7 +85,7 @@ ActiveRecord::Schema.define(version: version) do
   create_table "courses", force: :cascade do |t|
     t.string   "title",      null: false
     t.interval "duration"
-    t.enum     "types", subtype: :types, array: true
+    t.enum     "types", enum_type: :types, array: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -98,7 +99,7 @@ ActiveRecord::Schema.define(version: version) do
     t.integer  "activity_id"
     t.string   "title"
     t.text     "content"
-    t.enum     "status",    subtype: :content_status
+    t.enum     "status",    enum_type: :content_status
     t.index ["author_id"], name: "index_posts_on_author_id", using: :btree
   end
 
@@ -111,7 +112,7 @@ ActiveRecord::Schema.define(version: version) do
 
   create_table "users", force: :cascade do |t|
     t.string   "name",       null: false
-    t.enum     "role",                    subtype: :roles, default: :visitor
+    t.enum     "role",                    enum_type: :roles, default: :visitor
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -120,7 +121,7 @@ ActiveRecord::Schema.define(version: version) do
     t.integer  "author_id"
     t.string   "title"
     t.boolean  "active"
-    t.enum     "kind",                    subtype: :types
+    t.enum     "kind",                    enum_type: :types
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

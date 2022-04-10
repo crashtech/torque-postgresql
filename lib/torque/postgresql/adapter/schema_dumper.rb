@@ -22,12 +22,12 @@ module Torque
           column.type == :enum_set ? :enum : super
         end
 
-        # Adds +:subtype+ option to the default set
+        # Adds +:enum_type+ option to the default set
         def prepare_column_options(column)
           spec = super
 
-          if subtype = schema_subtype(column)
-            spec[:subtype] = subtype
+          if enum_type = schema_enum_type(column)
+            spec[:enum_type] = enum_type
           end
 
           spec
@@ -35,7 +35,7 @@ module Torque
 
         private
 
-          def schema_subtype(column)
+          def schema_enum_type(column)
             column.sql_type.to_sym.inspect if column.type == :enum || column.type == :enum_set
           end
 
@@ -89,7 +89,8 @@ module Torque
             types = @connection.user_defined_types('e')
             return unless types.any?
 
-            stream.puts "  # These are user-defined types used on this database"
+            stream.puts "  # Custom types defined in this database."
+            stream.puts "  # Note that some types may not work with other database engines. Be careful if changing database."
             types.sort_by(&:first).each { |(name, type)| send(type.to_sym, name, stream) }
             stream.puts
           rescue => e
