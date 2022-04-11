@@ -6,9 +6,6 @@ module Torque
       module AbstractReflection
         AREL_ATTR = ::Arel::Attributes::Attribute
 
-        ARR_NO_CAST = 'bigint'
-        ARR_CAST = 'bigint[]'
-
         # Check if the foreign key actually exists
         def connected_through_array?
           false
@@ -40,34 +37,29 @@ module Torque
           result
         end
 
-        # Build the id constraint checking if both types are perfect matching
+        # Build the id constraint checking if both types are perfect matching.
+        # The klass attribute (left side) will always be a column attribute
         def build_id_constraint(klass_attr, source_attr)
           return klass_attr.eq(source_attr) unless connected_through_array?
 
           # Klass and key are associated with the reflection Class
           klass_type = klass.columns_hash[join_keys.key.to_s]
-          # active_record and foreign_key are associated with the source Class
-          source_type = active_record.columns_hash[join_keys.foreign_key.to_s]
 
-          # If both are attributes but the left side is not an array, and the
-          # right side is, use the ANY operation
-          any_operation = arel_array_to_any(klass_attr, source_attr, klass_type, source_type)
-          return klass_attr.eq(any_operation) if any_operation
+          # Apply an ANY operation which checks if the single value on the left
+          # side exists in the array on the right side
+          if source_attr.is_a?(AREL_ATTR)
+            any_value = [klass_attr, source_attr]
+            any_value.reverse! if klass_type.try(:array?)
+            return any_value.shift.eq(::Arel::Nodes::NamedFunction.new('ANY', any_value))
+          end
 
           # If the left side is not an array, just use the IN condition
           return klass_attr.in(source_attr) unless klass_type.try(:array)
 
-          # Decide if should apply a cast to ensure same type comparision
-          should_cast = klass_type.type.eql?(:integer) && source_type.type.eql?(:integer)
-          should_cast &= !klass_type.sql_type.eql?(source_type.sql_type)
-          should_cast |= !(klass_attr.is_a?(AREL_ATTR) && source_attr.is_a?(AREL_ATTR))
-
-          # Apply necessary transformations to values
-          klass_attr = cast_constraint_to_array(klass_type, klass_attr, should_cast)
-          source_attr = cast_constraint_to_array(source_type, source_attr, should_cast)
-
-          # Return the overlap condition
-          klass_attr.overlaps(source_attr)
+          # Build the overlap condition (array && array) ensuring that the right
+          # side has the same type as the left side
+          source_attr = ::Arel::Nodes.build_quoted(Array.wrap(source_attr))
+          klass_attr.overlaps(source_attr.cast(klass_type.sql_type_metadata.sql_type))
         end
 
         if PostgreSQL::AR610
@@ -84,24 +76,6 @@ module Torque
             source_attr = foreign_table[join_foreign_key]
 
             build_id_constraint(klass_attr, source_attr)
-          end
-
-          # Prepare a value for an array constraint overlap condition
-          def cast_constraint_to_array(type, value, should_cast)
-            base_ready = type.try(:array) && value.is_a?(AREL_ATTR)
-            return value if base_ready && (type.sql_type.eql?(ARR_NO_CAST) || !should_cast)
-
-            value = ::Arel::Nodes.build_quoted(Array.wrap(value)) unless base_ready
-            value = value.cast(ARR_CAST) if should_cast
-            value
-          end
-
-          # Check if it's possible to turn both attributes into an ANY condition
-          def arel_array_to_any(klass_attr, source_attr, klass_type, source_type)
-            return unless !klass_type.try(:array) && source_type.try(:array) &&
-              klass_attr.is_a?(AREL_ATTR) && source_attr.is_a?(AREL_ATTR)
-
-            ::Arel::Nodes::NamedFunction.new('ANY', [source_attr])
           end
       end
 

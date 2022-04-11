@@ -411,4 +411,48 @@ RSpec.describe 'HasMany' do
       expect { query.load }.not_to raise_error
     end
   end
+
+  context 'using uuid' do
+    let(:connection) { ActiveRecord::Base.connection }
+    let(:game) { Class.new(ActiveRecord::Base) }
+    let(:player) { Class.new(ActiveRecord::Base) }
+
+    # TODO: Set as a shred example
+    before do
+      connection.create_table(:players, id: :uuid) { |t| t.string :name }
+      connection.create_table(:games, id: :uuid) { |t| t.uuid :player_ids, array: true }
+
+      game.table_name = 'games'
+      player.table_name = 'players'
+      player.has_many :games, array: true, anonymous_class: game,
+        inverse_of: false, foreign_key: :player_ids
+    end
+
+    subject { player.create }
+
+    it 'loads associated records' do
+      expect(subject.games.to_sql).to match(Regexp.new(<<-SQL.squish))
+        SELECT "games"\\.\\* FROM "games"
+        WHERE \\(?"games"\\."player_ids" && ARRAY\\['#{subject.id}'\\]::uuid\\[\\]\\)?
+      SQL
+
+      expect(subject.games.load).to be_a(ActiveRecord::Associations::CollectionProxy)
+      expect(subject.games.to_a).to be_eql([])
+    end
+
+    it 'can preload records' do
+      5.times { game.create(player_ids: [subject.id]) }
+      entries = player.all.includes(:games).load
+
+      expect(entries.size).to be_eql(1)
+      expect(entries.first.games).to be_loaded
+      expect(entries.first.games.size).to be_eql(5)
+    end
+
+    it 'can joins records' do
+      query = player.all.joins(:games)
+      expect(query.to_sql).to match(/INNER JOIN "games"/)
+      expect { query.load }.not_to raise_error
+    end
+  end
 end
