@@ -422,10 +422,12 @@ RSpec.describe 'HasMany' do
       connection.create_table(:players, id: :uuid) { |t| t.string :name }
       connection.create_table(:games, id: :uuid) { |t| t.uuid :player_ids, array: true }
 
+      options = { anonymous_class: game, foreign_key: :player_ids }
+      options[:inverse_of] = false if Torque::PostgreSQL::AR610
+
       game.table_name = 'games'
       player.table_name = 'players'
-      player.has_many :games, array: true, anonymous_class: game,
-        inverse_of: false, foreign_key: :player_ids
+      player.has_many :games, array: true, **options
     end
 
     subject { player.create }
