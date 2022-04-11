@@ -393,4 +393,51 @@ RSpec.describe 'BelongsToMany' do
       end
     end
   end
+
+  context 'using uuid' do
+    let(:connection) { ActiveRecord::Base.connection }
+    let(:game) { Class.new(ActiveRecord::Base) }
+    let(:player) { Class.new(ActiveRecord::Base) }
+    let(:other) { player.create }
+
+    # TODO: Set as a shred example
+    before do
+      connection.create_table(:players, id: :uuid) { |t| t.string :name }
+      connection.create_table(:games, id: :uuid) { |t| t.uuid :player_ids, array: true }
+
+      game.table_name = 'games'
+      player.table_name = 'players'
+      game.belongs_to_many :players, anonymous_class: player,
+        inverse_of: false, foreign_key: :player_ids
+    end
+
+    subject { game.create }
+
+    it 'loads associated records' do
+      subject.update(player_ids: [other.id])
+      expect(subject.players.to_sql).to be_eql(<<-SQL.squish)
+        SELECT "players".* FROM "players" WHERE "players"."id" IN ('#{other.id}')
+      SQL
+
+      expect(subject.players.load).to be_a(ActiveRecord::Associations::CollectionProxy)
+      expect(subject.players.to_a).to be_eql([other])
+    end
+
+    it 'can preload records' do
+      records = 5.times.map { player.create }
+      subject.players.concat(records)
+
+      entries = game.all.includes(:players).load
+
+      expect(entries.size).to be_eql(1)
+      expect(entries.first.players).to be_loaded
+      expect(entries.first.players.size).to be_eql(5)
+    end
+
+    it 'can joins records' do
+      query = game.all.joins(:players)
+      expect(query.to_sql).to match(/INNER JOIN "players"/)
+      expect { query.load }.not_to raise_error
+    end
+  end
 end

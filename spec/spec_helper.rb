@@ -39,6 +39,7 @@ RSpec.configure do |config|
 
   # Handles acton before rspec initialize
   config.before(:suite) do
+    ActiveSupport::Deprecation.silenced = true
     DatabaseCleaner.clean_with(:truncation)
   end
 
