@@ -20,6 +20,11 @@ module Torque
         private
 
           def tables(stream) # :nodoc:
+            # FX integration
+            if defined?(::Fx::SchemaDumper::Function)
+              functions(stream) if Fx.configuration.dump_functions_at_beginning_of_schema
+            end
+
             inherited_tables = @connection.inherited_tables
             sorted_tables = @connection.tables.sort - @connection.views
 
@@ -60,8 +65,13 @@ module Torque
             views(stream) if defined?(::Scenic)
 
             # FX integration
-            functions(stream) if defined?(::Fx::SchemaDumper::Function)
-            triggers(stream) if defined?(::Fx::SchemaDumper::Trigger)
+            if defined?(::Fx::SchemaDumper::Function)
+              functions(stream) unless Fx.configuration.dump_functions_at_beginning_of_schema
+            end
+
+            if defined?(::Fx::SchemaDumper::Trigger)
+              triggers(stream)
+            end
           end
       end
 
