@@ -6,7 +6,7 @@ module Torque
       module Preloader
         module LoaderQuery
           def foreign_column
-            @foreign_column ||= scope.columns_hash[association_key_name]
+            @foreign_column ||= scope.columns_hash[association_key_name.to_s]
           end
 
           def load_records_for_keys(keys, &block)
