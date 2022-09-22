@@ -20,6 +20,19 @@ module Torque
         private
 
           def tables(stream) # :nodoc:
+            around_tables(stream) { dump_tables(stream) }
+          end
+
+          def around_tables(stream)
+            functions(stream) if fx_functions_position == :beginning
+
+            yield
+
+            functions(stream) if fx_functions_position == :end
+            triggers(stream) if defined?(::Fx::SchemaDumper::Trigger)
+          end
+
+          def dump_tables(stream)
             inherited_tables = @connection.inherited_tables
             sorted_tables = @connection.tables.sort - @connection.views
 
@@ -55,13 +68,11 @@ module Torque
                 foreign_keys(tbl, stream) unless ignored?(tbl)
               end
             end
+          end
 
-            # Scenic integration
-            views(stream) if defined?(::Scenic)
-
-            # FX integration
-            functions(stream) if defined?(::Fx::SchemaDumper::Function)
-            triggers(stream) if defined?(::Fx::SchemaDumper::Trigger)
+          def fx_functions_position
+            return unless defined?(::Fx::SchemaDumper::Function)
+            Fx.configuration.dump_functions_at_beginning_of_schema ? :beginning : :end
           end
       end
 
