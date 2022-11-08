@@ -28,4 +28,6 @@ require 'torque/postgresql/relation'
 require 'torque/postgresql/reflection'
 require 'torque/postgresql/schema_cache'
 
+require 'torque/struct'
+
 require 'torque/postgresql/railtie' if defined?(Rails)
