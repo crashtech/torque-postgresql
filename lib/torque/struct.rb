@@ -68,7 +68,14 @@ module Torque
         ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name + "[]")
       end
 
+      def type_name
+        table_name
+      end
+      def type_name=(value)
+        @type_name = value
+      end
       def table_name
+        return @type_name if @type_name
         if self === Struct
           nil
         else
