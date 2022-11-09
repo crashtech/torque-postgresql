@@ -10,13 +10,51 @@ module Torque
           include ActiveRecord::ConnectionAdapters::Quoting
           include ActiveRecord::ConnectionAdapters::PostgreSQL::Quoting
 
+          AvailableType = ::Struct.new(:type_map, :name, :oid, :arr_oid, :klass, :array_klass, :registered, keyword_init: true)
+
+          def self.for_type(name)
+            typ = _type_by_name(name)
+            return nil unless typ
+
+            if !typ.registered
+              typ.type_map.register_type(typ.oid,     typ.klass)
+              typ.type_map.register_type(typ.arr_oid, typ.array_klass)
+              typ.registered = true
+            end
+
+            typ.name == name ? typ.klass : typ.array_klass
+          end
+
+          def self.register!(type_map, name, oid, arr_oid, klass, array_klass)
+            raise ArgumentError, "Already Registered" if _type_by_name(name)
+            available_types << AvailableType.new(
+              type_map: type_map,
+              name: name,
+              oid: oid,
+              arr_oid: arr_oid,
+              klass: klass,
+              array_klass: array_klass,
+            )
+          end
+
+          def self.available_types
+            @registry ||= []
+          end
+
+          def self._type_by_name(name)
+            available_types.find {|a| a.name == name || a.name + '[]' == name}
+          end
+
           def self.create(connection, row, type_map)
             name    = row['typname']
+            return if _type_by_name(name)
+
             oid     = row['oid'].to_i
             arr_oid = row['typarray'].to_i
             type = Struct.new(connection, name)
-            type_map.register_type(oid,     type)
-            type_map.register_type(arr_oid, ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Array.new(type))
+            arr_type = ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Array.new(type)
+
+            register!(type_map, name, oid, arr_oid, type, arr_type)
           end
 
           def initialize(connection, name)
@@ -47,7 +85,25 @@ module Torque
               "NULL"
             else
               casted_values = klass.columns.map do |col|
-                @connection.type_cast(klass.type_for_attribute(col.name).serialize(value[col.name]))
+                col_value = value[col.name]
+                serialized = klass.type_for_attribute(col.name).serialize(col_value)
+                begin
+                  @connection.type_cast(serialized)
+                rescue TypeError => e
+                  if klass.type_for_attribute(col.name).class == ActiveModel::Type::Value
+                    # attribute :nested, NestedStruct.database_type
+                    col = klass.columns.find {|c| c.name == col.name }
+
+                    available_custom_type = self.class._type_by_name(col.sql_type)
+                    if available_custom_type && !available_custom_type.registered
+                      hint = "add `attribute :#{col.name}, #{col.sql_type.classify}.database_#{col.array ? 'array_' : ''}type`"
+                      raise e, "#{e} (in #{klass.name}, #{hint}`", $!.backtrace
+                    end
+                    raise
+                  else
+                    raise
+                  end
+                end
               end
               PG::TextEncoder::Record.new.encode(casted_values)
             end

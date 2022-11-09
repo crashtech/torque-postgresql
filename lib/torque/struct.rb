@@ -60,12 +60,32 @@ module Torque
     include ActiveRecord::AttributeAssignment
     self.pluralize_table_names = false
     class << self
+      def database_type
+        ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name)
+      end
+
+      def database_array_type
+        ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name + "[]")
+      end
+
       def table_name
         if self === Struct
           nil
         else
           self.name.underscore
         end
+      end
+    end
+  end
+
+  class ActiveRecord::Base
+    class << self
+      def database_type
+        ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name)
+      end
+
+      def database_array_type
+        ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name + "[]")
       end
     end
   end

@@ -79,7 +79,6 @@ module Torque
           m.register_type 'segment',  OID::Segment.new
 
           m.alias_type 'regclass', 'varchar'
-          load_additional_types()
         end
 
         # :nodoc:
