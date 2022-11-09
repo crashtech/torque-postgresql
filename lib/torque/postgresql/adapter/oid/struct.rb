@@ -12,11 +12,16 @@ module Torque
 
           AvailableType = ::Struct.new(:type_map, :name, :oid, :arr_oid, :klass, :array_klass, :registered, keyword_init: true)
 
-          def self.for_type(name)
+          def self.for_type(name, klass:)
             typ = _type_by_name(name)
+
+            raise "No type registered to #{name}" unless typ
             return nil unless typ
 
-            if !typ.registered
+            if typ.registered
+              raise "Class mismatch; #{name} already registered for #{typ.klass.klass.name}" if typ.klass.klass != klass
+            else
+              typ.klass.klass = klass
               typ.type_map.register_type(typ.oid,     typ.klass)
               typ.type_map.register_type(typ.arr_oid, typ.array_klass)
               typ.registered = true
@@ -124,6 +129,11 @@ module Torque
               other.type == type
           end
 
+          def klass=(value)
+            raise ArgumentError, "Not a valid struct class" unless validate_klass(value)
+            @klass = value
+          end
+
           def klass
             @klass ||= validate_klass(name.to_s.camelize.singularize) || validate_klass(name.to_s.camelize.pluralize)
             return nil unless @klass
@@ -140,8 +150,11 @@ module Torque
 
           private
 
-            def validate_klass(class_name)
-              klass = class_name.safe_constantize
+            def validate_klass_name(class_name)
+              validate_klass class_name.safe_constantize
+            end
+
+            def validate_klass(klass)
               if klass && klass.ancestors.include?(::Torque::Struct)
                 klass
               elsif klass && klass.ancestors.include?(::ActiveRecord::Base)

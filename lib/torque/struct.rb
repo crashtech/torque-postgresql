@@ -27,10 +27,8 @@ module Torque
         # Lets you overwrite `connection` per-class
         ActiveRecord::Base.connection
       end
-
-      def primary_key
-        nil
-      end
+      class_attribute :primary_key
+      self.primary_key = "id"
 
       def base_class?
         self == BaseStruct || self == Struct
@@ -61,11 +59,11 @@ module Torque
     self.pluralize_table_names = false
     class << self
       def database_type
-        ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name)
+        ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name, klass: self)
       end
 
       def database_array_type
-        ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name + "[]")
+        ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name + "[]", klass: self)
       end
 
       def type_name
@@ -88,11 +86,11 @@ module Torque
   class ActiveRecord::Base
     class << self
       def database_type
-        ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name)
+        ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name, klass: self)
       end
 
       def database_array_type
-        ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name + "[]")
+        ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name + "[]", klass: self)
       end
     end
   end
