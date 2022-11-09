@@ -79,6 +79,7 @@ module Torque
           m.register_type 'segment',  OID::Segment.new
 
           m.alias_type 'regclass', 'varchar'
+          load_additional_types()
         end
 
         # :nodoc:
@@ -106,7 +107,7 @@ module Torque
                         WHERE el.oid = t.typelem AND el.typarray = t.oid
                       )
             AND     (t.typrelid = 0 OR (
-                      SELECT c.relkind = 'c' FROM pg_catalog.pg_class c
+                      SELECT c.relkind IN ('c', 'r') FROM pg_catalog.pg_class c
                         WHERE c.oid = t.typrelid
                       ))
           SQL

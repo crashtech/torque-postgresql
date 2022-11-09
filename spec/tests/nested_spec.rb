@@ -4,6 +4,9 @@ RSpec.describe 'Composite Types' do
 
   it "can save and load composite types" do
     start = DateTime.now.utc
+    question = Question.create!(title: "single question")
+    questions = [Question.create!(title: "some question"), Question.create!(title: "some other question")]
+
     instance = Nested.new
 
     instance.nested = NestedStruct.new
@@ -17,6 +20,8 @@ RSpec.describe 'Composite Types' do
     instance.nested.ary[0].timestamp_ary = [start + 1.minute, start + 2.minutes]
     instance.nested.ary[0].hsh = {"foo" => "bar"}
     instance.nested.ary[0].json = [nil, {sym: 4}]
+    instance.nested.ary[0].question = question
+    instance.nested.ary[0].question_ary = questions
     instance.save!
     instance = Nested.find(instance.id)
 
@@ -29,5 +34,7 @@ RSpec.describe 'Composite Types' do
     expect(instance.nested.ary[0].timestamp_ary.map(&:to_i)).to eq([(start + 1.minute).to_i, (start + 2.minutes).to_i])
     expect(instance.nested.ary[0].hsh).to eq({"foo" => "bar"})
     expect(instance.nested.ary[0].json).to eq([nil, {"sym" => 4}])
+    expect(instance.nested.ary[0].question).to eq(question)
+    expect(instance.nested.ary[0].question_ary).to eq(questions)
   end
 end

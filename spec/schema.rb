@@ -154,6 +154,8 @@ ActiveRecord::Schema.define(version: version) do
     timestamp_ary: "timestamp with time zone[]",
     hsh: "hstore",
     json: "jsonb",
+    question: "questions",
+    question_ary: "questions[]"
   }
 
   create_struct "unregistered_struct", {

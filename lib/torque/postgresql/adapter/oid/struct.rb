@@ -14,7 +14,6 @@ module Torque
             name    = row['typname']
             oid     = row['oid'].to_i
             arr_oid = row['typarray'].to_i
-
             type = Struct.new(connection, name)
             type_map.register_type(oid,     type)
             type_map.register_type(arr_oid, ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Array.new(type))
@@ -31,7 +30,8 @@ module Torque
 
           def deserialize(value)
             return unless value.present?
-            return value unless klass
+            return super(value) unless klass
+            return value if value.is_a? klass
             fields = PG::TextDecoder::Record.new.decode(value)
             field_names = klass.columns.map(&:name)
             attributes = Hash[field_names.zip(fields)]
@@ -41,7 +41,7 @@ module Torque
 
           def serialize(value)
             return if value.blank?
-            return value unless klass
+            return super(value) unless klass
             value = cast_value(value)
             if value.nil?
               "NULL"
@@ -69,13 +69,13 @@ module Torque
           end
 
           def klass
-            @klass ||= class_name.safe_constantize
-            return nil unless @klass.ancestors.include? ::Torque::Struct
+            @klass ||= validate_klass(name.to_s.camelize.singularize) || validate_klass(name.to_s.camelize.pluralize)
+            return nil unless @klass
+            if @klass.ancestors.include?(::ActiveRecord::Base)
+              return @klass if @klass.table_name == name
+            end
+            return nil unless @klass.ancestors.include?(::Torque::Struct)
             @klass
-          end
-
-          def class_name
-            name.to_s.camelize
           end
 
           def type_cast(value)
@@ -83,6 +83,17 @@ module Torque
           end
 
           private
+
+            def validate_klass(class_name)
+              klass = class_name.safe_constantize
+              if klass && klass.ancestors.include?(::Torque::Struct)
+                klass
+              elsif klass && klass.ancestors.include?(::ActiveRecord::Base)
+                klass.table_name == name ? klass : nil
+              else
+                false
+              end
+            end
 
             def cast_value(value)
               return if value.blank?
