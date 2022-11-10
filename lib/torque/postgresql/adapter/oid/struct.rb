@@ -19,7 +19,13 @@ module Torque
             return nil unless typ
 
             if typ.registered
-              raise "Class mismatch; #{name} already registered for #{typ.klass.klass.name}" if typ.klass.klass != klass
+              if typ.klass.klass != klass
+                if defined?(Rails) && !Rails.application.config.cache_classes && typ.klass.klass.name == klass.name
+                  typ.klass.klass = klass # Rails constant reloading
+                else
+                  raise "Class mismatch; #{name} already registered for #{typ.klass.klass.name}"
+                end
+              end
             else
               typ.klass.klass = klass
               typ.type_map.register_type(typ.oid,     typ.klass)
