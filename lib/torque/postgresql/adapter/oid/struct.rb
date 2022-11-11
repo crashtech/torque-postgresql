@@ -12,8 +12,9 @@ module Torque
 
           AvailableType = ::Struct.new(:type_map, :name, :oid, :arr_oid, :klass, :array_klass, :registered, keyword_init: true)
 
-          def self.for_type(name, klass:)
+          def self.for_type(name, klass: nil)
             typ = _type_by_name(name)
+            return typ if !klass
 
             raise "No type registered to #{name}" unless typ
             return nil unless typ

@@ -47,7 +47,6 @@ module Torque
       end
     end
   end
-
   class Struct < BaseStruct
     include ActiveRecord::Core
     include ActiveRecord::Persistence
@@ -64,6 +63,10 @@ module Torque
 
       def database_array_type
         ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name + "[]", klass: self)
+      end
+
+      def table_exists?
+        ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name).present?
       end
 
       def type_name
