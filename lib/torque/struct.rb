@@ -4,14 +4,6 @@ require "torque/postgresql/adapter"
 
 module Torque
   class BaseStruct
-    # ActiveRecord modules call `superclass.foo`, so we need an extra layer of inheritance
-    def initialize(attributes = nil)
-      @attributes = self.class.attributes_builder.build_from_database
-      self.class.define_attribute_methods
-      assign_attributes(attributes) if attributes
-      yield self if block_given?
-    end
-
     def to_s
       # Avoid printing excessive volumes
       "#<#{self.class.name}>"
@@ -56,7 +48,16 @@ module Torque
     include ActiveRecord::Serialization
     include ActiveRecord::AttributeAssignment
     self.pluralize_table_names = false
+    def initialize(attributes = nil)
+      @attributes = self.class.attributes_builder.build_from_database
+      assign_attributes(attributes) if attributes
+      self.class.define_attribute_methods
+      yield self if block_given?
+    end
+
     class << self
+
+      # ActiveRecord modules call `superclass.foo`, so we need an extra layer of inheritance
       def database_type
         ::Torque::PostgreSQL::Adapter::OID::Struct.for_type(table_name, klass: self)
       end

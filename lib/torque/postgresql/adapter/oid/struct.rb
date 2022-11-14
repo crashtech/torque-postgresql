@@ -86,7 +86,7 @@ module Torque
             field_names = klass.columns.map(&:name)
             attributes = Hash[field_names.zip(fields)]
             field_names.each { |field| attributes[field] = klass.type_for_attribute(field).deserialize(attributes[field]) }
-            build_from_attrs(attributes)
+            build_from_attrs(attributes, from_database: true)
           end
 
           def serialize(value)
@@ -175,12 +175,17 @@ module Torque
               return if value.blank?
               return if klass.blank?
               return value if value.is_a?(klass)
-              build_from_attrs(value)
+              build_from_attrs(value, from_database: false)
             end
 
-            def build_from_attrs(attributes)
-              attributes = klass.attributes_builder.build_from_database(attributes, {})
-              klass.allocate.init_with_attributes(attributes)
+            def build_from_attrs(attributes, from_database:)
+              klass.define_attribute_methods
+              if from_database
+                attributes = klass.attributes_builder.build_from_database(attributes, {})
+                klass.allocate.init_with_attributes(attributes)
+              else
+                klass.new(attributes)
+              end
             end
 
         end
