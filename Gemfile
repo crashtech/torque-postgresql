@@ -5,7 +5,7 @@ source 'https://rubygems.org'
 # development dependencies will be added by default to the :development group.
 gemspec
 
-gem 'rails', '>= 6.0'
+gem 'rails', '>= 6.0', '< 7.0'
 gem 'pg', '>= 1.2'
 
 # Declare any dependencies that are still in development here instead of in
