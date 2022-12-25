@@ -12,15 +12,14 @@
 * [TODO](https://github.com/crashtech/torque-postgresql/wiki/TODO)
 
 # Description
-`torque-postgresql` is a plugin that enhances Ruby on Rails enabling easy access to existing PostgreSQL advanced resources, such as data types and queries statements. Its features are designed to be as similar to Rails architecture and they work as smoothly as possible.
+`torque-postgresql` is a plugin that enhances Ruby on Rails enabling easy access to existing PostgreSQL advanced resources, such as data types and query statements. Its features are designed to be similar to Rails architecture and work as smoothly as possible.
 
-100% plug-and-play, with optional configurations, so that can be adapted to your project's design pattern.
+Fully compatible with `schema.rb` and 100% plug-and-play, with optional configurations, so that it can be adapted to your project's design pattern.
 
 # Installation
 
 To install torque-postgresql you need to add the following to your Gemfile:
 ```ruby
-gem 'torque-postgresql', '~> 1.1'   # For Rails  < 6.0
 gem 'torque-postgresql', '~> 2.0'   # For Rails >= 6.0 < 6.1
 gem 'torque-postgresql', '~> 2.0.4' # For Rails >= 6.1
 ```
@@ -48,25 +47,26 @@ These are the currently available features:
 
 ## Data types
 
+* [Box](https://github.com/crashtech/torque-postgresql/wiki/Box)
+* [Circle](https://github.com/crashtech/torque-postgresql/wiki/Circle)
+* [Date/Time Range](https://github.com/crashtech/torque-postgresql/wiki/Date-Time-Range)
 * [Enum](https://github.com/crashtech/torque-postgresql/wiki/Enum)
 * [EnumSet](https://github.com/crashtech/torque-postgresql/wiki/Enum-Set)
 * [Interval](https://github.com/crashtech/torque-postgresql/wiki/Interval)
-* [Date/Time Range](https://github.com/crashtech/torque-postgresql/wiki/Date-Time-Range)
-* [Box](https://github.com/crashtech/torque-postgresql/wiki/Box)
-* [Circle](https://github.com/crashtech/torque-postgresql/wiki/Circle)
 * [Line](https://github.com/crashtech/torque-postgresql/wiki/Line)
 * [Segment](https://github.com/crashtech/torque-postgresql/wiki/Segment)
 
 ## Querying
 
 * [Arel](https://github.com/crashtech/torque-postgresql/wiki/Arel)
-* [Has Many](https://github.com/crashtech/torque-postgresql/wiki/Has-Many)
-* [Belongs to Many](https://github.com/crashtech/torque-postgresql/wiki/Belongs-to-Many)
-* [Dynamic Attributes](https://github.com/crashtech/torque-postgresql/wiki/Dynamic-Attributes)
-* [Distinct On](https://github.com/crashtech/torque-postgresql/wiki/Distinct-On)
-* [Insert All](https://github.com/crashtech/torque-postgresql/wiki/Insert-All)
 * [Auxiliary Statements](https://github.com/crashtech/torque-postgresql/wiki/Auxiliary-Statements)
+* [Belongs to Many](https://github.com/crashtech/torque-postgresql/wiki/Belongs-to-Many)
+* [Distinct On](https://github.com/crashtech/torque-postgresql/wiki/Distinct-On)
+* [Dynamic Attributes](https://github.com/crashtech/torque-postgresql/wiki/Dynamic-Attributes)
+* [Has Many](https://github.com/crashtech/torque-postgresql/wiki/Has-Many)
 * [Inherited Tables](https://github.com/crashtech/torque-postgresql/wiki/Inherited-Tables)
+* [Insert All](https://github.com/crashtech/torque-postgresql/wiki/Insert-All)
+* [Multiple Schemas](https://github.com/crashtech/torque-postgresql/wiki/Multiple-Schemas)
 
 # How to Contribute
 

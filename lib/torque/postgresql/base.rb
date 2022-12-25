@@ -5,15 +5,27 @@ module Torque
     module Base
       extend ActiveSupport::Concern
 
+      ##
+      # :singleton-method: schema
+      # :call-seq: schema
+      #
+      # The schema to which the table belongs to.
+
       included do
         mattr_accessor :belongs_to_many_required_by_default, instance_accessor: false
+        class_attribute :schema, instance_writer: false
       end
 
       module ClassMethods
         delegate :distinct_on, :with, :itself_only, :cast_records, to: :all
 
-        # Wenever it's inherited, add a new list of auxiliary statements
-        # It also adds an auxiliary statement to load inherited records' relname
+        # Make sure that table name is an instance of TableName class
+        def reset_table_name
+          self.table_name = TableName.new(self, super)
+        end
+
+        # Whenever the base model is inherited, add a list of auxiliary
+        # statements like the one that loads inherited records' relname
         def inherited(subclass)
           super
 
@@ -24,6 +36,11 @@ module Torque
 
           # Define helper methods to return the class of the given records
           subclass.auxiliary_statement record_class do |cte|
+            ActiveSupport::Deprecation.warn(<<~MSG.squish)
+              Inheritance does not use this auxiliary statement and it can be removed.
+              You can replace it with `model.select_extra_values << 'tableoid::regclass'`.
+            MSG
+
             pg_class = ::Arel::Table.new('pg_class')
             arel_query = ::Arel::SelectManager.new(pg_class)
             arel_query.project(pg_class['oid'], pg_class['relname'].as(record_class.to_s))
@@ -36,18 +53,11 @@ module Torque
           # Define the dynamic attribute that returns the same information as
           # the one provided by the auxiliary statement
           subclass.dynamic_attribute(record_class) do
-            next self.class.table_name unless self.class.physically_inheritances?
+            klass = self.class
+            next klass.table_name unless klass.physically_inheritances?
 
-            pg_class = ::Arel::Table.new('pg_class')
-            source = ::Arel::Table.new(subclass.table_name, as: 'source')
-            quoted_id = ::Arel::Nodes::Quoted.new(id)
-
-            query = ::Arel::SelectManager.new(pg_class)
-            query.join(source).on(pg_class['oid'].eq(source['tableoid']))
-            query.where(source[subclass.primary_key].eq(quoted_id))
-            query.project(pg_class['relname'])
-
-            self.class.connection.select_value(query)
+            query = klass.unscoped.where(subclass.primary_key => id)
+            query.pluck(klass.arel_table['tableoid'].cast('regclass')).first
           end
         end
 
