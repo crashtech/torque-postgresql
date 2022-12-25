@@ -42,10 +42,6 @@ These are the currently available features:
 
 * [Configuring](https://github.com/crashtech/torque-postgresql/wiki/Configuring)
 
-## Core Extensions
-
-* [~~Range~~](https://github.com/crashtech/torque-postgresql/wiki/Range) (DEPRECATED)
-
 ## Data types
 
 * [Box](https://github.com/crashtech/torque-postgresql/wiki/Box)
