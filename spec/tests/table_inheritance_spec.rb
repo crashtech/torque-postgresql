@@ -73,37 +73,33 @@ RSpec.describe 'TableInheritance' do
   end
 
   context 'on schema' do
-    it 'dumps single inheritance with body' do
-      dump_io = StringIO.new
-      ActiveRecord::SchemaDumper.dump(connection, dump_io)
+    let(:dump_result) do
+      ActiveRecord::SchemaDumper.dump(connection, (dump_result = StringIO.new))
+      dump_result.string
+    end
 
+    it 'dumps single inheritance with body' do
       parts = '"activity_books"'
       parts << ', id: false'
       parts << ', force: :cascade'
-      parts << ', inherits: :activities'
-      expect(dump_io.string).to match(/create_table #{parts} do /)
+      parts << ', inherits: "activities"'
+      expect(dump_result).to match(/create_table #{parts} do /)
     end
 
     it 'dumps single inheritance without body' do
-      dump_io = StringIO.new
-      ActiveRecord::SchemaDumper.dump(connection, dump_io)
-
       parts = '"activity_post_samples"'
       parts << ', id: false'
       parts << ', force: :cascade'
-      parts << ', inherits: :activity_posts'
-      expect(dump_io.string).to match(/create_table #{parts}(?! do \|t\|)/)
+      parts << ', inherits: "activity_posts"'
+      expect(dump_result).to match(/create_table #{parts}(?! do \|t\|)/)
     end
 
     it 'dumps multiple inheritance' do
-      dump_io = StringIO.new
-      ActiveRecord::SchemaDumper.dump(connection, dump_io)
-
       parts = '"activity_posts"'
       parts << ', id: false'
       parts << ', force: :cascade'
-      parts << ', inherits: (\[:images, :activities\]|\[:activities, :images\])'
-      expect(dump_io.string).to match(/create_table #{parts}/)
+      parts << ', inherits: (\["images", "activities"\]|\["activities", "images"\])'
+      expect(dump_result).to match(/create_table #{parts}/)
     end
   end
 

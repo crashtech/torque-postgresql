@@ -109,7 +109,6 @@ module Torque
 
       # Try to find a model based on a given table
       def lookup_model(table_name, scoped_class = '')
-        # byebug if table_name == 'activities'
         scoped_class = scoped_class.name if scoped_class.is_a?(Class)
         return @data_sources_model_names[table_name] \
           if @data_sources_model_names.key?(table_name)
@@ -117,6 +116,12 @@ module Torque
         # Get all the possible scopes
         scopes = scoped_class.scan(/(?:::)?[A-Z][a-z]+/)
         scopes.unshift('Object::')
+
+        # Check if the table name comes with a schema
+        if table_name.include?('.')
+          schema, table_name = table_name.split('.')
+          scopes.insert(1, schema.camelize) if schema != 'public'
+        end
 
         # Consider the maximum namespaced possible model name
         max_name = table_name.tr('_', '/').camelize.split(/(::)/)

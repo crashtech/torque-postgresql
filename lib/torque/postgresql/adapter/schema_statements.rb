@@ -7,6 +7,21 @@ module Torque
 
         TableDefinition = ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition
 
+        # Create a new schema
+        def create_schema(name, options = {})
+          drop_schema(name, options) if options[:force]
+
+          check = 'IF NOT EXISTS' if options.fetch(:check, true)
+          execute("CREATE SCHEMA #{check} #{quote_schema_name(name.to_s)}")
+        end
+
+        # Drop an existing schema
+        def drop_schema(name, options = {})
+          force = options.fetch(:force, '').upcase
+          check = 'IF EXISTS' if options.fetch(:check, true)
+          execute("DROP SCHEMA #{check} #{quote_schema_name(name.to_s)} #{force}")
+        end
+
         # Drops a type.
         def drop_type(name, options = {})
           force = options.fetch(:force, '').upcase
@@ -64,10 +79,35 @@ module Torque
 
         # Rewrite the method that creates tables to easily accept extra options
         def create_table(table_name, **options, &block)
+          table_name = "#{options[:schema]}.#{table_name}" if options[:schema].present?
+
           options[:id] = false if options[:inherits].present? &&
             options[:primary_key].blank? && options[:id].blank?
 
           super table_name, **options, &block
+        end
+
+        # Add the schema option when extracting table options
+        def table_options(table_name)
+          parts = table_name.split('.').reverse
+          return super unless parts.size == 2 && parts[1] != 'public'
+
+          (super || {}).merge(schema: parts[1])
+        end
+
+        # When dumping the schema we need to add all schemas, not only those
+        # active for the current +schema_search_path+
+        def quoted_scope(name = nil, type: nil)
+          return super unless name.nil?
+
+          super.merge(schema: "ANY ('{#{user_defined_schemas.join(',')}}')")
+        end
+
+        # Fix the query to include the schema on tables names when dumping
+        def data_source_sql(name = nil, type: nil)
+          return super unless name.nil?
+
+          super.sub('SELECT c.relname FROM', "SELECT n.nspname || '.' || c.relname FROM")
         end
 
         private
