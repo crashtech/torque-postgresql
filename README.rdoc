@@ -128,6 +128,23 @@ reconfigured on the model, and then can be used during querying process.
 
   {Learn more}[link:classes/Torque/PostgreSQL/AuxiliaryStatement.html]
 
+* Multiple Schemas
+
+Allows models and modules to have a schema associated with them, so that
+developers can better organize their tables into schemas and build features in
+a way that the database can better represent how they are separated.
+
+   create_schema "internal", force: :cascade
+
+   module Internal
+     class User < ActiveRecord::Base
+       self.schema = 'internal'
+     end
+   end
+
+   Internal::User.all
+
+  {Learn more}[link:classes/Torque/PostgreSQL/Adapter/DatabaseStatements.html]
 
 == Download and installation
 
