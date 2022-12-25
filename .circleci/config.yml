@@ -38,7 +38,7 @@ references:
     test:
       matrix:
         parameters:
-          ruby-version: ['2.7', '3.0', '3.1']
+          ruby-version: ['2.6', '2.7', '3.0', '3.1']
           bundle-version: ['Gemfile.rails-6.0', 'Gemfile.rails-6.1']
 
 workflows:
