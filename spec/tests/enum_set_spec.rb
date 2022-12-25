@@ -42,18 +42,19 @@ RSpec.describe 'Enum' do
   end
 
   context 'on schema' do
+    let(:dump_result) do
+      ActiveRecord::SchemaDumper.dump(connection, (dump_result = StringIO.new))
+      dump_result.string
+    end
+
     it 'can be used on tables' do
-      dump_io = StringIO.new
       checker = /t\.enum +"conflicts", +array: true, +enum_type: :conflicts/
-      ActiveRecord::SchemaDumper.dump(connection, dump_io)
-      expect(dump_io.string).to match checker
+      expect(dump_result).to match checker
     end
 
     xit 'can have a default value as an array of symbols' do
-      dump_io = StringIO.new
       checker = /t\.enum +"types", +default: \[:A, :B\], +array: true, +enum_type: :types/
-      ActiveRecord::SchemaDumper.dump(connection, dump_io)
-      expect(dump_io.string).to match checker
+      expect(dump_result).to match checker
     end
   end
 

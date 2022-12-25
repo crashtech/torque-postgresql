@@ -117,6 +117,12 @@ module Torque
         scopes = scoped_class.scan(/(?:::)?[A-Z][a-z]+/)
         scopes.unshift('Object::')
 
+        # Check if the table name comes with a schema
+        if table_name.include?('.')
+          schema, table_name = table_name.split('.')
+          scopes.insert(1, schema.camelize) if schema != 'public'
+        end
+
         # Consider the maximum namespaced possible model name
         max_name = table_name.tr('_', '/').camelize.split(/(::)/)
         max_name[-1] = max_name[-1].singularize

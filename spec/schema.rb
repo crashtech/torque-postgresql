@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-version = 2
+version = 1
 
 return if ActiveRecord::Migrator.current_version == version
 ActiveRecord::Schema.define(version: version) do
@@ -19,6 +19,9 @@ ActiveRecord::Schema.define(version: version) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
+
+  # Custom schemas used in this database.
+  create_schema "internal", force: :cascade
 
   # Custom types defined in this database.
   # Note that some types may not work with other database engines. Be careful if changing database.
@@ -115,6 +118,13 @@ ActiveRecord::Schema.define(version: version) do
     t.enum     "role",                    enum_type: :roles, default: :visitor
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "users", schema: "internal", force: :cascade do |t|
+    t.string   "email"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_internal_users_on_email", unique: true
   end
 
   create_table "activities", force: :cascade do |t|

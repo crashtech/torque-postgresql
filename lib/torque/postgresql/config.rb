@@ -40,6 +40,19 @@ module Torque
       end.to_h
     end
 
+    # Configure multiple schemas
+    config.nested(:schemas) do |schemas|
+
+      # Defines a list of LIKE-based schemas to not consider for a multiple
+      # schema database
+      schemas.blacklist = %w[information_schema pg_%]
+
+      # Defines a list of LIKE-based schemas to consider for a multiple schema
+      # database
+      schemas.whitelist = %w[public]
+
+    end
+
     # Configure associations features
     config.nested(:associations) do |assoc|
 
