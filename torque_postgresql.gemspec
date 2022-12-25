@@ -7,22 +7,30 @@ require 'torque/postgresql/version'
 Gem::Specification.new do |s|
   s.name        = 'torque-postgresql'
   s.version     = Torque::PostgreSQL::VERSION
+  s.date        = Date.today.to_s
   s.authors     = ['Carlos Silva']
-  s.email       = ['carlinhus.fsilva@gmail.com']
+  s.email       = ['me@carlosfsilva.com']
   s.homepage    = 'https://github.com/crashtech/torque-postgresql'
   s.summary     = 'ActiveRecord extension to access PostgreSQL advanced resources'
   s.description = 'Add support to complex resources of PostgreSQL, like data types, array associations, and auxiliary statements (CTE)'
   s.license     = 'MIT'
+  s.metadata    = {
+    # 'homepage_uri'    => 'https://torque.carlosfsilva.com/postgresql',
+    "source_code_uri" => 'https://github.com/crashtech/torque-postgresql',
+    'bug_tracker_uri' => 'https://github.com/crashtech/torque-postgresql/issues',
+    # 'changelog_uri'   => 'https://github.com/crashtech/torque-postgresql/blob/master/CHANGELOG.md',
+  }
 
   s.require_paths = ['lib']
 
-  s.files      = Dir['MIT-LICENSE', 'README.rdoc', 'lib/**/*', 'Rakefile']
-  s.test_files = Dir['spec/**/*']
+  s.files        = Dir['MIT-LICENSE', 'README.rdoc', 'lib/**/*', 'Rakefile']
+  s.test_files   = Dir['spec/**/*']
+  s.rdoc_options = ['--title', 'Torque PostgreSQL']
 
-  s.required_ruby_version     = '>= 2.6'
+  s.required_ruby_version     = '>= 2.7.2'
   s.required_rubygems_version = '>= 1.8.11'
 
-  s.add_dependency 'rails', '>= 6.0'
+  s.add_dependency 'rails', '>= 7.0'
   s.add_dependency 'pg', '>= 1.2'
 
   s.add_development_dependency 'rake', '~> 12.3', '>= 12.3.3'
