@@ -22,7 +22,7 @@ cleaner = ->() do
 end
 
 load File.join('schema.rb')
-Dir.glob(File.join('spec', '{models,factories,mocks}', '*.rb')) do |file|
+Dir.glob(File.join('spec', '{models,factories,mocks}', '**', '*.rb')) do |file|
   require file[5..-4]
 end
 
@@ -39,6 +39,7 @@ RSpec.configure do |config|
 
   # Handles acton before rspec initialize
   config.before(:suite) do
+    Torque::PostgreSQL.config.schemas.whitelist << 'internal'
     ActiveSupport::Deprecation.silenced = true
     DatabaseCleaner.clean_with(:truncation)
   end

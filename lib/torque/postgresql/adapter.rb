@@ -31,9 +31,9 @@ module Torque
         )
       end
 
-      # Add `inherits` to the list of extracted table options
+      # Add `inherits` and `schema` to the list of extracted table options
       def extract_table_options!(options)
-        super.merge(options.extract!(:inherits))
+        super.merge(options.extract!(:inherits, :schema))
       end
 
       # Allow filtered bulk insert by adding the where clause. This method is

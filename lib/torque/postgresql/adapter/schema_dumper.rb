@@ -12,6 +12,11 @@ module Torque
           stream
         end
 
+        def extensions(stream) # :nodoc:
+          super
+          user_defined_schemas(stream)
+        end
+
         # Translate +:enum_set+ into +:enum+
         def schema_type(column)
           column.type == :enum_set ? :enum : super
@@ -34,7 +39,9 @@ module Torque
 
           def dump_tables(stream)
             inherited_tables = @connection.inherited_tables
-            sorted_tables = @connection.tables.sort - @connection.views
+            sorted_tables = (@connection.tables - @connection.views).sort_by do |table_name|
+              table_name.split(/(?:public)?\./).reverse
+            end
 
             stream.puts "  # These are the common tables"
             (sorted_tables - inherited_tables.keys).each do |table_name|
@@ -51,7 +58,7 @@ module Torque
 
                 # Add the inherits setting
                 sub_stream.rewind
-                inherits.map!(&:to_sym)
+                inherits.map! { |parent| parent.to_s.sub(/\Apublic\./, '') }
                 inherits = inherits.first if inherits.size === 1
                 inherits = ", inherits: #{inherits.inspect} do |t|"
                 table_dump = sub_stream.read.gsub(/ do \|t\|$/, inherits)
@@ -68,6 +75,20 @@ module Torque
                 foreign_keys(tbl, stream) unless ignored?(tbl)
               end
             end
+          end
+
+          # Make sure to remove the schema from the table name
+          def remove_prefix_and_suffix(table)
+            super(table.sub(/\A[a-z0-9_]*\./, ''))
+          end
+
+          # Dump user defined schemas
+          def user_defined_schemas(stream)
+            return if (list = (@connection.user_defined_schemas - ['public'])).empty?
+
+            stream.puts "  # Custom schemas defined in this database."
+            list.each { |name| stream.puts "  create_schema \"#{name}\", force: :cascade" }
+            stream.puts
           end
 
           def fx_functions_position
