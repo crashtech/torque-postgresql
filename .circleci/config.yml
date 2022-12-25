@@ -13,7 +13,7 @@ jobs:
 
     docker:
       - image: cimg/ruby:<< parameters.ruby-version >>
-      - image: circleci/postgres:12.9
+      - image: cimg/postgres:14.6
         environment:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: torque
