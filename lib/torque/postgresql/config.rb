@@ -63,6 +63,10 @@ module Torque
       # auxiliary statement in order to perform detached CTEs
       cte.exposed_class = 'TorqueCTE'
 
+      # Estipulate a class name (which may contain namespace) that expose the
+      # recursive auxiliary statement in order to perform detached CTEs
+      cte.exposed_recursive_class = 'TorqueRecursiveCTE'
+
     end
 
     # Configure ENUM features

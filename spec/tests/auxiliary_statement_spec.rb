@@ -21,7 +21,7 @@ RSpec.describe 'AuxiliaryStatement' do
       end
 
       result = 'WITH "comments" AS'
-      result << ' (SELECT "comments"."user_id", "comments"."content" AS comment_content FROM "comments")'
+      result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id" FROM "comments")'
       result << ' SELECT "users".*, "comments"."comment_content" FROM "users"'
       result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id"'
       expect(subject.with(:comments).arel.to_sql).to eql(result)
@@ -34,7 +34,7 @@ RSpec.describe 'AuxiliaryStatement' do
       end
 
       result = 'WITH "comments" AS (SELECT DISTINCT ON ( "comments"."user_id" )'
-      result << ' "comments"."user_id", "comments"."content" AS last_comment'
+      result << ' "comments"."content" AS last_comment, "comments"."user_id"'
       result << ' FROM "comments" ORDER BY "comments"."user_id" ASC,'
       result << ' "comments"."id" DESC) SELECT "users".*,'
       result << ' "comments"."last_comment" FROM "users" INNER JOIN "comments"'
@@ -49,7 +49,7 @@ RSpec.describe 'AuxiliaryStatement' do
       end
 
       result = 'WITH "comments" AS'
-      result << ' (SELECT "comments"."user_id", "comments"."content" AS comment_content, "comments"."slug" AS comment_slug FROM "comments")'
+      result << ' (SELECT "comments"."content" AS comment_content, "comments"."slug" AS comment_slug, "comments"."user_id" FROM "comments")'
       result << ' SELECT "users".*, "comments"."comment_content", "comments"."comment_slug" FROM "users"'
       result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id"'
       expect(subject.with(:comments, select: {slug: :comment_slug}).arel.to_sql).to eql(result)
@@ -62,7 +62,7 @@ RSpec.describe 'AuxiliaryStatement' do
       end
 
       result = 'WITH "comments" AS'
-      result << ' (SELECT "comments"."user_id", "comments"."active", "comments"."content" AS comment_content FROM "comments")'
+      result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id", "comments"."active" FROM "comments")'
       result << ' SELECT "users".*, "comments"."comment_content" FROM "users"'
       result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id" AND "comments"."active" = "users"."active"'
       expect(subject.with(:comments, join: {active: :active}).arel.to_sql).to eql(result)
@@ -75,7 +75,7 @@ RSpec.describe 'AuxiliaryStatement' do
       end
 
       result = 'WITH "comments" AS'
-      result << ' (SELECT "comments"."user_id", "comments"."content" AS comment_content'
+      result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id"'
       result << ' FROM "comments" WHERE "comments"."active" = $1)'
       result << ' SELECT "users".*, "comments"."comment_content" FROM "users"'
       result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id"'
@@ -91,7 +91,7 @@ RSpec.describe 'AuxiliaryStatement' do
       query = subject.where(id: 2).with(:comments)
 
       result = 'WITH "comments" AS'
-      result << ' (SELECT "comments"."user_id", "comments"."content" AS comment_content FROM "comments"'
+      result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id" FROM "comments"'
       result << ' WHERE "comments"."id" = $1)'
       result << ' SELECT "users".*, "comments"."comment_content" FROM "users"'
       result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id"'
@@ -108,7 +108,7 @@ RSpec.describe 'AuxiliaryStatement' do
       end
 
       result = 'WITH "comments" AS'
-      result << ' (SELECT "comments"."user_id", MAX(id) AS comment_id FROM "comments")'
+      result << ' (SELECT MAX(id) AS comment_id, "comments"."user_id" FROM "comments")'
       result << ' SELECT "users".*, "comments"."comment_id" FROM "users"'
       result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id"'
       expect(subject.with(:comments).arel.to_sql).to eql(result)
@@ -121,7 +121,7 @@ RSpec.describe 'AuxiliaryStatement' do
       end
 
       result = 'WITH "comments" AS'
-      result << ' (SELECT "comments"."user_id", ROW_NUMBER() OVER (PARTITION BY ORDER BY "comments"."id") AS comment_id FROM "comments")'
+      result << ' (SELECT ROW_NUMBER() OVER (PARTITION BY ORDER BY "comments"."id") AS comment_id, "comments"."user_id" FROM "comments")'
       result << ' SELECT "users".*, "comments"."comment_id" FROM "users"'
       result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id"'
       expect(subject.with(:comments).arel.to_sql).to eql(result)
@@ -134,7 +134,7 @@ RSpec.describe 'AuxiliaryStatement' do
       end
 
       result = 'WITH "comments" AS'
-      result << ' (SELECT "comments"."user_id", MIN("comments"."id") AS comment_id FROM "comments")'
+      result << ' (SELECT MIN("comments"."id") AS comment_id, "comments"."user_id" FROM "comments")'
       result << ' SELECT "users".*, "comments"."comment_id" FROM "users"'
       result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id"'
       expect(subject.with(:comments).arel.to_sql).to eql(result)
@@ -147,8 +147,8 @@ RSpec.describe 'AuxiliaryStatement' do
         cte.join name: :id, 'a.col' => :col
       end
 
-      result = 'WITH "comments" AS (SELECT "comments"."id", "comments"."col",'
-      result << ' "comments"."content" AS comment_content FROM "comments") SELECT "users".*,'
+      result = 'WITH "comments" AS (SELECT "comments"."content" AS comment_content,'
+      result << ' "comments"."id", "comments"."col" FROM "comments") SELECT "users".*,'
       result << ' "comments"."comment_content" FROM "users" INNER JOIN "comments"'
       result << ' ON "comments"."id" = "users"."name" AND "comments"."col" = "a"."col"'
       expect(subject.with(:comments).arel.to_sql).to eql(result)
@@ -161,8 +161,8 @@ RSpec.describe 'AuxiliaryStatement' do
         cte.join_type :left
       end
 
-      result = 'WITH "comments" AS (SELECT "comments"."user_id",'
-      result << ' "comments"."content" AS comment_content FROM "comments") SELECT "users".*,'
+      result = 'WITH "comments" AS (SELECT "comments"."content" AS comment_content,'
+      result << ' "comments"."user_id" FROM "comments") SELECT "users".*,'
       result << ' "comments"."comment_content" FROM "users" LEFT OUTER JOIN "comments"'
       result << ' ON "comments"."user_id" = "users"."id"'
       expect(subject.with(:comments).arel.to_sql).to eql(result)
@@ -177,7 +177,7 @@ RSpec.describe 'AuxiliaryStatement' do
       end
 
       result = 'WITH "comments" AS'
-      result << ' (SELECT "comments"."a_user_id", "comments"."content" AS sample_content FROM "comments")'
+      result << ' (SELECT "comments"."content" AS sample_content, "comments"."a_user_id" FROM "comments")'
       result << ' SELECT "users".*, "comments"."sample_content" FROM "users"'
       result << ' INNER JOIN "comments" ON "comments"."a_user_id" = "users"."id"'
       expect(subject.with(:comments).arel.to_sql).to eql(result)
@@ -198,8 +198,8 @@ RSpec.describe 'AuxiliaryStatement' do
       query = subject.where(id: 3).with(:comments2)
 
       result = 'WITH '
-      result << '"comments1" AS (SELECT "comments"."user_id", "comments"."content" AS comment_content1 FROM "comments" WHERE "comments"."id" = $1), '
-      result << '"comments2" AS (SELECT "comments"."user_id", "comments"."content" AS comment_content2 FROM "comments" WHERE "comments"."id" = $2)'
+      result << '"comments1" AS (SELECT "comments"."content" AS comment_content1, "comments"."user_id" FROM "comments" WHERE "comments"."id" = $1), '
+      result << '"comments2" AS (SELECT "comments"."content" AS comment_content2, "comments"."user_id" FROM "comments" WHERE "comments"."id" = $2)'
       result << ' SELECT "users".*, "comments1"."comment_content1", "comments2"."comment_content2" FROM "users"'
       result << ' INNER JOIN "comments1" ON "comments1"."user_id" = "users"."id"'
       result << ' INNER JOIN "comments2" ON "comments2"."user_id" = "users"."id"'
@@ -225,8 +225,8 @@ RSpec.describe 'AuxiliaryStatement' do
 
       it 'can requires another statement as dependency' do
         result = 'WITH '
-        result << '"comments1" AS (SELECT "comments"."user_id", "comments"."content" AS comment_content1 FROM "comments"), '
-        result << '"comments2" AS (SELECT "comments"."user_id", "comments"."content" AS comment_content2 FROM "comments")'
+        result << '"comments1" AS (SELECT "comments"."content" AS comment_content1, "comments"."user_id" FROM "comments"), '
+        result << '"comments2" AS (SELECT "comments"."content" AS comment_content2, "comments"."user_id" FROM "comments")'
         result << ' SELECT "users".*, "comments1"."comment_content1", "comments2"."comment_content2" FROM "users"'
         result << ' INNER JOIN "comments1" ON "comments1"."user_id" = "users"."id"'
         result << ' INNER JOIN "comments2" ON "comments2"."user_id" = "users"."id"'
@@ -235,8 +235,8 @@ RSpec.describe 'AuxiliaryStatement' do
 
       it 'can uses already already set dependent' do
         result = 'WITH '
-        result << '"comments1" AS (SELECT "comments"."user_id", "comments"."content" AS comment_content1 FROM "comments"), '
-        result << '"comments2" AS (SELECT "comments"."user_id", "comments"."content" AS comment_content2 FROM "comments")'
+        result << '"comments1" AS (SELECT "comments"."content" AS comment_content1, "comments"."user_id" FROM "comments"), '
+        result << '"comments2" AS (SELECT "comments"."content" AS comment_content2, "comments"."user_id" FROM "comments")'
         result << ' SELECT "users".*, "comments1"."comment_content1", "comments2"."comment_content2" FROM "users"'
         result << ' INNER JOIN "comments1" ON "comments1"."user_id" = "users"."id"'
         result << ' INNER JOIN "comments2" ON "comments2"."user_id" = "users"."id"'
@@ -309,7 +309,7 @@ RSpec.describe 'AuxiliaryStatement' do
         end
 
         result = 'WITH "comments" AS'
-        result << ' (SELECT "comments"."user_id", "comments"."content" AS comment FROM "comments")'
+        result << ' (SELECT "comments"."content" AS comment, "comments"."user_id" FROM "comments")'
         result << ' SELECT "users".*, "comments"."comment" FROM "users"'
         result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id"'
         expect(subject.with(:comments).arel.to_sql).to eql(result)
@@ -352,7 +352,7 @@ RSpec.describe 'AuxiliaryStatement' do
         query = subject.with(:comments, args: {id: 1})
 
         result = 'WITH "comments" AS'
-        result << ' (SELECT "comments"."user_id", "comments"."content" AS comment'
+        result << ' (SELECT "comments"."content" AS comment, "comments"."user_id"'
         result << ' FROM "comments" WHERE "comments"."id" = $1)'
         result << ' SELECT "users".*, "comments"."comment" FROM "users"'
         result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id"'
@@ -403,7 +403,7 @@ RSpec.describe 'AuxiliaryStatement' do
         end
 
         result = 'WITH "authors" AS'
-        result << ' (SELECT "authors"."id", "authors"."name" AS author_name FROM "authors")'
+        result << ' (SELECT "authors"."name" AS author_name, "authors"."id" FROM "authors")'
         result << ' SELECT "activity_books".*, "authors"."author_name" FROM "activity_books"'
         result << ' INNER JOIN "authors" ON "authors"."id" = "activity_books"."author_id"'
         expect(subject.with(:authors).arel.to_sql).to eql(result)
@@ -423,7 +423,7 @@ RSpec.describe 'AuxiliaryStatement' do
         end
 
         result = 'WITH "authors" AS'
-        result << ' (SELECT "authors"."id", "authors"."type" AS author_type FROM "authors")'
+        result << ' (SELECT "authors"."type" AS author_type, "authors"."id" FROM "authors")'
         result << ' SELECT "activity_books".*, "authors"."author_type" FROM "activity_books"'
         result << ' INNER JOIN "authors" ON "authors"."id" = "activity_books"."author_id"'
         expect(subject.with(:authors).arel.to_sql).to eql(result)
@@ -434,6 +434,30 @@ RSpec.describe 'AuxiliaryStatement' do
       end
     end
 
+    context 'recursive' do
+      let(:klass) { Course }
+
+      it 'correctly build a recursive cte' do
+        klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query Category.all
+          cte.join id: :parent_id
+          cte.connect id: :parent_id
+        end
+
+        result = 'WITH RECURSIVE "all_categories" AS ('
+        result << ' SELECT "categories"."id", "categories"."parent_id"'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."parent_id" IS NULL'
+        result << ' UNION'
+        result << ' SELECT "categories"."id", "categories"."parent_id"'
+        result << ' FROM "categories", "all_categories"'
+        result << ' WHERE "categories"."parent_id" = "all_categories"."id"'
+        result << ' ) SELECT "courses".* FROM "courses" INNER JOIN "all_categories"'
+        result << ' ON "all_categories"."parent_id" = "courses"."id"'
+        expect(subject.with(:all_categories).arel.to_sql).to eql(result)
+      end
+    end
+
     it 'works with count and does not add extra columns' do
       klass.send(:auxiliary_statement, :comments) do |cte|
         cte.query Comment.all
@@ -441,7 +465,7 @@ RSpec.describe 'AuxiliaryStatement' do
       end
 
       result = 'WITH "comments" AS'
-      result << ' (SELECT "comments"."user_id", "comments"."content" AS comment_content FROM "comments")'
+      result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id" FROM "comments")'
       result << ' SELECT COUNT(*) FROM "users"'
       result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id"'
 
@@ -456,7 +480,7 @@ RSpec.describe 'AuxiliaryStatement' do
       end
 
       result = 'WITH "comments" AS'
-      result << ' (SELECT "comments"."user_id", "comments"."id" AS value FROM "comments")'
+      result << ' (SELECT "comments"."id" AS value, "comments"."user_id" FROM "comments")'
       result << ' SELECT SUM("comments"."value") FROM "users"'
       result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id"'
 
@@ -495,7 +519,12 @@ RSpec.describe 'AuxiliaryStatement' do
       expect(subject.protected_methods).to include(:auxiliary_statement)
     end
 
-    it 'allows configurate new auxiliary statements' do
+    it 'has the recursive configuration' do
+      expect(subject.protected_methods).to include(:recursive_cte)
+      expect(subject.protected_methods).to include(:recursive_auxiliary_statement)
+    end
+
+    it 'allows configure new auxiliary statements' do
       subject.send(:auxiliary_statement, :cte1)
       expect(subject.auxiliary_statements_list).to include(:cte1)
       expect(subject.const_defined?('Cte1_AuxiliaryStatement')).to be_truthy
@@ -527,7 +556,7 @@ RSpec.describe 'AuxiliaryStatement' do
       query = subject.with(sample, select: {content: :comment_content}).arel.to_sql
 
       result = 'WITH "comment" AS'
-      result << ' (SELECT "comments"."user_id", "comments"."content" AS comment_content FROM "comments")'
+      result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id" FROM "comments")'
       result << ' SELECT "users".*, "comment"."comment_content" FROM "users"'
       result << ' INNER JOIN "comment" ON "comment"."user_id" = "users"."id"'
       expect(query).to eql(result)
@@ -538,7 +567,7 @@ RSpec.describe 'AuxiliaryStatement' do
       query = subject.with(sample).arel.to_sql
 
       result = 'WITH "comment" AS'
-      result << ' (SELECT "comments"."user_id", "comments"."content" AS comment_content FROM "comments")'
+      result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id" FROM "comments")'
       result << ' SELECT "users".*, "comment"."comment_content" FROM "users"'
       result << ' INNER JOIN "comment" ON "comment"."user_id" = "users"."id"'
       expect(query).to eql(result)
@@ -551,7 +580,7 @@ RSpec.describe 'AuxiliaryStatement' do
       end
 
       result = 'WITH "all_comments" AS'
-      result << ' (SELECT "comments"."user_id", "comments"."content" AS comment_content FROM "comments")'
+      result << ' (SELECT "comments"."content" AS comment_content, "comments"."user_id" FROM "comments")'
       result << ' SELECT "users".*, "all_comments"."comment_content" FROM "users"'
       result << ' INNER JOIN "all_comments" ON "all_comments"."user_id" = "users"."id"'
 

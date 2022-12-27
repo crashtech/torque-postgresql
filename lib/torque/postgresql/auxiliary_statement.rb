@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'auxiliary_statement/settings'
+require_relative 'auxiliary_statement/recursive'
 
 module Torque
   module PostgreSQL
@@ -8,13 +9,16 @@ module Torque
       TABLE_COLUMN_AS_STRING = /\A(?:"?(\w+)"?\.)?"?(\w+)"?\z/.freeze
 
       class << self
-        attr_reader :config
+        attr_reader :config, :table_name
 
         # Find or create the class that will handle statement
         def lookup(name, base)
           const = name.to_s.camelize << '_' << self.name.demodulize
           return base.const_get(const, false) if base.const_defined?(const, false)
-          base.const_set(const, Class.new(AuxiliaryStatement))
+
+          base.const_set(const, Class.new(self)).tap do |klass|
+            klass.instance_variable_set(:@table_name, name.to_s)
+          end
         end
 
         # Create a new instance of an auxiliary statement
@@ -56,7 +60,7 @@ module Torque
         # A way to create auxiliary statements outside of models configurations,
         # being able to use on extensions
         def create(table_or_settings, &block)
-          klass = Class.new(AuxiliaryStatement)
+          klass = Class.new(self)
 
           if block_given?
             klass.instance_variable_set(:@table_name, table_or_settings)
@@ -89,7 +93,8 @@ module Torque
         def configure(base, instance)
           return @config unless @config.respond_to?(:call)
 
-          settings = Settings.new(base, instance)
+          recursive = self < AuxiliaryStatement::Recursive
+          settings = Settings.new(base, instance, recursive)
           settings.instance_exec(settings, &@config)
           settings
         end
@@ -98,17 +103,12 @@ module Torque
         def table
           @table ||= ::Arel::Table.new(table_name)
         end
-
-        # Get the name of the table of the configurated statement
-        def table_name
-          @table_name ||= self.name.demodulize.split('_').first.underscore
-        end
       end
 
       delegate :config, :table, :table_name, :relation, :configure, :relation_query?,
         to: :class
 
-      attr_reader :bound_attributes, :join_sources
+      attr_reader :bound_attributes, :join_sources, :settings
 
       # Start a new auxiliary statement giving extra options
       def initialize(*args)
@@ -129,6 +129,7 @@ module Torque
       def build(base)
         @bound_attributes.clear
         @join_sources.clear
+        @options = nil
 
         # Prepare all the data for the statement
         prepare(base)
@@ -141,9 +142,10 @@ module Torque
       end
 
       private
+
         # Setup the statement using the class configuration
         def prepare(base)
-          settings = configure(base, self)
+          @settings = configure(base, self)
           requires = Array.wrap(settings.requires).flatten.compact
           @dependencies = ensure_dependencies(requires, base).flatten.compact
 
@@ -151,7 +153,7 @@ module Torque
           @query = settings.query
 
           # Call a proc to get the real query
-          if @query.methods.include?(:call)
+          if @query.respond_to?(:call)
             call_args = @query.try(:arity) === 0 ? [] : [OpenStruct.new(@args)]
             @query = @query.call(*call_args)
             @args = []
@@ -168,7 +170,7 @@ module Torque
             @association = settings.through.to_s
           elsif relation_query?(@query)
             @association = base.reflections.find do |name, reflection|
-              break name if @query.klass.eql? reflection.klass
+              break name if @query.klass.eql?(reflection.klass)
             end
           end
         end
@@ -234,15 +236,6 @@ module Torque
             as a query object on #{self.class.name}.
           MSG
 
-          # Expose join columns
-          if relation_query?(@query)
-            query_table = @query.arel_table
-            conditions.children.each do |item|
-              @query.select_values += [query_table[item.left.name]] \
-                if item.left.relation.eql?(table)
-            end
-          end
-
           # Build the join based on the join type
           arel_join.new(table, table.create_on(conditions))
         end
@@ -263,10 +256,20 @@ module Torque
 
         # Mount the list of selected attributes
         def expose_columns(base, query_table = nil)
+          # Add the columns necessary for the join
+          list = @join_sources.each_with_object(@select) do |join, hash|
+            join.right.expr.children.each do |item|
+              hash[item.left.name] = nil if item.left.relation.eql?(table)
+            end
+          end
+
           # Add select columns to the query and get exposed columns
-          @select.map do |left, right|
-            base.select_extra_values += [table[right.to_s]]
-            project(left, query_table).as(right.to_s) if query_table
+          list.filter_map do |left, right|
+            base.select_extra_values += [table[right.to_s]] unless right.nil?
+            next unless query_table
+
+            col = project(left, query_table)
+            right.nil? ? col : col.as(right.to_s)
           end
         end
 

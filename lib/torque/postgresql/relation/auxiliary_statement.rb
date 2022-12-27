@@ -10,22 +10,14 @@ module Torque
         # :nodoc:
         def auxiliary_statements_values=(value); set_value(:auxiliary_statements, value); end
 
-        # Set use of an auxiliary statement already configurated on the model
+        # Set use of an auxiliary statement
         def with(*args)
           spawn.with!(*args)
         end
 
         # Like #with, but modifies relation in place.
         def with!(*args)
-          options = args.extract_options!
-          args.each do |table|
-            instance = table.is_a?(Class) && table < PostgreSQL::AuxiliaryStatement \
-              ? table.new(options) \
-              : PostgreSQL::AuxiliaryStatement.instantiate(table, self, options)
-
-            self.auxiliary_statements_values += [instance]
-          end
-
+          instantiate_auxiliary_statements(*args)
           self
         end
 
@@ -47,8 +39,24 @@ module Torque
           # Hook arel build to add the distinct on clause
           def build_arel(*)
             arel = super
+            type = auxiliary_statement_type
             subqueries = build_auxiliary_statements(arel)
-            subqueries.nil? ? arel : arel.with(subqueries)
+            subqueries.nil? ? arel : arel.with(*type, *subqueries)
+          end
+
+          # Instantiate one or more auxiliary statements for the given +klass+
+          def instantiate_auxiliary_statements(*args)
+            options = args.extract_options!
+            klass = PostgreSQL::AuxiliaryStatement
+            klass = klass::Recursive if options.delete(:recursive).present?
+
+            self.auxiliary_statements_values += args.map do |table|
+              if table.is_a?(Class) && table < klass
+                table.new(options)
+              else
+                klass.instantiate(table, self, options)
+              end
+            end
           end
 
           # Build all necessary data for auxiliary statements
@@ -57,6 +65,12 @@ module Torque
             auxiliary_statements_values.map do |klass|
               klass.build(self).tap { arel.join_sources.concat(klass.join_sources) }
             end
+          end
+
+          # Return recursive if any auxiliary statement is recursive
+          def auxiliary_statement_type
+            klass = PostgreSQL::AuxiliaryStatement::Recursive
+            :recursive if auxiliary_statements_values.any?(klass)
           end
 
           # Throw an error showing that an auxiliary statement of the given

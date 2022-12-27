@@ -252,7 +252,7 @@ module Torque
           # attributes key:
           # Provides a map of attributes to be exposed to the main query.
           #
-          # For instace, if the statement query has an 'id' column that you
+          # For instance, if the statement query has an 'id' column that you
           # want it to be accessed on the main query as 'item_id',
           # you can use:
           #   attributes id: :item_id, 'MAX(id)' => :max_id,
@@ -293,6 +293,16 @@ module Torque
             klass.configurator(block)
           end
           alias cte auxiliary_statement
+
+          # Creates a new recursive auxiliary statement (CTE) under the base
+          # Very similar to the regular auxiliary statement, but with two-part
+          # query where one is executed first and the second recursively
+          def recursive_auxiliary_statement(table, &block)
+            klass = AuxiliaryStatement::Recursive.lookup(table, self)
+            auxiliary_statements_list[table.to_sym] = klass
+            klass.configurator(block)
+          end
+          alias recursive_cte recursive_auxiliary_statement
       end
     end
 
