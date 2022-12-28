@@ -156,11 +156,9 @@ module Torque
           if @query.respond_to?(:call)
             call_args = @query.try(:arity) === 0 ? [] : [OpenStruct.new(@args)]
             @query = @query.call(*call_args)
-            @args = []
           end
 
-          # Manually set the query table when it's not an relation query
-          @query_table = settings.query_table unless relation_query?(@query)
+          # Merge select attributes provided on the instance creation
           @select = settings.attributes.merge(@select) if settings.attributes.present?
 
           # Merge join settings

@@ -12,29 +12,28 @@ module Torque
             # Expose columns and get the list of the ones for select
             columns = expose_columns(base, @query.try(:arel_table))
             sub_columns = columns.dup
-            union_all = settings.all.present?
+            type = settings.union_all.present? ? 'all' : ''
 
             # Build any extra columns that are dynamic and from the recursion
             extra_columns(base, columns, sub_columns)
-            type = union_all ? 'all' : ''
 
             # Prepare the query depending on its type
-            if @query.is_a?(String)
+            if @query.is_a?(String) && @sub_query.is_a?(String)
               args = @args.each_with_object({}) { |h, (k, v)| h[k] = base.connection.quote(v) }
               ::Arel.sql("(#{@query} UNION #{type.upcase} #{@sub_query})" % args)
-            elsif relation_query?(@query)
+            elsif relation_query?(@query) && relation_query?(@sub_query)
               @query = @query.where(@where) if @where.present?
               @bound_attributes.concat(@query.send(:bound_attributes))
               @bound_attributes.concat(@sub_query.send(:bound_attributes))
 
-              sub_query = @sub_query.select(*columns).arel
+              sub_query = @sub_query.select(*sub_columns).arel
               sub_query.from([@sub_query.arel_table, table])
 
               @query.select(*columns).arel.union(type, sub_query)
             else
               raise ArgumentError, <<-MSG.squish
-                Only String and ActiveRecord::Base objects are accepted as query objects,
-                #{@query.class.name} given for #{self.class.name}.
+                Only String and ActiveRecord::Base objects are accepted as query and sub query
+                objects, #{@query.class.name} given for #{self.class.name}.
               MSG
             end
           end
@@ -56,19 +55,25 @@ module Torque
             MSG
 
             if @sub_query.nil?
-              left, right = @connect = settings.connect.to_a.first.map(&:to_s)
-              @sub_query = @query.where(@query.arel_table[right].eq(table[left]))
-              @query = @query.where(right => nil) unless @query.where_values_hash.key?(right)
-            else
-              # Call a proc to get the real sub query
-              if @sub_query.respond_to?(:call)
-                call_args = @sub_query.try(:arity) === 0 ? [] : [OpenStruct.new(@args)]
-                @sub_query = @sub_query.call(*call_args)
-                @args = []
-              end
+              raise ArgumentError, <<-MSG.squish if settings.connect.blank?
+                Unable to generate sub query without setting up a proper way to connect it
+                with the main query. Please provide a `connect` property on the "#{table_name}"
+                settings.
+              MSG
 
-              # Manually set the query table when it's not an relation query
-              @sub_query_table = settings.sub_query_table unless relation_query?(@sub_query)
+              left, right = @connect = settings.connect.to_a.first.map(&:to_s)
+              condition = @query.arel_table[right].eq(table[left])
+
+              if @query.where_values_hash.key?(right)
+                @sub_query = @query.unscope(where: right.to_sym).where(condition)
+              else
+                @sub_query = @query.where(condition)
+                @query = @query.where(right => nil)
+              end
+            elsif @sub_query.respond_to?(:call)
+              # Call a proc to get the real sub query
+              call_args = @sub_query.try(:arity) === 0 ? [] : [OpenStruct.new(@args)]
+              @sub_query = @sub_query.call(*call_args)
             end
           end
 
@@ -84,28 +89,25 @@ module Torque
 
             # Build a column to represent the depth of the recursion
             if settings.depth?
-              col = table[settings.depth]
-              base.select_extra_values += [col]
+              name, start, as = settings.depth
+              col = table[name]
+              base.select_extra_values += [col.as(as)] unless as.nil?
 
-              columns << settings.sql('0').as(settings.depth)
-              sub_columns << (col + settings.sql('1')).as(settings.depth)
+              columns << ::Arel.sql(start.to_s).as(name)
+              sub_columns << (col + ::Arel.sql('1')).as(name)
             end
 
             # Build a column to represent the path of the record access
             if settings.path?
-              name, source = settings.path
-              source ||= @connect[0]
-
-              raise ArgumentError, <<-MSG.squish if source.nil?
-                Unable to generate path without providing a source or connect setting.
-              MSG
+              name, source, as = settings.path
+              source = @query.arel_table[source || @connect[0]]
 
               col = table[name]
-              base.select_extra_values += [col]
-              parts = [col, @sub_query.arel_table[source].cast(:varchar)]
+              base.select_extra_values += [col.as(as)] unless as.nil?
+              parts = [col, source.cast(:varchar)]
 
-              columns << ::Arel.array([col]).cast(:varchar, true).as(name)
-              sub_columns << ::Arel.named_function(:array_append, parts)
+              columns << ::Arel.array([source]).cast(:varchar, true).as(name)
+              sub_columns << ::Arel::Nodes::NamedFunction.new('array_append', parts).as(name)
             end
           end
 

@@ -4,9 +4,9 @@ module Torque
   module PostgreSQL
     class AuxiliaryStatement
       class Settings < Collector.new(:attributes, :join, :join_type, :query, :requires,
-          :polymorphic, :through, :all, :connect)
+          :polymorphic, :through, :union_all, :connect)
 
-        attr_reader :base, :source
+        attr_reader :base, :source, :depth, :path
         alias_method :select, :attributes
         alias_method :cte, :source
 
@@ -18,6 +18,7 @@ module Torque
           @base = base
           @source = source
           @recursive = recursive
+          set_default_connect(base) if recursive?
         end
 
         def base_name
@@ -33,21 +34,26 @@ module Torque
         end
 
         def depth?
-          defined?(@with_depth)
+          defined?(@depth)
         end
 
         def path?
-          defined?(@with_path)
+          defined?(@path)
         end
 
         # Add an attribute to the result showing the depth of each iteration
-        def with_depth(name = 'depth')
-          @with_depth = name if recursive?
+        def with_depth(name = 'depth', start: 0, as: nil)
+          @depth = [name.to_s, start, as&.to_s] if recursive?
         end
 
         # Add an attribute to the result showing the path of each record
-        def with_path(name = 'path', source = nil)
-          @with_path = [name, source] if recursive?
+        def with_path(name = 'path', source: nil, as: nil)
+          @path = [name.to_s, source&.to_s, as&.to_s] if recursive?
+        end
+
+        # Set recursive operation to use union all
+        def union_all!
+          @union_all = true if recursive?
         end
 
         # Add both depth and path to the result
@@ -72,11 +78,11 @@ module Torque
         # There are three ways of setting the query:
         # - A simple relation based on a Model
         # - A Arel-based select manager
-        # - A string or a proc that requires the table name as first argument
+        # - A string or a proc
         def query(value = nil, command = nil)
           return @query if value.nil?
 
-          @query, @query_table = query_parts(value, command)
+          @query = sanitize_query(value, command)
         end
 
         # Same as query, but for the second part of the union for recursive cte
@@ -84,29 +90,44 @@ module Torque
           return unless recursive?
           return @sub_query if value.nil?
 
-          @sub_query, @sub_query_table = query_parts(value, command)
+          @sub_query = sanitize_query(value, command)
         end
+
+        # Assume `parent_` as the other part if provided a Symbol or String
+        def connect(value = nil)
+          return @connect if value.nil?
+
+          value = { value.to_sym => :"parent_#{value}" } \
+            if value.is_a?(String) || value.is_a?(Symbol)
+
+          @connect = value
+        end
+
+        alias connect= connect
 
         private
 
           # Get the query and table from the params
-          def query_parts(value, command = nil)
-            return [value] if relation_query?(value)
-            return [value, value.source.left.name] if value.is_a?(::Arel::SelectManager)
+          def sanitize_query(value, command = nil)
+            return value if relation_query?(value)
+            return value if value.is_a?(::Arel::SelectManager)
 
+            command = value if command.nil? # For compatibility purposes
             valid_type = command.respond_to?(:call) || command.is_a?(String)
-
-            raise ArgumentError, <<-MSG.squish if command.nil?
-              To use proc or string as query, you need to provide the table name
-              as the first argument
-            MSG
 
             raise ArgumentError, <<-MSG.squish unless valid_type
               Only relation, string and proc are valid object types for query,
               #{command.inspect} given.
             MSG
 
-            [command, ::Arel::Table.new(value)]
+            command
+          end
+
+          # When setting up a recursive cte, set connect as default
+          # id: :parent_id, based on primary key
+          def set_default_connect(base)
+            key = base.primary_key
+            self.connect = key unless key.nil?
           end
 
       end

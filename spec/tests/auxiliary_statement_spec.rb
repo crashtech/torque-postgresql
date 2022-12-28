@@ -289,14 +289,14 @@ RSpec.describe 'AuxiliaryStatement' do
         expect{ subject.with(:comments).arel.to_sql }.to raise_error(ArgumentError, /join columns/)
       end
 
-      it 'raises an error when not given the table name as first argument' do
+      it 'not raises an error when not given the table name as first argument' do
         klass.send(:auxiliary_statement, :comments) do |cte|
           cte.query 'SELECT * FROM comments'
           cte.attributes content: :comment
           cte.join id: :user_id
         end
 
-        expect{ subject.with(:comments).arel.to_sql }.to raise_error(ArgumentError, /table name/)
+        expect{ subject.with(:comments).arel.to_sql }.not_to raise_error
       end
     end
 
@@ -370,14 +370,14 @@ RSpec.describe 'AuxiliaryStatement' do
         expect{ subject.with(:comments).arel.to_sql }.to raise_error(ArgumentError, /join columns/)
       end
 
-      it 'raises an error when not given the table name as first argument' do
+      it 'not raises an error when not given the table name as first argument' do
         klass.send(:auxiliary_statement, :comments) do |cte|
           cte.query -> { Comment.all }
           cte.attributes content: :comment
           cte.join id: :user_id
         end
 
-        expect{ subject.with(:comments).arel.to_sql }.to raise_error(ArgumentError, /table name/)
+        expect{ subject.with(:comments).arel.to_sql }.not_to raise_error
       end
 
       it 'raises an error when the result of the proc is an invalid type' do
@@ -441,7 +441,6 @@ RSpec.describe 'AuxiliaryStatement' do
         klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
           cte.query Category.all
           cte.join id: :parent_id
-          cte.connect id: :parent_id
         end
 
         result = 'WITH RECURSIVE "all_categories" AS ('
@@ -455,6 +454,210 @@ RSpec.describe 'AuxiliaryStatement' do
         result << ' ) SELECT "courses".* FROM "courses" INNER JOIN "all_categories"'
         result << ' ON "all_categories"."parent_id" = "courses"."id"'
         expect(subject.with(:all_categories).arel.to_sql).to eql(result)
+      end
+
+      it 'allows connect to be set to something different using a single value' do
+        klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query Category.all
+          cte.join id: :parent_id
+          cte.connect :name
+        end
+
+        result = 'WITH RECURSIVE "all_categories" AS ('
+        result << ' SELECT "categories"."name", "categories"."parent_id"'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."parent_name" IS NULL'
+        result << ' UNION'
+        result << ' SELECT "categories"."name", "categories"."parent_id"'
+        result << ' FROM "categories", "all_categories"'
+        result << ' WHERE "categories"."parent_name" = "all_categories"."name"'
+        result << ' ) SELECT "courses".* FROM "courses" INNER JOIN "all_categories"'
+        result << ' ON "all_categories"."parent_id" = "courses"."id"'
+        expect(subject.with(:all_categories).arel.to_sql).to eql(result)
+      end
+
+      it 'allows a complete different set of connect' do
+        klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query Category.all
+          cte.join id: :parent_id
+          cte.connect left: :right
+        end
+
+        result = 'WITH RECURSIVE "all_categories" AS ('
+        result << ' SELECT "categories"."left", "categories"."parent_id"'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."right" IS NULL'
+        result << ' UNION'
+        result << ' SELECT "categories"."left", "categories"."parent_id"'
+        result << ' FROM "categories", "all_categories"'
+        result << ' WHERE "categories"."right" = "all_categories"."left"'
+        result << ' ) SELECT "courses".* FROM "courses" INNER JOIN "all_categories"'
+        result << ' ON "all_categories"."parent_id" = "courses"."id"'
+        expect(subject.with(:all_categories).arel.to_sql).to eql(result)
+      end
+
+      it 'allows using an union all' do
+        klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query Category.all
+          cte.join id: :parent_id
+          cte.union_all!
+        end
+
+        result = 'WITH RECURSIVE "all_categories" AS ('
+        result << ' SELECT "categories"."id", "categories"."parent_id"'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."parent_id" IS NULL'
+        result << ' UNION ALL'
+        result << ' SELECT "categories"."id", "categories"."parent_id"'
+        result << ' FROM "categories", "all_categories"'
+        result << ' WHERE "categories"."parent_id" = "all_categories"."id"'
+        result << ' ) SELECT "courses".* FROM "courses" INNER JOIN "all_categories"'
+        result << ' ON "all_categories"."parent_id" = "courses"."id"'
+        expect(subject.with(:all_categories).arel.to_sql).to eql(result)
+      end
+
+      it 'allows having a complete different initiator' do
+        klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query Category.where(parent_id: 5)
+          cte.join id: :parent_id
+        end
+
+        result = 'WITH RECURSIVE "all_categories" AS ('
+        result << ' SELECT "categories"."id", "categories"."parent_id"'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."parent_id" = $1'
+        result << ' UNION'
+        result << ' SELECT "categories"."id", "categories"."parent_id"'
+        result << ' FROM "categories", "all_categories"'
+        result << ' WHERE "categories"."parent_id" = "all_categories"."id"'
+        result << ' ) SELECT "courses".* FROM "courses" INNER JOIN "all_categories"'
+        result << ' ON "all_categories"."parent_id" = "courses"."id"'
+        expect(subject.with(:all_categories).arel.to_sql).to eql(result)
+      end
+
+      it 'can process the depth of the query' do
+        klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query Category.all
+          cte.join id: :parent_id
+          cte.with_depth
+        end
+
+        result = 'WITH RECURSIVE "all_categories" AS ('
+        result << ' SELECT "categories"."id", "categories"."parent_id", 0 AS depth'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."parent_id" IS NULL'
+        result << ' UNION'
+        result << ' SELECT "categories"."id", "categories"."parent_id", ("all_categories"."depth" + 1) AS depth'
+        result << ' FROM "categories", "all_categories"'
+        result << ' WHERE "categories"."parent_id" = "all_categories"."id"'
+        result << ' ) SELECT "courses".* FROM "courses" INNER JOIN "all_categories"'
+        result << ' ON "all_categories"."parent_id" = "courses"."id"'
+        expect(subject.with(:all_categories).arel.to_sql).to eql(result)
+      end
+
+      it 'can process and expose the depth of the query' do
+        klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query Category.all
+          cte.join id: :parent_id
+          cte.with_depth 'd', start: 10, as: :category_depth
+        end
+
+        result = 'WITH RECURSIVE "all_categories" AS ('
+        result << ' SELECT "categories"."id", "categories"."parent_id", 10 AS d'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."parent_id" IS NULL'
+        result << ' UNION'
+        result << ' SELECT "categories"."id", "categories"."parent_id", ("all_categories"."d" + 1) AS d'
+        result << ' FROM "categories", "all_categories"'
+        result << ' WHERE "categories"."parent_id" = "all_categories"."id"'
+        result << ' ) SELECT "courses".*, "all_categories"."d" AS category_depth FROM "courses" INNER JOIN "all_categories"'
+        result << ' ON "all_categories"."parent_id" = "courses"."id"'
+        expect(subject.with(:all_categories).arel.to_sql).to eql(result)
+      end
+
+      it 'can process the path of the query' do
+        klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query Category.all
+          cte.join id: :parent_id
+          cte.with_path
+        end
+
+        result = 'WITH RECURSIVE "all_categories" AS ('
+        result << ' SELECT "categories"."id", "categories"."parent_id", ARRAY["categories"."id"]::varchar[] AS path'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."parent_id" IS NULL'
+        result << ' UNION'
+        result << ' SELECT "categories"."id", "categories"."parent_id", array_append("all_categories"."path", "categories"."id"::varchar) AS path'
+        result << ' FROM "categories", "all_categories"'
+        result << ' WHERE "categories"."parent_id" = "all_categories"."id"'
+        result << ' ) SELECT "courses".* FROM "courses" INNER JOIN "all_categories"'
+        result << ' ON "all_categories"."parent_id" = "courses"."id"'
+        expect(subject.with(:all_categories).arel.to_sql).to eql(result)
+      end
+
+      it 'can process and expose the path of the query' do
+        klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query Category.all
+          cte.join id: :parent_id
+          cte.with_path 'p', source: :name, as: :category_path
+        end
+
+        result = 'WITH RECURSIVE "all_categories" AS ('
+        result << ' SELECT "categories"."id", "categories"."parent_id", ARRAY["categories"."name"]::varchar[] AS p'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."parent_id" IS NULL'
+        result << ' UNION'
+        result << ' SELECT "categories"."id", "categories"."parent_id", array_append("all_categories"."p", "categories"."name"::varchar) AS p'
+        result << ' FROM "categories", "all_categories"'
+        result << ' WHERE "categories"."parent_id" = "all_categories"."id"'
+        result << ' ) SELECT "courses".*, "all_categories"."p" AS category_path FROM "courses" INNER JOIN "all_categories"'
+        result << ' ON "all_categories"."parent_id" = "courses"."id"'
+        expect(subject.with(:all_categories).arel.to_sql).to eql(result)
+      end
+
+      it 'works with string queries' do
+        klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query 'SELECT * FROM categories WHERE a IS NULL'
+          cte.sub_query 'SELECT * FROM categories, all_categories WHERE all_categories.a = b'
+          cte.join id: :parent_id
+        end
+
+        result = 'WITH RECURSIVE "all_categories" AS ('
+        result << 'SELECT * FROM categories WHERE a IS NULL'
+        result << ' UNION '
+        result << ' SELECT * FROM categories, all_categories WHERE all_categories.a = b'
+        result << ') SELECT "courses".* FROM "courses" INNER JOIN "all_categories"'
+        result << ' ON "all_categories"."parent_id" = "courses"."id"'
+        expect(subject.with(:all_categories).arel.to_sql).to eql(result)
+      end
+
+      it 'raises an error when query is a string and there is no sub query' do
+        klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query 'SELECT * FROM categories WHERE a IS NULL'
+          cte.join id: :parent_id
+        end
+
+        expect{ subject.with(:all_categories).arel.to_sql }.to raise_error(ArgumentError, /generate sub query/)
+      end
+
+      it 'raises an error when sub query has an invalid type' do
+        klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query 'SELECT * FROM categories WHERE a IS NULL'
+          cte.sub_query -> { 1 }
+          cte.join id: :parent_id
+        end
+
+        expect{ subject.with(:all_categories).arel.to_sql }.to raise_error(ArgumentError, /query and sub query objects/)
+      end
+
+      it 'raises an error when connect can be resolved automatically' do
+        allow(klass).to receive(:primary_key).and_return(nil)
+        klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query Category.all
+          cte.join id: :parent_id
+        end
+
+        expect{ subject.with(:all_categories).arel.to_sql }.to raise_error(ArgumentError, /setting up a proper way to connect/)
       end
     end
 
