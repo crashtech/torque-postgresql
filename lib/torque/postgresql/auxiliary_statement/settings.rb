@@ -18,7 +18,6 @@ module Torque
           @base = base
           @source = source
           @recursive = recursive
-          set_default_connect(base) if recursive?
         end
 
         def base_name
@@ -97,8 +96,9 @@ module Torque
         def connect(value = nil)
           return @connect if value.nil?
 
-          value = { value.to_sym => :"parent_#{value}" } \
+          value = [value.to_sym, :"parent_#{value}"] \
             if value.is_a?(String) || value.is_a?(Symbol)
+          value = value.to_a.first if value.is_a?(Hash)
 
           @connect = value
         end
@@ -121,13 +121,6 @@ module Torque
             MSG
 
             command
-          end
-
-          # When setting up a recursive cte, set connect as default
-          # id: :parent_id, based on primary key
-          def set_default_connect(base)
-            key = base.primary_key
-            self.connect = key unless key.nil?
           end
 
       end

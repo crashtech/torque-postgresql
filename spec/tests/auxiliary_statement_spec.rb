@@ -699,7 +699,7 @@ RSpec.describe 'AuxiliaryStatement' do
       expect{ subject.with(:comments).arel.to_sql }.to raise_error(ArgumentError, /object types/)
     end
 
-    it 'raises an error when traying to use a statement that is not defined' do
+    it 'raises an error when trying to use a statement that is not defined' do
       expect{ subject.with(:does_not_exist).arel.to_sql }.to raise_error(ArgumentError)
     end
 
@@ -789,6 +789,113 @@ RSpec.describe 'AuxiliaryStatement' do
 
       query = subject.with(sample).arel.to_sql
       expect(query).to eql(result)
+    end
+
+    context 'recursive' do
+      let(:klass) { Torque::PostgreSQL::AuxiliaryStatement::Recursive }
+      subject { Course }
+
+      it 'has the external method available' do
+        expect(klass).to respond_to(:create)
+      end
+
+      it 'accepts simple recursive auxiliary statement definition' do
+        settings = { join: { id: :parent_id } }
+        query = subject.with(klass.create(Category.all), **settings).arel.to_sql
+
+        result = 'WITH RECURSIVE "category" AS ('
+        result << ' SELECT "categories"."id", "categories"."parent_id"'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."parent_id" IS NULL'
+        result << ' UNION'
+        result << ' SELECT "categories"."id", "categories"."parent_id"'
+        result << ' FROM "categories", "category"'
+        result << ' WHERE "categories"."parent_id" = "category"."id"'
+        result << ' ) SELECT "courses".* FROM "courses" INNER JOIN "category"'
+        result << ' ON "category"."parent_id" = "courses"."id"'
+        expect(query).to eql(result)
+      end
+
+      it 'accepts a connect option' do
+        settings = { join: { id: :parent_id }, connect: { a: :b } }
+        query = subject.with(klass.create(Category.all), **settings).arel.to_sql
+
+        result = 'WITH RECURSIVE "category" AS ('
+        result << ' SELECT "categories"."a", "categories"."parent_id"'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."b" IS NULL'
+        result << ' UNION'
+        result << ' SELECT "categories"."a", "categories"."parent_id"'
+        result << ' FROM "categories", "category"'
+        result << ' WHERE "categories"."b" = "category"."a"'
+        result << ' ) SELECT "courses".* FROM "courses" INNER JOIN "category"'
+        result << ' ON "category"."parent_id" = "courses"."id"'
+        expect(query).to eql(result)
+      end
+
+      it 'accepts an union all option' do
+        settings = { join: { id: :parent_id }, union_all: true }
+        query = subject.with(klass.create(Category.all), **settings).arel.to_sql
+
+        result = 'WITH RECURSIVE "category" AS ('
+        result << ' SELECT "categories"."id", "categories"."parent_id"'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."parent_id" IS NULL'
+        result << ' UNION ALL'
+        result << ' SELECT "categories"."id", "categories"."parent_id"'
+        result << ' FROM "categories", "category"'
+        result << ' WHERE "categories"."parent_id" = "category"."id"'
+        result << ' ) SELECT "courses".* FROM "courses" INNER JOIN "category"'
+        result << ' ON "category"."parent_id" = "courses"."id"'
+        expect(query).to eql(result)
+      end
+
+      it 'accepts a sub query option' do
+        settings = { join: { id: :parent_id }, sub_query: Category.where(active: true) }
+        query = subject.with(klass.create(Category.all), **settings).arel.to_sql
+
+        result = 'WITH RECURSIVE "category" AS ('
+        result << ' SELECT "categories"."id", "categories"."parent_id" FROM "categories"'
+        result << ' UNION'
+        result << ' SELECT "categories"."id", "categories"."parent_id" FROM "categories", "category" WHERE "categories"."active" = $1'
+        result << ' ) SELECT "courses".* FROM "courses" INNER JOIN "category"'
+        result << ' ON "category"."parent_id" = "courses"."id"'
+        expect(query).to eql(result)
+      end
+
+      it 'accepts a depth option' do
+        settings = { join: { id: :parent_id }, with_depth: { name: 'a', start: 5, as: 'b' } }
+        query = subject.with(klass.create(Category.all), **settings).arel.to_sql
+
+        result = 'WITH RECURSIVE "category" AS ('
+        result << ' SELECT "categories"."id", "categories"."parent_id", 5 AS a'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."parent_id" IS NULL'
+        result << ' UNION'
+        result << ' SELECT "categories"."id", "categories"."parent_id", ("category"."a" + 1) AS a'
+        result << ' FROM "categories", "category"'
+        result << ' WHERE "categories"."parent_id" = "category"."id"'
+        result << ' ) SELECT "courses".*, "category"."a" AS b FROM "courses" INNER JOIN "category"'
+        result << ' ON "category"."parent_id" = "courses"."id"'
+        expect(query).to eql(result)
+      end
+
+      it 'accepts a path option' do
+        settings = { join: { id: :parent_id }, with_path: { name: 'a', source: 'b', as: 'c' } }
+        query = subject.with(klass.create(Category.all), **settings).arel.to_sql
+
+        result = 'WITH RECURSIVE "category" AS ('
+        result << ' SELECT "categories"."id", "categories"."parent_id", ARRAY["categories"."b"]::varchar[] AS a'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."parent_id" IS NULL'
+        result << ' UNION'
+        result << ' SELECT "categories"."id", "categories"."parent_id", array_append("category"."a", "categories"."b"::varchar) AS a'
+        result << ' FROM "categories", "category"'
+        result << ' WHERE "categories"."parent_id" = "category"."id"'
+        result << ' ) SELECT "courses".*, "category"."a" AS c FROM "courses" INNER JOIN "category"'
+        result << ' ON "category"."parent_id" = "courses"."id"'
+        expect(query).to eql(result)
+      end
     end
   end
 

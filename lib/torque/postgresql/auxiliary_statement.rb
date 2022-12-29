@@ -22,7 +22,7 @@ module Torque
         end
 
         # Create a new instance of an auxiliary statement
-        def instantiate(statement, base, options = nil)
+        def instantiate(statement, base, **options)
           klass = while base < ActiveRecord::Base
             list = base.auxiliary_statements_list
             break list[statement] if list.present? && list.key?(statement)
@@ -30,15 +30,15 @@ module Torque
             base = base.superclass
           end
 
-          return klass.new(options) unless klass.nil?
+          return klass.new(**options) unless klass.nil?
           raise ArgumentError, <<-MSG.squish
             There's no '#{statement}' auxiliary statement defined for #{base.class.name}.
           MSG
         end
 
         # Fast access to statement build
-        def build(statement, base, options = nil, bound_attributes = [], join_sources = [])
-          klass = instantiate(statement, base, options)
+        def build(statement, base, bound_attributes = [], join_sources = [], **options)
+          klass = instantiate(statement, base, **options)
           result = klass.build(base)
 
           bound_attributes.concat(klass.bound_attributes)
@@ -108,18 +108,17 @@ module Torque
       delegate :config, :table, :table_name, :relation, :configure, :relation_query?,
         to: :class
 
-      attr_reader :bound_attributes, :join_sources, :settings
+      attr_reader :bound_attributes, :join_sources
 
       # Start a new auxiliary statement giving extra options
-      def initialize(*args)
-        options = args.extract_options!
+      def initialize(*, **options)
         args_key = Torque::PostgreSQL.config.auxiliary_statement.send_arguments_key
 
         @join = options.fetch(:join, {})
         @args = options.fetch(args_key, {})
         @where = options.fetch(:where, {})
         @select = options.fetch(:select, {})
-        @join_type = options.fetch(:join_type, nil)
+        @join_type = options[:join_type]
 
         @bound_attributes = []
         @join_sources = []
@@ -129,10 +128,9 @@ module Torque
       def build(base)
         @bound_attributes.clear
         @join_sources.clear
-        @options = nil
 
         # Prepare all the data for the statement
-        prepare(base)
+        prepare(base, configure(base, self))
 
         # Add the join condition to the list
         @join_sources << build_join(base)
@@ -144,8 +142,7 @@ module Torque
       private
 
         # Setup the statement using the class configuration
-        def prepare(base)
-          @settings = configure(base, self)
+        def prepare(base, settings)
           requires = Array.wrap(settings.requires).flatten.compact
           @dependencies = ensure_dependencies(requires, base).flatten.compact
 
@@ -274,11 +271,11 @@ module Torque
         # Ensure that all the dependencies are loaded in the base relation
         def ensure_dependencies(list, base)
           with_options = list.extract_options!.to_a
-          (list + with_options).map do |dependent, options|
-            dependent_klass = base.model.auxiliary_statements_list[dependent]
+          (list + with_options).map do |name, options|
+            dependent_klass = base.model.auxiliary_statements_list[name]
 
             raise ArgumentError, <<-MSG.squish if dependent_klass.nil?
-              The '#{dependent}' auxiliary statement dependency can't found on
+              The '#{name}' auxiliary statement dependency can't found on
               #{self.class.name}.
             MSG
 
@@ -286,7 +283,8 @@ module Torque
               cte.is_a?(dependent_klass)
             end
 
-            AuxiliaryStatement.build(dependent, base, options, bound_attributes, join_sources)
+            options ||= {}
+            AuxiliaryStatement.build(name, base, bound_attributes, join_sources, **options)
           end
         end
 

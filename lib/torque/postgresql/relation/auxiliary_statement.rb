@@ -11,13 +11,13 @@ module Torque
         def auxiliary_statements_values=(value); set_value(:auxiliary_statements, value); end
 
         # Set use of an auxiliary statement
-        def with(*args)
-          spawn.with!(*args)
+        def with(*args, **settings)
+          spawn.with!(*args, **settings)
         end
 
         # Like #with, but modifies relation in place.
-        def with!(*args)
-          instantiate_auxiliary_statements(*args)
+        def with!(*args, **settings)
+          instantiate_auxiliary_statements(*args, **settings)
           self
         end
 
@@ -40,21 +40,20 @@ module Torque
           def build_arel(*)
             arel = super
             type = auxiliary_statement_type
-            subqueries = build_auxiliary_statements(arel)
-            subqueries.nil? ? arel : arel.with(*type, *subqueries)
+            sub_queries = build_auxiliary_statements(arel)
+            sub_queries.nil? ? arel : arel.with(*type, *sub_queries)
           end
 
           # Instantiate one or more auxiliary statements for the given +klass+
-          def instantiate_auxiliary_statements(*args)
-            options = args.extract_options!
+          def instantiate_auxiliary_statements(*args, **options)
             klass = PostgreSQL::AuxiliaryStatement
             klass = klass::Recursive if options.delete(:recursive).present?
 
             self.auxiliary_statements_values += args.map do |table|
               if table.is_a?(Class) && table < klass
-                table.new(options)
+                table.new(**options)
               else
-                klass.instantiate(table, self, options)
+                klass.instantiate(table, self, **options)
               end
             end
           end
