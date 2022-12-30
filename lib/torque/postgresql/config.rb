@@ -59,11 +59,11 @@ module Torque
       # arguments to format string or send on a proc
       cte.send_arguments_key = :args
 
-      # Estipulate a class name (which may contain namespace) that expose the
+      # Estipulate a class name (which may contain namespace) that exposes the
       # auxiliary statement in order to perform detached CTEs
       cte.exposed_class = 'TorqueCTE'
 
-      # Estipulate a class name (which may contain namespace) that expose the
+      # Estipulate a class name (which may contain namespace) that exposes the
       # recursive auxiliary statement in order to perform detached CTEs
       cte.exposed_recursive_class = 'TorqueRecursiveCTE'
 
