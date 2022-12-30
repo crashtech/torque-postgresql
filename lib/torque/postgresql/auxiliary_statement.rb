@@ -259,13 +259,13 @@ module Torque
           end
 
           # Add select columns to the query and get exposed columns
-          list.filter_map do |left, right|
+          list.map do |left, right|
             base.select_extra_values += [table[right.to_s]] unless right.nil?
             next unless query_table
 
             col = project(left, query_table)
             right.nil? ? col : col.as(right.to_s)
-          end
+          end.compact
         end
 
         # Ensure that all the dependencies are loaded in the base relation
