@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-version = 1
+version = 2
 
 return if ActiveRecord::Migrator.current_version == version
 ActiveRecord::Schema.define(version: version) do
@@ -69,6 +69,11 @@ ActiveRecord::Schema.define(version: version) do
     t.enum     "specialty", enum_type: :specialties
   end
 
+  create_table "categories", force: :cascade do |t|
+    t.integer  "parent_id"
+    t.string   "title"
+  end
+
   create_table "texts", force: :cascade do |t|
     t.integer  "user_id"
     t.string   "content"
@@ -86,6 +91,7 @@ ActiveRecord::Schema.define(version: version) do
   end
 
   create_table "courses", force: :cascade do |t|
+    t.integer  "category_id"
     t.string   "title",      null: false
     t.interval "duration"
     t.enum     "types", enum_type: :types, array: true

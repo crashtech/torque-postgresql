@@ -30,11 +30,15 @@ module Torque
           Torque::PostgreSQL::Attributes::Enum.lookup(name).sample
         end
 
-        # Define the exposed constant for auxiliary statements
+        # Define the exposed constant for both types of auxiliary statements
         if torque_config.auxiliary_statement.exposed_class.present?
           *ns, name = torque_config.auxiliary_statement.exposed_class.split('::')
           base = ns.present? ? Object.const_get(ns.join('::')) : Object
           base.const_set(name, Torque::PostgreSQL::AuxiliaryStatement)
+
+          *ns, name = torque_config.auxiliary_statement.exposed_recursive_class.split('::')
+          base = ns.present? ? Object.const_get(ns.join('::')) : Object
+          base.const_set(name, Torque::PostgreSQL::AuxiliaryStatement::Recursive)
         end
       end
     end
