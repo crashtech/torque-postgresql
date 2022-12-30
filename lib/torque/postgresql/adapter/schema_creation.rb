@@ -13,21 +13,15 @@ module Torque
           statements << accept(o.primary_keys) if o.primary_keys
 
           if supports_indexes_in_create?
-            statements.concat(o.indexes.map do |column_name, options|
-              index_in_create(o.name, column_name, options)
-            end)
+            statements.concat(o.indexes.map { |c, o| index_in_create(o.name, c, o) })
           end
 
           if supports_foreign_keys?
-            statements.concat(o.foreign_keys.map do |to_table, options|
-              foreign_key_in_create(o.name, to_table, options)
-            end)
+            statements.concat(o.foreign_keys.map { |fk| accept fk })
           end
 
           if respond_to?(:supports_check_constraints?) && supports_check_constraints?
-            statements.concat(o.check_constraints.map do |expression, options|
-              check_constraint_in_create(o.name, expression, options)
-            end)
+            statements.concat(o.check_constraints.map { |chk| accept chk })
           end
 
           create_sql << "(#{statements.join(', ')})" \
