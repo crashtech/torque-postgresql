@@ -185,21 +185,20 @@ module Torque
 
         # Get the list of columns, and their definition, but only from the
         # actual table, does not include columns that comes from inherited table
-        def column_definitions(table_name) # :nodoc:
-          local_condition = 'AND a.attislocal IS TRUE' if @_dump_mode
+        def column_definitions(table_name)
+          local = 'AND a.attislocal' if @_dump_mode
+
           query(<<-SQL, 'SCHEMA')
-              SELECT a.attname, format_type(a.atttypid, a.atttypmod),
-                     pg_get_expr(d.adbin, d.adrelid), a.attnotnull, a.atttypid, a.atttypmod,
-             (SELECT c.collname FROM pg_collation c, pg_type t
-               WHERE c.oid = a.attcollation AND t.oid = a.atttypid AND a.attcollation <> t.typcollation),
-                     col_description(a.attrelid, a.attnum) AS comment
-                FROM pg_attribute a
-           LEFT JOIN pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum
-               WHERE a.attrelid = '#{quote_table_name(table_name)}'::regclass
-                 AND a.attnum > 0
-                 AND a.attisdropped IS FALSE
-                 #{local_condition}
-               ORDER BY a.attnum
+            SELECT a.attname, format_type(a.atttypid, a.atttypmod),
+                    pg_get_expr(d.adbin, d.adrelid), a.attnotnull, a.atttypid, a.atttypmod,
+                    c.collname, col_description(a.attrelid, a.attnum) AS comment
+              FROM pg_attribute a
+              LEFT JOIN pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum
+              LEFT JOIN pg_type t ON a.atttypid = t.oid
+              LEFT JOIN pg_collation c ON a.attcollation = c.oid AND a.attcollation <> t.typcollation
+              WHERE a.attrelid = #{quote(quote_table_name(table_name))}::regclass
+                AND a.attnum > 0 AND NOT a.attisdropped #{local}
+              ORDER BY a.attnum
           SQL
         end
 
