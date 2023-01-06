@@ -127,6 +127,11 @@ module Torque
 
         private
 
+          # Remove the schema from the sequence name
+          def sequence_name_from_parts(table_name, column_name, suffix)
+            super(table_name.split('.').last, column_name, suffix)
+          end
+
           def quote_enum_values(name, values, options)
             prefix = options[:prefix]
             prefix = name if prefix === true
