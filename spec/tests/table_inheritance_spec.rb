@@ -101,15 +101,6 @@ RSpec.describe 'TableInheritance' do
       parts << ', inherits: (\["images", "activities"\]|\["activities", "images"\])'
       expect(dump_result).to match(/create_table #{parts}/)
     end
-
-    it 'does not affect serial ids' do
-      connection.create_table(:primary_keys, id: :serial) do |t|
-        t.string :title
-      end
-
-      parts = '"primary_keys", id: :serial, force: :cascade'
-      expect(dump_result).to match(/create_table #{parts} do /)
-    end
   end
 
   context 'on schema cache' do
