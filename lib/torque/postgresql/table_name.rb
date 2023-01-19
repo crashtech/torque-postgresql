@@ -12,8 +12,8 @@ module Torque
         return @schema if defined?(@schema)
 
         @schema = ([@klass] + @klass.module_parents[0..-2]).find do |klass|
-          next unless klass.respond_to?(:schema)
-          break klass.schema
+          next unless klass.respond_to?(:schema) && !(value = klass.schema).nil?
+          break value
         end
       end
 

@@ -40,6 +40,26 @@ RSpec.describe 'Schema' do
       connection.schemas_whitelist.push('legacy')
       expect(connection.schema_exists?(:legacy)).to be_truthy
     end
+
+    context 'reverting' do
+      let(:migration) { ActiveRecord::Migration::Current.new('Testing') }
+
+      before { connection.create_schema(:legacy) }
+
+      it 'reverts the creation of a schema' do
+        expect(connection.schema_exists?(:legacy, filtered: false)).to be_truthy
+        migration.revert { migration.connection.create_schema(:legacy) }
+        expect(connection.schema_exists?(:legacy, filtered: false)).to be_falsey
+      end
+
+      it 'reverts the creation of a table' do
+        connection.create_table(:users, schema: :legacy) { |t| t.string(:name) }
+
+        expect(connection.table_exists?('legacy.users')).to be_truthy
+        migration.revert { migration.connection.create_table(:users, schema: :legacy) }
+        expect(connection.table_exists?('legacy.users')).to be_falsey
+      end
+    end
   end
 
   context 'on schema' do
@@ -86,8 +106,11 @@ RSpec.describe 'Schema' do
 
   context 'on relation' do
     let(:model) { Internal::User }
+    let(:table_name) { Torque::PostgreSQL::TableName.new(model, 'users') }
 
     it 'adds the schema to the query' do
+      model.reset_table_name
+      expect(table_name.to_s).to eq('internal.users')
       expect(model.all.to_sql).to match(/FROM "internal"."users"/)
     end
 
@@ -95,7 +118,17 @@ RSpec.describe 'Schema' do
       allow(Internal).to receive(:schema).and_return('internal')
       allow(model).to receive(:schema).and_return(nil)
 
+      model.reset_table_name
+      expect(table_name.to_s).to eq('internal.users')
       expect(model.all.to_sql).to match(/FROM "internal"."users"/)
+    end
+
+    it 'does not change anything if the model has not configured a schema' do
+      allow(model).to receive(:schema).and_return(nil)
+
+      model.reset_table_name
+      expect(table_name.to_s).to eq('users')
+      expect(model.all.to_sql).to match(/FROM "users"/)
     end
   end
 end
