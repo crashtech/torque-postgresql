@@ -33,9 +33,9 @@ module Torque
         end
 
         # Renames a type.
-        def rename_type(type_name, new_name)
+        def rename_type(type_name, new_name, options = {})
           execute <<-SQL.squish
-            ALTER TYPE #{quote_type_name(type_name)}
+            ALTER TYPE #{quote_type_name(type_name, options[:schema])}
             RENAME TO #{Quoting::Name.new(nil, new_name.to_s).quoted}
           SQL
         end
@@ -100,6 +100,18 @@ module Torque
             options[:primary_key].blank? && options[:id].blank?
 
           super table_name, **options, &block
+        end
+
+        # Simply add the schema to the table name when changing a table
+        def change_table(table_name, **options)
+          table_name = "#{options[:schema]}.#{table_name}" if options[:schema].present?
+          super table_name, **options
+        end
+
+        # Simply add the schema to the table name when dropping a table
+        def drop_table(table_name, **options)
+          table_name = "#{options[:schema]}.#{table_name}" if options[:schema].present?
+          super table_name, **options
         end
 
         # Add the schema option when extracting table options
