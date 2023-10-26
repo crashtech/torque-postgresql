@@ -160,7 +160,13 @@ ActiveRecord::Schema.define(version: version) do
     t.integer  "activated"
   end
 
-  create_table "activity_post_samples", force: :cascade, inherits: :activity_posts
+  # add and remove temporary column as a workaround
+  # for Rails 7.1+ which can't create empty table
+  create_table "activity_post_samples", force: :cascade, inherits: :activity_posts do |t|
+    t.string "temporary_column"
+  end
+
+  remove_column "activity_post_samples", "temporary_column"
 
   create_table "question_selects", force: :cascade, inherits: :questions do |t|
     t.string  "options", array: true
