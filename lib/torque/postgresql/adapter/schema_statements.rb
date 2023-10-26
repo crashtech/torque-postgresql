@@ -84,7 +84,7 @@ module Torque
           options[:id] = false if options[:inherits].present? &&
             options[:primary_key].blank? && options[:id].blank?
 
-          super table_name, **options, &block
+          super table_name, **options.except(:schema, :inherits), &block
         end
 
         # Simply add the schema to the table name when changing a table
