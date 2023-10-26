@@ -82,10 +82,9 @@ module Torque
           table_name = "#{options[:schema]}.#{table_name}" if options[:schema].present?
 
           options[:id] = false if options[:inherits].present? &&
-                                  options[:primary_key].blank? &&
-                                  options[:id].blank?
+            options[:primary_key].blank? && options[:id].blank?
 
-          super table_name, **options.except(:inherits), &block
+          super table_name, **options.except(:schema, :inherits), &block
         end
 
         # Simply add the schema to the table name when changing a table
