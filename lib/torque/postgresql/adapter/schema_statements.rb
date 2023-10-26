@@ -82,7 +82,10 @@ module Torque
           table_name = "#{options[:schema]}.#{table_name}" if options[:schema].present?
 
           options[:id] = false if options[:inherits].present? &&
-            options[:primary_key].blank? && options[:id].blank?
+                                  options[:primary_key].blank? &&
+                                  options[:id].blank?
+
+          options[:_skip_validate_options] = true
 
           super table_name, **options, &block
         end
