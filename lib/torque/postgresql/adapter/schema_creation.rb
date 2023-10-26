@@ -16,7 +16,12 @@ module Torque
             statements.concat(o.indexes.map { |c, o| index_in_create(o.name, c, o) })
           end
 
-          if supports_foreign_keys?
+          # bridges ActiveRecord 7.0 & 7.1
+          _supports_foreign_keys = respond_to?(:supports_foreign_keys?) ?
+                                      supports_foreign_keys? :
+                                      @conn.supports_foreign_keys?
+
+          if _supports_foreign_keys
             statements.concat(o.foreign_keys.map { |fk| accept fk })
           end
 
