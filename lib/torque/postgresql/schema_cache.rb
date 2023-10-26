@@ -212,8 +212,8 @@ module Torque
 
         # Use this method to also load any irregular model name. This is smart
         # enought to only load the sources present on this instance
-        def prepare_data_sources(*)
-          super
+        def prepare_data_sources(...)
+          super(...)
           @data_sources_model_names = Torque::PostgreSQL.config
             .irregular_models.slice(*@data_sources.keys).map do |table_name, model_name|
             [table_name, (model_name.is_a?(Class) ? model_name : model_name.constantize)]
@@ -222,6 +222,87 @@ module Torque
 
     end
 
+    module BoundSchemaReflection
+      def initialize(*) # :nodoc:
+        super
+
+        @data_sources_model_names = {}
+        @inheritance_dependencies = {}
+        @inheritance_associations = {}
+        @inheritance_loaded = false
+      end
+
+      # Get all the tables that the given one inherits from
+      def dependencies(table_name)
+        reload_inheritance_data!
+        @inheritance_dependencies[table_name]
+      end
+
+      # Get the list of all tables that are associated (direct or indirect
+      # inheritance) with the provided one
+      def associations(table_name)
+        reload_inheritance_data!
+        @inheritance_associations[table_name]
+      end
+
+      # private
+
+        # Reload information about tables inheritance and dependencies, uses a
+        # cache to not perform additional checkes
+        def reload_inheritance_data!
+          return if @inheritance_loaded
+          @inheritance_dependencies = @connection.inherited_tables
+          @inheritance_associations = generate_associations
+          @inheritance_loaded = true
+        end
+
+        # Calculates the inverted dependency (association), where even indirect
+        # inheritance comes up in the list
+        def generate_associations
+          return {} if @inheritance_dependencies.empty?
+
+          result = Hash.new{ |h, k| h[k] = [] }
+          masters = @inheritance_dependencies.values.flatten.uniq
+
+          # Add direct associations
+          masters.map do |master|
+            @inheritance_dependencies.each do |(dependent, associations)|
+              result[master] << dependent if associations.include?(master)
+            end
+          end
+
+          # Add indirect associations
+          result.each do |master, children|
+            children.each do |child|
+              children.concat(result[child]).uniq! if result.key?(child)
+            end
+          end
+
+          # Remove the default proc that would create new entries
+          result.default_proc = nil
+          result
+        end
+
+        def cache
+          @schema_reflection.send(:cache, @connection)
+        end
+
+        # Use this method to also load any irregular model name. This is smart
+        # enought to only load the sources present on this instance
+        def prepare_data_sources(*)
+          cache.send(:prepare_data_sources, @connection)
+        end
+
+        # Try to find a model based on a given table
+        def lookup_model(table_name, scoped_class = '')
+          cache.send :lookup_model, table_name, scoped_class
+        end
+    end
+
     ActiveRecord::ConnectionAdapters::SchemaCache.prepend SchemaCache
+
+    if Object.const_defined?("ActiveRecord::ConnectionAdapters::BoundSchemaReflection")
+      ActiveRecord::ConnectionAdapters::BoundSchemaReflection.prepend BoundSchemaReflection
+    end
   end
 end

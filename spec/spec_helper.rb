@@ -22,7 +22,7 @@ cleaner = ->() do
 end
 
 load File.join('schema.rb')
-Dir.glob(File.join('spec', '{models,factories,mocks}', '**', '*.rb')) do |file|
+Dir.glob(File.join('spec', '{models,factories,mocks}', '**', '*.rb')).sort_by { |file| file.split("/").length }.each do |file|
   require file[5..-4]
 end
 
