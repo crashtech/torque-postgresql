@@ -160,7 +160,9 @@ ActiveRecord::Schema.define(version: version) do
     t.integer  "activated"
   end
 
-  create_table "activity_post_samples", force: :cascade, inherits: :activity_posts
+  create_table "activity_post_samples", force: :cascade, inherits: :activity_posts do |t|
+    t.string "activity_post_title" # AR refuses to create table without any columns
+  end
 
   create_table "question_selects", force: :cascade, inherits: :questions do |t|
     t.string  "options", array: true
