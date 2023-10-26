@@ -64,7 +64,7 @@ module Torque
         ].map(&:size).inject(:+)
       end
 
-      def clear_data_source_cache!(name) # :nodoc:
+      def clear_data_source_cache!(name, *) # :nodoc:
         super
         @data_sources_model_names.delete name
         @inheritance_dependencies.delete name
@@ -212,7 +212,7 @@ module Torque
 
         # Use this method to also load any irregular model name. This is smart
         # enought to only load the sources present on this instance
-        def prepare_data_sources
+        def prepare_data_sources(*)
           super
           @data_sources_model_names = Torque::PostgreSQL.config
             .irregular_models.slice(*@data_sources.keys).map do |table_name, model_name|
