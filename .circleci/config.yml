@@ -23,26 +23,26 @@ jobs:
       - checkout
       - run: ruby --version
       - run:
-          command: 'bundle install --gemfile gemfiles/<< parameters.bundle-version >>'
+          command: "bundle install --gemfile gemfiles/<< parameters.bundle-version >>"
           name: Install Bundle
       - run:
           command: dockerize -wait tcp://localhost:5432 -timeout 1m
           name: Wait for DB
       - run:
-          command: 'bundle exec --gemfile gemfiles/<< parameters.bundle-version >> rspec'
+          command: "bundle exec --gemfile gemfiles/<< parameters.bundle-version >> rspec"
           name: Run Tests
           environment:
-            DATABASE_URL: 'postgresql://postgres:torque@localhost/torque_postgresql'
+            DATABASE_URL: "postgresql://postgres:torque@localhost/torque_postgresql"
 
 references:
   matrix_build: &matrix_build
     test:
       matrix:
         parameters:
-          ruby-version: ['2.7', '3.0', '3.1', '3.2']
-          bundle-version: ['Gemfile.rails-7.0']
+          ruby-version: ["2.7", "3.0", "3.1", "3.2"]
+          bundle-version: ["Gemfile.rails-7.0", "Gemfile.rails-7.1"]
 
 workflows:
-   commit:
-     jobs:
-       - <<: *matrix_build
+  commit:
+    jobs:
+      - <<: *matrix_build
