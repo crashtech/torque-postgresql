@@ -104,7 +104,12 @@ RSpec.describe 'TableInheritance' do
   end
 
   context 'on schema cache' do
-    subject { ActiveRecord::Base.connection.schema_cache }
+    let(:schema_cache) { ActiveRecord::Base.connection.schema_cache }
+    let(:schema_cache_connection) { schema_cache.instance_variable_get(:@connection) }
+    let(:schema_cache_reflection) { schema_cache.instance_variable_get(:@schema_reflection) }
+    let(:new_schema_cache) { schema_cache_reflection.send(:cache, schema_cache_connection) }
+
+    subject { Torque::PostgreSQL::AR710 ? new_schema_cache : schema_cache }
 
     it 'correctly defines the associations' do
       scenario = {
@@ -131,6 +136,8 @@ RSpec.describe 'TableInheritance' do
     end
 
     context 'on looking up models' do
+      let(:prepare_arguments) { Torque::PostgreSQL::AR710 ? [schema_cache_connection] : nil }
+
       after(:all) do
         schema_cache = ActiveRecord::Base.connection.schema_cache
         schema_cache.instance_variable_set(:@data_sources, {})
@@ -139,13 +146,13 @@ RSpec.describe 'TableInheritance' do
 
       it 'respect irregular names' do
         Torque::PostgreSQL.config.irregular_models = {
-          'posts' => 'ActivityPost',
+          'public.posts' => 'ActivityPost',
         }
 
-        subject.send(:prepare_data_sources)
+        subject.send(:prepare_data_sources, *prepare_arguments)
         list = subject.instance_variable_get(:@data_sources_model_names)
-        expect(list).to have_key('posts')
-        expect(list['posts']).to eql(ActivityPost)
+        expect(list).to have_key('public.posts')
+        expect(list['public.posts']).to eql(ActivityPost)
       end
 
       it 'does not load irregular where the data source is not defined' do
@@ -153,7 +160,7 @@ RSpec.describe 'TableInheritance' do
           'products' => 'Product',
         }
 
-        subject.send(:prepare_data_sources)
+        subject.send(:prepare_data_sources, *prepare_arguments)
         list = subject.instance_variable_get(:@data_sources_model_names)
         expect(list).to_not have_key('products')
       end
@@ -175,6 +182,8 @@ RSpec.describe 'TableInheritance' do
     let(:child) { ActivityPost }
     let(:child2) { ActivityBook }
     let(:other) { AuthorJournalist }
+
+    before { ActiveRecord::Base.connection.schema_cache.clear! }
 
     it 'identifies mergeable attributes' do
       result_base = %w(id author_id title active kind created_at updated_at description url file post_id)

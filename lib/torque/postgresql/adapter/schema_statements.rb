@@ -122,6 +122,12 @@ module Torque
           super.sub('SELECT c.relname FROM', "SELECT n.nspname || '.' || c.relname FROM")
         end
 
+        # Add schema and inherits as one of the valid options for table
+        # definition
+        def valid_table_definition_options
+          super + [:schema, :inherits]
+        end
+
         private
 
           # Remove the schema from the sequence name

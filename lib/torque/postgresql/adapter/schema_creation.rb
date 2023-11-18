@@ -16,7 +16,7 @@ module Torque
             statements.concat(o.indexes.map { |c, o| index_in_create(o.name, c, o) })
           end
 
-          if supports_foreign_keys?
+          if @conn.supports_foreign_keys?
             statements.concat(o.foreign_keys.map { |fk| accept fk })
           end
 
