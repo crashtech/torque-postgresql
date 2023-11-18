@@ -45,11 +45,10 @@ module Torque
         @inheritance_associations = coder['inheritance_associations']
       end
 
-      def add(*args) # :nodoc:
+      def add(connection_or_table_name, table_name = connection_or_table_name, *) # :nodoc:
         super
 
         # Reset inheritance information when a table is added
-        table_name = Torque::PostgreSQL::AR710 ? args[1] : args[0]
         if @data_sources.key?(table_name)
           @inheritance_dependencies.clear
           @inheritance_associations.clear
@@ -73,11 +72,11 @@ module Torque
         ].map(&:size).inject(:+)
       end
 
-      def clear_data_source_cache!(connection_or_name, name = nil) # :nodoc:
-        Torque::PostgreSQL::AR710 ? super : super(connection_or_name)
-        @data_sources_model_names.delete name || connection_or_name
-        @inheritance_dependencies.delete name || connection_or_name
-        @inheritance_associations.delete name || connection_or_name
+      def clear_data_source_cache!(connection_or_name, name = connection_or_name) # :nodoc:
+        Torque::PostgreSQL::AR710 ? super : super(name)
+        @data_sources_model_names.delete name
+        @inheritance_dependencies.delete name
+        @inheritance_associations.delete name
       end
 
       def marshal_dump # :nodoc:
@@ -104,17 +103,15 @@ module Torque
       end
 
       # Get all the tables that the given one inherits from
-      def dependencies(conn, table_name = nil)
-        conn, table_name = connection, conn if table_name.nil?
-        reload_inheritance_data!(conn)
+      def dependencies(conn, table_name = conn)
+        reload_inheritance_data!(conn == table_name ? connection : conn)
         @inheritance_dependencies[table_name]
       end
 
       # Get the list of all tables that are associated (direct or indirect
       # inheritance) with the provided one
-      def associations(conn, table_name = nil)
-        conn, table_name = connection, conn if table_name.nil?
-        reload_inheritance_data!(conn)
+      def associations(conn, table_name = conn)
+        reload_inheritance_data!(conn == table_name ? connection : conn)
         @inheritance_associations[table_name]
       end
 
