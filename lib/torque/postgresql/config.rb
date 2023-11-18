@@ -4,6 +4,9 @@ module Torque
   module PostgreSQL
     include ActiveSupport::Configurable
 
+    # Stores a version check for compatibility purposes
+    AR710 = (ActiveRecord.gem_version >= Gem::Version.new('7.1.0'))
+
     # Use the same logger as the Active Record one
     def self.logger
       ActiveRecord::Base.logger
@@ -17,8 +20,8 @@ module Torque
       send("#{name}=", klass)
     end
 
-    # Set if any information that requires querying and searching or collectiong
-    # information shuld be eager loaded. This automatically changes when rails
+    # Set if any information that requires querying and searching or collecting
+    # information should be eager loaded. This automatically changes when rails
     # same configuration is set to true
     config.eager_load = false
 

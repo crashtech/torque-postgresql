@@ -40,9 +40,9 @@ references:
       matrix:
         parameters:
           ruby-version: ['2.7', '3.0', '3.1', '3.2']
-          bundle-version: ['Gemfile.rails-7.0']
+          bundle-version: ['Gemfile.rails-7.0', 'Gemfile.rails-7.1']
 
 workflows:
-   commit:
-     jobs:
-       - <<: *matrix_build
+  commit:
+    jobs:
+      - <<: *matrix_build

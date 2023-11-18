@@ -4,8 +4,8 @@ RSpec.describe 'Schema' do
   let(:connection) { ActiveRecord::Base.connection }
 
   before do
-    connection.instance_variable_set(:@schmeas_blacklist, nil)
-    connection.instance_variable_set(:@schmeas_whitelist, nil)
+    connection.instance_variable_set(:@schemas_blacklist, nil)
+    connection.instance_variable_set(:@schemas_whitelist, nil)
   end
 
   context 'on migration' do

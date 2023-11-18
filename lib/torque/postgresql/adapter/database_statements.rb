@@ -176,11 +176,11 @@ module Torque
         # Build the query for allowed schemas
         def user_defined_schemas_sql
           conditions = []
-          conditions << <<-SQL if schemas_blacklist.any?
-            nspname NOT LIKE ANY (ARRAY['#{schemas_blacklist.join("', '")}'])
+          conditions << <<-SQL.squish if schemas_blacklist.any?
+            nspname NOT LIKE ALL (ARRAY['#{schemas_blacklist.join("', '")}'])
           SQL
 
-          conditions << <<-SQL if schemas_whitelist.any?
+          conditions << <<-SQL.squish if schemas_whitelist.any?
             nspname LIKE ANY (ARRAY['#{schemas_whitelist.join("', '")}'])
           SQL
 
