@@ -27,6 +27,17 @@ RSpec.describe 'AuxiliaryStatement' do
       expect(subject.with(:comments).arel.to_sql).to eql(result)
     end
 
+    it 'can be used as the from clause' do
+      klass.send(:auxiliary_statement, :admin_users) do |cte|
+        cte.query User.where(role: :admin)
+      end
+
+      result = 'WITH "admin_users" AS'
+      result << ' (SELECT "users".* FROM "users" WHERE "users"."role" = $1)'
+      result << ' SELECT "users".* FROM "admin_users" AS users'
+      expect(subject.from(:admin_users, :users).arel.to_sql).to eql(result)
+    end
+
     it 'can perform more complex queries' do
       klass.send(:auxiliary_statement, :comments) do |cte|
         cte.query Comment.distinct_on(:user_id).order(:user_id, id: :desc)
@@ -456,6 +467,21 @@ RSpec.describe 'AuxiliaryStatement' do
         expect(subject.with(:all_categories).arel.to_sql).to eql(result)
       end
 
+      it 'can be used as the from clause' do
+        Category.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query Category.all
+        end
+
+        result = 'WITH RECURSIVE "all_categories" AS ('
+        result << ' SELECT "categories".* FROM "categories"'
+        result << ' WHERE "categories"."parent_id" IS NULL'
+        result << ' UNION'
+        result << ' SELECT "categories".* FROM "categories", "all_categories"'
+        result << ' WHERE "categories"."parent_id" = "all_categories"."id"'
+        result << ' ) SELECT "categories".* FROM "all_categories" AS categories'
+        expect(Category.from(:all_categories, :categories).arel.to_sql).to eql(result)
+      end
+
       it 'allows connect to be set to something different using a single value' do
         klass.send(:recursive_auxiliary_statement, :all_categories) do |cte|
           cte.query Category.all
@@ -613,6 +639,25 @@ RSpec.describe 'AuxiliaryStatement' do
         result << ' ) SELECT "courses".*, "all_categories"."p" AS category_path FROM "courses" INNER JOIN "all_categories"'
         result << ' ON "all_categories"."parent_id" = "courses"."id"'
         expect(subject.with(:all_categories).arel.to_sql).to eql(result)
+      end
+
+      it 'can be used as the from clause with depth and path' do
+        Category.send(:recursive_auxiliary_statement, :all_categories) do |cte|
+          cte.query Category.all
+          cte.with_depth
+          cte.with_path
+        end
+
+        result = 'WITH RECURSIVE "all_categories" AS ('
+        result << ' SELECT "categories".*, 0 AS depth, ARRAY["categories"."id"]::varchar[] AS path'
+        result << ' FROM "categories"'
+        result << ' WHERE "categories"."parent_id" IS NULL'
+        result << ' UNION'
+        result << ' SELECT "categories".*, ("all_categories"."depth" + 1) AS depth, array_append("all_categories"."path", "categories"."id"::varchar) AS path'
+        result << ' FROM "categories", "all_categories"'
+        result << ' WHERE "categories"."parent_id" = "all_categories"."id"'
+        result << ' ) SELECT "categories".* FROM "all_categories" AS categories'
+        expect(Category.from(:all_categories, :categories).arel.to_sql).to eql(result)
       end
 
       it 'works with string queries' do

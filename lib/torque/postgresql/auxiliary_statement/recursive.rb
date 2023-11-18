@@ -26,14 +26,14 @@ module Torque
         private
 
           # Build the string or arel query
-          def build_query(base)
+          def build_query(base, joining = true)
             # Expose columns and get the list of the ones for select
-            columns = expose_columns(base, @query.try(:arel_table))
+            columns = expose_columns(base, @query.try(:arel_table), joining)
             sub_columns = columns.dup
             type = @union_all.present? ? 'all' : ''
 
             # Build any extra columns that are dynamic and from the recursion
-            extra_columns(base, columns, sub_columns)
+            extra_columns(base, columns, sub_columns, joining)
 
             # Prepare the query depending on its type
             if @query.is_a?(String) && @sub_query.is_a?(String)
@@ -41,18 +41,18 @@ module Torque
               ::Arel.sql("(#{@query} UNION #{type.upcase} #{@sub_query})" % args)
             elsif relation_query?(@query)
               @query = @query.where(@where) if @where.present?
+              @query = add_selected_columns(@query, columns, joining)
               @bound_attributes.concat(@query.send(:bound_attributes))
 
               if relation_query?(@sub_query)
+                sub_query = add_selected_columns(@sub_query, sub_columns, joining).arel
+                sub_query = sub_query.from([@sub_query.arel_table, table])
                 @bound_attributes.concat(@sub_query.send(:bound_attributes))
-
-                sub_query = @sub_query.select(*sub_columns).arel
-                sub_query.from([@sub_query.arel_table, table])
               else
                 sub_query = ::Arel.sql(@sub_query)
               end
 
-              @query.select(*columns).arel.union(type, sub_query)
+              @query.arel.union(type, sub_query)
             else
               raise ArgumentError, <<-MSG.squish
                 Only String and ActiveRecord::Base objects are accepted as query and sub query
@@ -104,17 +104,17 @@ module Torque
               end
             elsif @sub_query.respond_to?(:call)
               # Call a proc to get the real sub query
-              call_args = @sub_query.try(:arity) === 0 ? [] : [OpenStruct.new(@args)]
+              call_args = @sub_query.try(:arity) === 0 ? nil : [OpenStruct.new(@args)]
               @sub_query = @sub_query.call(*call_args)
             end
           end
 
           # Add depth and path if they were defined in settings
-          def extra_columns(base, columns, sub_columns)
+          def extra_columns(base, columns, sub_columns, joining)
             return if @query.is_a?(String) || @sub_query.is_a?(String)
 
             # Add the connect attribute to the query
-            if defined?(@connect)
+            if defined?(@connect) && joining
               columns.unshift(@query.arel_table[@connect[0]])
               sub_columns.unshift(@sub_query.arel_table[@connect[0]])
             end

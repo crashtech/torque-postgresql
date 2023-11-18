@@ -279,7 +279,7 @@ module Torque
           # Changes the type of the join
           #
           # query key:
-          # Save the query command to be performand
+          # Save the query command to be performed
           #
           # requires key:
           # Indicates dependencies with another statements

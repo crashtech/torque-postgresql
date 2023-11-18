@@ -125,7 +125,7 @@ module Torque
       end
 
       # Build the statement on the given arel and return the WITH statement
-      def build(base)
+      def build(base, joining = true)
         @bound_attributes.clear
         @join_sources.clear
 
@@ -133,10 +133,10 @@ module Torque
         prepare(base, configure(base, self))
 
         # Add the join condition to the list
-        @join_sources << build_join(base)
+        @join_sources << build_join(base) if joining
 
         # Return the statement with its dependencies
-        [@dependencies, ::Arel::Nodes::As.new(table, build_query(base))]
+        [@dependencies, ::Arel::Nodes::As.new(table, build_query(base, joining))]
       end
 
       private
@@ -151,7 +151,7 @@ module Torque
 
           # Call a proc to get the real query
           if @query.respond_to?(:call)
-            call_args = @query.try(:arity) === 0 ? [] : [OpenStruct.new(@args)]
+            call_args = @query.try(:arity) === 0 ? nil : [OpenStruct.new(@args)]
             @query = @query.call(*call_args)
           end
 
@@ -171,9 +171,9 @@ module Torque
         end
 
         # Build the string or arel query
-        def build_query(base)
+        def build_query(base, joining = true)
           # Expose columns and get the list of the ones for select
-          columns = expose_columns(base, @query.try(:arel_table))
+          columns = expose_columns(base, @query.try(:arel_table), joining)
 
           # Prepare the query depending on its type
           if @query.is_a?(String)
@@ -181,8 +181,9 @@ module Torque
             ::Arel.sql("(#{@query})" % args)
           elsif relation_query?(@query)
             @query = @query.where(@where) if @where.present?
+            @query = add_selected_columns(@query, columns, joining)
             @bound_attributes.concat(@query.send(:bound_attributes))
-            @query.select(*columns).arel
+            @query.arel
           else
             raise ArgumentError, <<-MSG.squish
               Only String and ActiveRecord::Base objects are accepted as query objects,
@@ -235,26 +236,14 @@ module Torque
           arel_join.new(table, table.create_on(conditions))
         end
 
-        # Get the class of the join on arel
-        def arel_join
-          case @join_type
-          when :inner then ::Arel::Nodes::InnerJoin
-          when :left  then ::Arel::Nodes::OuterJoin
-          when :right then ::Arel::Nodes::RightOuterJoin
-          when :full  then ::Arel::Nodes::FullOuterJoin
-          else
-            raise ArgumentError, <<-MSG.squish
-              The '#{@join_type}' is not implemented as a join type.
-            MSG
-          end
-        end
-
         # Mount the list of selected attributes
-        def expose_columns(base, query_table = nil)
+        def expose_columns(base, query_table = nil, joining = true)
           # Add the columns necessary for the join
-          list = @join_sources.each_with_object(@select) do |join, hash|
-            join.right.expr.children.each do |item|
-              hash[item.left.name] = nil if item.left.relation.eql?(table)
+          list = !joining ? @select : begin
+            @join_sources.each_with_object(@select) do |join, hash|
+              join.right.expr.children.each do |item|
+                hash[item.left.name] = nil if item.left.relation.eql?(table)
+              end
             end
           end
 
@@ -265,6 +254,31 @@ module Torque
 
             col = project(left, query_table)
             right.nil? ? col : col.as(right.to_s)
+          end
+        end
+
+        # Project a column on a given table, or use the column table
+        def project(column, arel_table = nil)
+          if column.respond_to?(:as)
+            return column
+          elsif (as_string = TABLE_COLUMN_AS_STRING.match(column.to_s))
+            column = as_string[2]
+            arel_table = ::Arel::Table.new(as_string[1]) unless as_string[1].nil?
+          end
+
+          arel_table ||= table
+          arel_table[column.to_s]
+        end
+
+        # Add the provided +columns+ to the provided +query+ in a way that
+        # complies with the given +joining+ condition
+        def add_selected_columns(query, columns, joining)
+          query.tap do
+            if joining
+              query._select!(*columns)
+            else
+              query.select_extra_values += columns
+            end
           end
         end
 
@@ -288,17 +302,18 @@ module Torque
           end
         end
 
-        # Project a column on a given table, or use the column table
-        def project(column, arel_table = nil)
-          if column.respond_to?(:as)
-            return column
-          elsif (as_string = TABLE_COLUMN_AS_STRING.match(column.to_s))
-            column = as_string[2]
-            arel_table = ::Arel::Table.new(as_string[1]) unless as_string[1].nil?
+        # Get the class of the join on arel
+        def arel_join
+          case @join_type
+          when :inner then ::Arel::Nodes::InnerJoin
+          when :left  then ::Arel::Nodes::OuterJoin
+          when :right then ::Arel::Nodes::RightOuterJoin
+          when :full  then ::Arel::Nodes::FullOuterJoin
+          else
+            raise ArgumentError, <<-MSG.squish
+              The '#{@join_type}' is not implemented as a join type.
+            MSG
           end
-
-          arel_table ||= table
-          arel_table[column.to_s]
         end
     end
   end
