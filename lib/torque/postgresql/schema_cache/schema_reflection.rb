@@ -4,7 +4,7 @@ module Torque
   module PostgreSQL
     module SchemaReflection
       def add_model_name(connection, table_name, model)
-        cache(connection).add_model_name(table_name, model)
+        cache(connection).add_model_name(connection, table_name, model)
       end
 
       def dependencies(connection, table_name)
