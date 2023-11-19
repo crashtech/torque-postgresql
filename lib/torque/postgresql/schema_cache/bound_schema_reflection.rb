@@ -3,8 +3,8 @@
 module Torque
   module PostgreSQL
     module BoundSchemaReflection
-      def add_model_name(table_name, model)
-        @schema_reflection.add_model_name(@connection, table_name, model)
+      def add_model_name(connection, table_name, model)
+        @schema_reflection.add_model_name(connection, table_name, model)
       end
 
       def dependencies(table_name)
