@@ -90,7 +90,7 @@ module Torque
 
           adapter = ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
           if Torque::PostgreSQL.config.eager_load && connection.is_a?(adapter)
-            connection.schema_cache.add_model_name(table, self)
+            connection.schema_cache.add_model_name(connection, table, self)
           end
 
           table
