@@ -125,6 +125,7 @@ RSpec.describe 'TableInheritance' do
       subject.instance_variable_set(:@inheritance_loaded, true)
       subject.instance_variable_set(:@inheritance_dependencies, scenario)
       subject.instance_variable_set(:@inheritance_associations, subject.send(:generate_associations))
+      subject.instance_variable_set(:@data_sources_model_names, {})
       expect(subject.instance_variable_get(:@inheritance_associations)).to eql({
         'A' => %w(B D C N M),
         'B' => %w(C N M),
@@ -145,9 +146,9 @@ RSpec.describe 'TableInheritance' do
       end
 
       it 'respect irregular names' do
-        Torque::PostgreSQL.config.irregular_models = {
+        allow(Torque::PostgreSQL.config).to receive(:irregular_models).and_return({
           'public.posts' => 'ActivityPost',
-        }
+        })
 
         subject.send(:prepare_data_sources, *prepare_arguments)
         list = subject.instance_variable_get(:@data_sources_model_names)
@@ -156,13 +157,22 @@ RSpec.describe 'TableInheritance' do
       end
 
       it 'does not load irregular where the data source is not defined' do
-        Torque::PostgreSQL.config.irregular_models = {
+        allow(Torque::PostgreSQL.config).to receive(:irregular_models).and_return({
           'products' => 'Product',
-        }
+        })
 
         subject.send(:prepare_data_sources, *prepare_arguments)
         list = subject.instance_variable_get(:@data_sources_model_names)
         expect(list).to_not have_key('products')
+      end
+
+      it 'works with eager loading' do
+        allow(Torque::PostgreSQL.config).to receive(:eager_load).and_return(true)
+        ActivityPost.reset_table_name
+
+        list = subject.instance_variable_get(:@data_sources_model_names)
+        expect(list).to have_key('activity_posts')
+        expect(list['activity_posts']).to eql(ActivityPost)
       end
 
       {
@@ -237,7 +247,7 @@ RSpec.describe 'TableInheritance' do
       expect(other.table_name).to eql('authors')
     end
 
-    it 'respects the table name prefix and sufix defined on parent module' do
+    it 'respects the table name prefix and suffix defined on parent module' do
       mod = Object.const_set('Private', Module.new)
       mod.define_singleton_method(:table_name_prefix) { 'private.' }
       mod.define_singleton_method(:table_name_suffix) { '_bundle' }

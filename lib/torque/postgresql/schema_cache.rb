@@ -97,9 +97,11 @@ module Torque
       end
 
       # A way to manually add models name so it doesn't need the lookup method
-      def add_model_name(table_name, model)
-        return unless data_source_exists?(table_name) && model.is_a?(Class)
-        @data_sources_model_names[table_name] = model
+      def add_model_name(*args)
+        model, *source = args.reverse
+        return unless data_source_exists?(*source.reverse) && model.is_a?(Class)
+
+        @data_sources_model_names[source.first] = model
       end
 
       # Get all the tables that the given one inherits from
