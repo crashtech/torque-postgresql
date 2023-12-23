@@ -16,10 +16,10 @@ Gem::Specification.new do |s|
   s.description = 'Add support to complex resources of PostgreSQL, like data types, array associations, and auxiliary statements (CTE)'
   s.license     = 'MIT'
   s.metadata    = {
-    # 'homepage_uri'    => 'https://torque.carlosfsilva.com/postgresql',
+    # 'homepage_uri'    => 'https://torque.dev/postgresql',
     "source_code_uri" => 'https://github.com/crashtech/torque-postgresql',
     'bug_tracker_uri' => 'https://github.com/crashtech/torque-postgresql/issues',
-    # 'changelog_uri'   => 'https://github.com/crashtech/torque-postgresql/blob/master/CHANGELOG.md',
+    'changelog_uri'   => 'https://github.com/crashtech/torque-postgresql/releases',
   }
 
   s.require_paths = ['lib']

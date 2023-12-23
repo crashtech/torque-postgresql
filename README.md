@@ -1,5 +1,6 @@
-
-# Torque PostgreSQL
+<a href="https://github.com/crashtech/torque-postgresql">
+  <img src="./docs/assets/images/github.png" alt="Torque PostgreSQL - Advanced PG features in a seamlessly RoR interface" />
+</a>
 
 [![CircleCI](https://circleci.com/gh/crashtech/torque-postgresql/tree/master_v2.svg?style=svg)](https://circleci.com/gh/crashtech/torque-postgresql/tree/master_v2)
 [![Code Climate](https://codeclimate.com/github/crashtech/torque-postgresql/badges/gpa.svg)](https://codeclimate.com/github/crashtech/torque-postgresql)
