@@ -206,6 +206,8 @@ RSpec.describe 'HasMany' do
       let(:activity) { Activity.create! }
 
       before do
+        skip('Only Rails 7.1 onwards') unless Post.respond_to?(:query_constraints)
+
         Post.query_constraints :author_id, :id
         Activity.query_constraints :author_id, :id
         Activity.has_many :posts
