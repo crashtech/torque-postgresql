@@ -11,20 +11,20 @@ module Torque
 
           def load_records_for_keys(keys, &block)
             condition = query_condition_for(keys)
+            return super if condition.nil?
+
             scope.where(condition).load(&block)
           end
 
           def query_condition_for(keys)
-            if connected_through_array?
-              value = scope.cast_for_condition(foreign_column, keys.to_a)
-              scope.table[association_key_name].overlaps(value)
-            else
-              { association_key_name => keys }
-            end
+            return unless connected_through_array?
+
+            value = scope.cast_for_condition(foreign_column, keys.to_a)
+            scope.table[association_key_name].overlaps(value)
           end
 
           def connected_through_array?
-            foreign_column.array?
+            !association_key_name.is_a?(Array) && foreign_column.array?
           end
         end
 

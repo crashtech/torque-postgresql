@@ -201,6 +201,45 @@ RSpec.describe 'HasMany' do
       expect(query.to_sql).to match(/INNER JOIN "texts"/)
       expect { query.load }.not_to raise_error
     end
+
+    context 'with query constraint' do
+      let(:activity) { Activity.create! }
+
+      before do
+        Post.query_constraints :author_id, :id
+        Activity.query_constraints :author_id, :id
+        Activity.has_many :posts
+      end
+
+      after do
+        Post.instance_variable_set(:@has_query_constraints, false)
+        Post.instance_variable_set(:@query_constraints_list, nil)
+        Post.instance_variable_set(:@_query_constraints_list, nil)
+        Activity.instance_variable_set(:@has_query_constraints, false)
+        Activity.instance_variable_set(:@query_constraints_list, nil)
+        Activity.instance_variable_set(:@_query_constraints_list, nil)
+      end
+
+      it 'properly preload records' do
+        FactoryBot.create_list(:post, 5, activity: activity)
+        entries = Activity.all.includes(:posts).load
+
+        expect(entries.size).to be_eql(1)
+        expect(entries.first.posts).to be_loaded
+        expect(entries.first.posts.size).to be_eql(5)
+      end
+
+      it 'properly preload records using preloader' do
+        FactoryBot.create_list(:post, 5, activity: activity)
+        entries = ActiveRecord::Associations::Preloader.new(
+          records: Activity.all,
+          associations: [:posts],
+        ).call.first.records_by_owner
+
+        expect(entries.size).to be_eql(1)
+        expect(entries.values.first.size).to be_eql(5)
+      end
+    end
   end
 
   context 'on array' do
