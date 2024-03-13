@@ -44,7 +44,7 @@ RSpec.describe 'Relation', type: :helper do
     end
 
     it 'raises on relation not present' do
-      check = [tags: :name]
+      check = [supervisors: :name]
       expect{ subject.call(check) }.to raise_error(ArgumentError, /Relation for/)
     end
 

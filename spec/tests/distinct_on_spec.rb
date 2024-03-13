@@ -40,7 +40,7 @@ RSpec.describe 'DistinctOn' do
     end
 
     it 'raises with invalid relation' do
-      expect { subject.distinct_on(tags: :name).to_sql }.to \
+      expect { subject.distinct_on(supervisors: :name).to_sql }.to \
         raise_error(ArgumentError, /Relation for/)
     end
 
