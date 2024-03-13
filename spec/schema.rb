@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-version = 2
+version = 3
 
 return if ActiveRecord::Migrator.current_version == version
 ActiveRecord::Schema.define(version: version) do
@@ -77,14 +77,14 @@ ActiveRecord::Schema.define(version: version) do
   create_table "texts", force: :cascade do |t|
     t.integer  "user_id"
     t.string   "content"
-    t.enum     "conflict",  enum_type: :conflicts
+    t.enum     "conflict", enum_type: :conflicts
   end
 
   create_table "comments", force: :cascade do |t|
-    t.integer "user_id",    null: false
+    t.integer "user_id", null: false
     t.integer "comment_id"
     t.integer "video_id"
-    t.text    "content",    null: false
+    t.text    "content", null: false
     t.string  "kind"
     t.index ["user_id"], name: "index_comments_on_user_id", using: :btree
     t.index ["comment_id"], name: "index_comments_on_comment_id", using: :btree
@@ -92,7 +92,7 @@ ActiveRecord::Schema.define(version: version) do
 
   create_table "courses", force: :cascade do |t|
     t.integer  "category_id"
-    t.string   "title",      null: false
+    t.string   "title", null: false
     t.interval "duration"
     t.enum     "types", enum_type: :types, array: true
     t.datetime "created_at", null: false
@@ -108,7 +108,7 @@ ActiveRecord::Schema.define(version: version) do
     t.integer  "activity_id"
     t.string   "title"
     t.text     "content"
-    t.enum     "status",    enum_type: :content_status
+    t.enum     "status", enum_type: :content_status
     t.index ["author_id"], name: "index_posts_on_author_id", using: :btree
   end
 
@@ -120,8 +120,8 @@ ActiveRecord::Schema.define(version: version) do
   end
 
   create_table "users", force: :cascade do |t|
-    t.string   "name",       null: false
-    t.enum     "role",                    enum_type: :roles, default: :visitor
+    t.string   "name", null: false
+    t.enum     "role", enum_type: :roles, default: :visitor
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -137,7 +137,7 @@ ActiveRecord::Schema.define(version: version) do
     t.integer  "author_id"
     t.string   "title"
     t.boolean  "active"
-    t.enum     "kind",                    enum_type: :types
+    t.enum     "kind", enum_type: :types
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

@@ -441,4 +441,45 @@ RSpec.describe 'BelongsToMany' do
       expect { query.load }.not_to raise_error
     end
   end
+
+  context 'using custom keys' do
+    let(:connection) { ActiveRecord::Base.connection }
+    let(:post) { Post }
+    let(:tag) { Tag }
+    let(:tags) { %w[a b c].map { |id| create(:tag, friendly_id: id) } }
+
+    subject { create(:post) }
+
+    before do
+      connection.add_column(:tags, :friendly_id, :string)
+      connection.add_column(:posts, :friendly_tag_ids, :string, array: true)
+      post.belongs_to_many(:tags, foreign_key: :friendly_tag_ids, primary_key: :friendly_id)
+      post.reset_column_information
+      tag.reset_column_information
+    end
+
+    after do
+      tag.reset_column_information
+      post.reset_column_information
+      post._reflections.delete(:tags)
+    end
+
+    it 'loads associated records' do
+      subject.update(friendly_tag_ids: tags.pluck(:friendly_id))
+
+      expect(subject.tags.to_sql).to be_eql(<<-SQL.squish)
+        SELECT "tags".* FROM "tags" WHERE "tags"."friendly_id" IN ('a', 'b', 'c')
+      SQL
+
+      expect(subject.tags.load).to be_a(ActiveRecord::Associations::CollectionProxy)
+      expect(subject.tags.to_a).to be_eql(tags)
+    end
+
+    it 'can properly assign tags' do
+      expect(subject.friendly_tag_ids).to be_blank
+
+      subject.tags = tags
+      expect(subject.friendly_tag_ids).to be_eql(%w[a b c])
+    end
+  end
 end
