@@ -25,7 +25,7 @@ module Torque
         end
 
         def foreign_key
-          @foreign_key ||= options[:foreign_key] || derive_foreign_key.freeze
+          @foreign_key ||= options[:foreign_key]&.to_s || derive_foreign_key.freeze
         end
 
         def association_foreign_key
@@ -33,7 +33,7 @@ module Torque
         end
 
         def active_record_primary_key
-          @active_record_primary_key ||= options[:primary_key] || derive_primary_key
+          @active_record_primary_key ||= options[:primary_key]&.to_s || derive_primary_key
         end
 
         def join_primary_key(*)

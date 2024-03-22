@@ -20,6 +20,14 @@ RSpec.describe 'BelongsToMany' do
 
       model.belongs_to_many(:tests)
     end
+
+    it 'allows setting up foreign key and primary_key as symbol' do
+      model.belongs_to_many(:tests, foreign_key: :test_ids, primary_key: :test_id)
+
+      reflection = model._reflections['tests']
+      expect(reflection.foreign_key).to be_eql('test_ids')
+      expect(reflection.active_record_primary_key).to be_eql('test_id')
+    end
   end
 
   context 'on association' do
@@ -359,7 +367,7 @@ RSpec.describe 'BelongsToMany' do
       expect { query.load }.not_to raise_error
     end
 
-    context 'When the attribute has a default value' do
+    context 'when the attribute has a default value' do
       subject { FactoryBot.create(:item) }
 
       it 'will always return the column default value' do
@@ -382,7 +390,7 @@ RSpec.describe 'BelongsToMany' do
       end
     end
 
-    context 'When record is not persisted' do
+    context 'when record is not persisted' do
       let(:initial) { FactoryBot.create(:tag) }
 
       subject { Video.new(title: 'A', tags: [initial]) }
