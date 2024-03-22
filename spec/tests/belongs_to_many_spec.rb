@@ -20,6 +20,14 @@ RSpec.describe 'BelongsToMany' do
 
       model.belongs_to_many(:tests)
     end
+
+    it 'allows setting up foreign key and primary_key as symbol' do
+      model.belongs_to_many(:tests, foreign_key: :test_ids, primary_key: :test_id)
+
+      reflection = model._reflections['tests']
+      expect(reflection.foreign_key).to be_eql('test_ids')
+      expect(reflection.active_record_primary_key).to be_eql('test_id')
+    end
   end
 
   context 'on association' do
