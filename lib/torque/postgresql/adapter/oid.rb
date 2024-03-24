@@ -6,6 +6,7 @@ require_relative 'oid/interval'
 require_relative 'oid/line'
 require_relative 'oid/range'
 require_relative 'oid/segment'
+require_relative 'oid/struct'
 
 module Torque
   module PostgreSQL
