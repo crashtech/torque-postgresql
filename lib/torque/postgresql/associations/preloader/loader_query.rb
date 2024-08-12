@@ -24,7 +24,7 @@ module Torque
           end
 
           def connected_through_array?
-            !association_key_name.is_a?(Array) && foreign_column.array?
+            !association_key_name.is_a?(Array) && foreign_column&.array?
           end
         end
 
