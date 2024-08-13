@@ -62,6 +62,8 @@ module Torque
           ).present?
         rescue ActiveRecord::ConnectionNotEstablished
           false
+        rescue ActiveRecord::NoDatabaseError
+          false
         end
 
         # Get the list of all tables directly or indirectly dependent of the

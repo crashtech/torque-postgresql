@@ -25,6 +25,14 @@ module Torque
           [:drop_schema, [args.first]]
         end
 
+        # Records the creation of the struct to be reverted.
+        def create_struct(*args, &block)
+          record(:create_struct, args, &block)
+        end
+        def invert_create_struct(*args)
+          [:drop_type, [args.first]]
+        end
+
       end
 
       ActiveRecord::Migration::CommandRecorder.include CommandRecorder
