@@ -1,8 +1,15 @@
 require 'spec_helper'
 
 RSpec.describe 'Interval' do
-  let(:connection) { ActiveRecord::Base.connection }
   let(:table_definition) { ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition }
+  let(:connection) { ActiveRecord::Base.connection }
+  let(:source) do
+    if Torque::PostgreSQL::AR720
+      ActiveRecord::Base.connection_pool
+    else
+      ActiveRecord::Base.connection
+    end
+  end
 
   context 'on settings' do
     it 'must be set to ISO 8601' do
@@ -27,7 +34,7 @@ RSpec.describe 'Interval' do
   context 'on schema' do
     it 'can be used on tables too' do
       dump_io = StringIO.new
-      ActiveRecord::SchemaDumper.dump(connection, dump_io)
+      ActiveRecord::SchemaDumper.dump(source, dump_io)
       expect(dump_io.string).to match /t\.interval +"duration"/
     end
   end

@@ -11,6 +11,7 @@ RSpec.describe 'HasMany' do
 
   context 'on original' do
     let(:other) { Text }
+    let(:key) { Torque::PostgreSQL::AR720 ? :texts : 'texts' }
 
     before { User.has_many :texts }
     subject { User.create(name: 'User 1') }
@@ -18,11 +19,11 @@ RSpec.describe 'HasMany' do
 
     it 'has the method' do
       expect(subject).to respond_to(:texts)
-      expect(subject._reflections).to include('texts')
+      expect(subject._reflections).to include(key)
     end
 
     it 'has correct foreign key' do
-      item = subject._reflections['texts']
+      item = subject._reflections[key]
       expect(item.foreign_key).to be_eql('user_id')
     end
 
@@ -246,6 +247,7 @@ RSpec.describe 'HasMany' do
 
   context 'on array' do
     let(:other) { Video }
+    let(:key) { Torque::PostgreSQL::AR720 ? :videos : 'videos' }
 
     before { Tag.has_many :videos, array: true }
     subject { Tag.create(name: 'A') }
@@ -253,11 +255,11 @@ RSpec.describe 'HasMany' do
 
     it 'has the method' do
       expect(subject).to respond_to(:videos)
-      expect(subject._reflections).to include('videos')
+      expect(subject._reflections).to include(key)
     end
 
     it 'has correct foreign key' do
-      item = subject._reflections['videos']
+      item = subject._reflections[key]
       expect(item.foreign_key).to be_eql('tag_ids')
     end
 
