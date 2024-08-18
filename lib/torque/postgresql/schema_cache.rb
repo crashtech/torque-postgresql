@@ -145,14 +145,13 @@ module Torque
         end
 
         # Use this method to also load any irregular model name
-        def add_all(source = nil)
-          Torque::PostgreSQL::AR710 ? super : super()
+        method_name = Torque::PostgreSQL::AR720 ? :add_all : :prepare_data_sources
+        define_method(method_name) do |source = nil|
+          Torque::PostgreSQL::AR710 ? super(source) : super()
 
           data_sources = source.present? ? tables_to_cache(source) : @data_sources.keys
           @data_sources_model_names = prepare_irregular_models(data_sources)
         end
-
-        alias_method :prepare_data_sources, :add_all
 
     end
 
