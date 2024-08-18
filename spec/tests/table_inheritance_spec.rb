@@ -149,6 +149,7 @@ RSpec.describe 'TableInheritance' do
 
     context 'on looking up models' do
       let(:prepare_arguments) { Torque::PostgreSQL::AR710 ? [schema_cache_source] : nil }
+      let(:prepare_method) { Torque::PostgreSQL::AR720 ? :add_all : :prepare_data_sources }
 
       after(:all) do
         schema_cache = ActiveRecord::Base.connection.schema_cache
@@ -161,7 +162,7 @@ RSpec.describe 'TableInheritance' do
           'public.posts' => 'ActivityPost',
         })
 
-        subject.send(:prepare_data_sources, *prepare_arguments)
+        subject.send(prepare_method, *prepare_arguments)
         list = subject.instance_variable_get(:@data_sources_model_names)
         expect(list).to have_key('public.posts')
         expect(list['public.posts']).to eql(ActivityPost)
@@ -172,7 +173,7 @@ RSpec.describe 'TableInheritance' do
           'products' => 'Product',
         })
 
-        subject.send(:prepare_data_sources, *prepare_arguments)
+        subject.send(prepare_method, *prepare_arguments)
         list = subject.instance_variable_get(:@data_sources_model_names)
         expect(list).to_not have_key('products')
       end
