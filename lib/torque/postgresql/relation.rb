@@ -102,7 +102,7 @@ module Torque
         # Compatibility method with 5.0
         unless ActiveRecord::Relation.method_defined?(:set_value)
           def set_value(name, value)
-            assert_mutability!
+            assert_mutability! if respond_to?(:assert_mutability!)
             @values[name] = value
           end
         end
@@ -132,6 +132,14 @@ module Torque
 
           klass.superclass.send(:relation) if klass.define_attribute_methods &&
             klass.superclass != ActiveRecord::Base && !klass.superclass.abstract_class?
+        end
+
+        # Allow extra keyword arguments to be sent to +InsertAll+
+        if Torque::PostgreSQL::AR720
+          def upsert_all(attributes, **xargs)
+            xargs = xargs.reverse_merge(on_duplicate: :update)
+            ::ActiveRecord::InsertAll.execute(self, attributes, **xargs)
+          end
         end
       end
     end

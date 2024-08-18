@@ -201,9 +201,11 @@ module Torque
         end
 
         # Allow extra keyword arguments to be sent to +InsertAll+
-        def upsert_all(attributes, **xargs)
-          xargs = xargs.merge(on_duplicate: :update)
-          ::ActiveRecord::InsertAll.new(self, attributes, **xargs).execute
+        unless Torque::PostgreSQL::AR720
+          def upsert_all(attributes, **xargs)
+            xargs = xargs.reverse_merge(on_duplicate: :update)
+            ::ActiveRecord::InsertAll.new(self, attributes, **xargs).execute
+          end
         end
 
         protected

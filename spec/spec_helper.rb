@@ -40,7 +40,7 @@ RSpec.configure do |config|
   # Handles acton before rspec initialize
   config.before(:suite) do
     Torque::PostgreSQL.config.schemas.whitelist << 'internal'
-    ActiveSupport::Deprecation.silenced = true
+    ActiveSupport::Deprecation.try(:silenced=, true)
     DatabaseCleaner.clean_with(:truncation)
   end
 

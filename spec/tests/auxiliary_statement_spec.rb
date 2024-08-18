@@ -672,7 +672,7 @@ RSpec.describe 'AuxiliaryStatement' do
       result << ' SELECT COUNT(*) FROM "users"'
       result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id"'
 
-      query = get_last_executed_query{ subject.with(:comments).count }
+      query = get_last_executed_query { subject.with(:comments).count }
       expect(query).to eql(result)
     end
 
@@ -687,7 +687,7 @@ RSpec.describe 'AuxiliaryStatement' do
       result << ' SELECT SUM("comments"."value") FROM "users"'
       result << ' INNER JOIN "comments" ON "comments"."user_id" = "users"."id"'
 
-      query = get_last_executed_query{ subject.with(:comments).sum(comments: :value) }
+      query = get_last_executed_query { subject.with(:comments).sum(comments: :value) }
       expect(query).to eql(result)
     end
 

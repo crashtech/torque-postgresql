@@ -2,6 +2,13 @@ require 'spec_helper'
 
 RSpec.describe 'Schema' do
   let(:connection) { ActiveRecord::Base.connection }
+  let(:source) do
+    if Torque::PostgreSQL::AR720
+      ActiveRecord::Base.connection_pool
+    else
+      ActiveRecord::Base.connection
+    end
+  end
 
   before do
     connection.instance_variable_set(:@schemas_blacklist, nil)
@@ -64,7 +71,7 @@ RSpec.describe 'Schema' do
 
   context 'on schema' do
     let(:dump_result) do
-      ActiveRecord::SchemaDumper.dump(connection, (dump_result = StringIO.new))
+      ActiveRecord::SchemaDumper.dump(source, (dump_result = StringIO.new))
       dump_result.string
     end
 

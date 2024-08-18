@@ -43,8 +43,16 @@ RSpec.describe 'Enum' do
   end
 
   context 'on schema' do
+    let(:source) do
+      if Torque::PostgreSQL::AR720
+        ActiveRecord::Base.connection_pool
+      else
+        ActiveRecord::Base.connection
+      end
+    end
+
     let(:dump_result) do
-      ActiveRecord::SchemaDumper.dump(connection, (dump_result = StringIO.new))
+      ActiveRecord::SchemaDumper.dump(source, (dump_result = StringIO.new))
       dump_result.string
     end
 

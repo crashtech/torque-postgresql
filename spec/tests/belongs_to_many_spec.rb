@@ -5,6 +5,8 @@ RSpec.describe 'BelongsToMany' do
     let(:model) { Video }
     let(:builder) { Torque::PostgreSQL::Associations::Builder::BelongsToMany }
     let(:reflection) { Torque::PostgreSQL::Reflection::BelongsToManyReflection }
+    let(:key) { Torque::PostgreSQL::AR720 ? :tests : 'tests' }
+
     after { model._reflections = {} }
 
     it 'has the builder method' do
@@ -24,7 +26,7 @@ RSpec.describe 'BelongsToMany' do
     it 'allows setting up foreign key and primary_key as symbol' do
       model.belongs_to_many(:tests, foreign_key: :test_ids, primary_key: :test_id)
 
-      reflection = model._reflections['tests']
+      reflection = model._reflections[key]
       expect(reflection.foreign_key).to be_eql('test_ids')
       expect(reflection.active_record_primary_key).to be_eql('test_id')
     end
@@ -33,6 +35,7 @@ RSpec.describe 'BelongsToMany' do
   context 'on association' do
     let(:other) { Tag }
     let(:initial) { FactoryBot.create(:tag) }
+    let(:key) { Torque::PostgreSQL::AR720 ? :tags : 'tags' }
 
     before { Video.belongs_to_many(:tags) }
     subject { Video.create(title: 'A') }
@@ -44,11 +47,11 @@ RSpec.describe 'BelongsToMany' do
 
     it 'has the method' do
       expect(subject).to respond_to(:tags)
-      expect(subject._reflections).to include('tags')
+      expect(subject._reflections).to include(key)
     end
 
     it 'has correct foreign key' do
-      item = subject._reflections['tags']
+      item = subject._reflections[key]
       expect(item.foreign_key).to be_eql('tag_ids')
     end
 

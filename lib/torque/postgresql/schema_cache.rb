@@ -105,15 +105,15 @@ module Torque
       end
 
       # Get all the tables that the given one inherits from
-      def dependencies(conn, table_name = conn)
-        reload_inheritance_data!(conn == table_name ? connection : conn)
+      def dependencies(source, table_name = source)
+        reload_inheritance_data!(source == table_name ? connection : source)
         @inheritance_dependencies[table_name]
       end
 
       # Get the list of all tables that are associated (direct or indirect
       # inheritance) with the provided one
-      def associations(conn, table_name = conn)
-        reload_inheritance_data!(conn == table_name ? connection : conn)
+      def associations(source, table_name = source)
+        reload_inheritance_data!(source == table_name ? connection : source)
         @inheritance_associations[table_name]
       end
 
@@ -127,11 +127,15 @@ module Torque
 
         # Reload information about tables inheritance and dependencies, uses a
         # cache to not perform additional checks
-        def reload_inheritance_data!(connection)
+        def reload_inheritance_data!(source)
           return if @inheritance_loaded
-          @inheritance_dependencies = connection.inherited_tables
-          @inheritance_associations = generate_associations
-          @inheritance_loaded = true
+
+          method_name = Torque::PostgreSQL::AR720 ? :with_connection : :then
+          source.public_send(method_name) do |connection|
+            @inheritance_dependencies = connection.inherited_tables
+            @inheritance_associations = generate_associations
+            @inheritance_loaded = true
+          end
         end
 
         # Calculates the inverted dependency (association), where even indirect
@@ -141,11 +145,12 @@ module Torque
         end
 
         # Use this method to also load any irregular model name
-        def prepare_data_sources(connection = nil)
-          Torque::PostgreSQL::AR710 ? super : super()
+        method_name = Torque::PostgreSQL::AR720 ? :add_all : :prepare_data_sources
+        define_method(method_name) do |source = nil|
+          Torque::PostgreSQL::AR710 ? super(source) : super()
 
-          sources = connection.present? ? tables_to_cache(connection) : @data_sources.keys
-          @data_sources_model_names = prepare_irregular_models(sources)
+          data_sources = source.present? ? tables_to_cache(source) : @data_sources.keys
+          @data_sources_model_names = prepare_irregular_models(data_sources)
         end
 
     end

@@ -73,8 +73,16 @@ RSpec.describe 'TableInheritance' do
   end
 
   context 'on schema' do
+    let(:source) do
+      if Torque::PostgreSQL::AR720
+        ActiveRecord::Base.connection_pool
+      else
+        ActiveRecord::Base.connection
+      end
+    end
+
     let(:dump_result) do
-      ActiveRecord::SchemaDumper.dump(connection, (dump_result = StringIO.new))
+      ActiveRecord::SchemaDumper.dump(source, (dump_result = StringIO.new))
       dump_result.string
     end
 
@@ -105,9 +113,12 @@ RSpec.describe 'TableInheritance' do
 
   context 'on schema cache' do
     let(:schema_cache) { ActiveRecord::Base.connection.schema_cache }
-    let(:schema_cache_connection) { schema_cache.instance_variable_get(:@connection) }
     let(:schema_cache_reflection) { schema_cache.instance_variable_get(:@schema_reflection) }
-    let(:new_schema_cache) { schema_cache_reflection.send(:cache, schema_cache_connection) }
+    let(:new_schema_cache) { schema_cache_reflection.send(:cache, schema_cache_source) }
+
+    let(:schema_cache_source) do
+      schema_cache.instance_variable_get(Torque::PostgreSQL::AR720 ? :@pool : :@connection)
+    end
 
     subject { Torque::PostgreSQL::AR710 ? new_schema_cache : schema_cache }
 
@@ -137,7 +148,8 @@ RSpec.describe 'TableInheritance' do
     end
 
     context 'on looking up models' do
-      let(:prepare_arguments) { Torque::PostgreSQL::AR710 ? [schema_cache_connection] : nil }
+      let(:prepare_arguments) { Torque::PostgreSQL::AR710 ? [schema_cache_source] : nil }
+      let(:prepare_method) { Torque::PostgreSQL::AR720 ? :add_all : :prepare_data_sources }
 
       after(:all) do
         schema_cache = ActiveRecord::Base.connection.schema_cache
@@ -150,7 +162,7 @@ RSpec.describe 'TableInheritance' do
           'public.posts' => 'ActivityPost',
         })
 
-        subject.send(:prepare_data_sources, *prepare_arguments)
+        subject.send(prepare_method, *prepare_arguments)
         list = subject.instance_variable_get(:@data_sources_model_names)
         expect(list).to have_key('public.posts')
         expect(list['public.posts']).to eql(ActivityPost)
@@ -161,7 +173,7 @@ RSpec.describe 'TableInheritance' do
           'products' => 'Product',
         })
 
-        subject.send(:prepare_data_sources, *prepare_arguments)
+        subject.send(prepare_method, *prepare_arguments)
         list = subject.instance_variable_get(:@data_sources_model_names)
         expect(list).to_not have_key('products')
       end
