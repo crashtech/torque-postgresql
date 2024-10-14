@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-version = 3
+version = 4
 
 return if ActiveRecord::Migrator.current_version == version
 ActiveRecord::Schema.define(version: version) do
@@ -59,6 +59,7 @@ ActiveRecord::Schema.define(version: version) do
     t.string   "url"
     t.enum     "type", enum_type: :types
     t.enum     "conflicts", enum_type: :conflicts, array: true
+    t.jsonb    "metadata"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
