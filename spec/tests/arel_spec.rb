@@ -64,6 +64,12 @@ RSpec.describe 'Arel' do
     it 'does not break jsonb' do
       expect { connection.add_column(:authors, :profile, :jsonb, default: []) }.not_to raise_error
       expect(Author.columns_hash['profile'].default).to eq('[]')
+
+      condition = Author.arel_table['profile'].is_distinct_from([])
+      result = Torque::PostgreSQL::AR610 ? "'[]'" : "ARRAY[]"
+      expect(Author.where(condition).to_sql).to eq(<<~SQL.squish)
+        SELECT "authors".* FROM "authors" WHERE "authors"."profile" IS DISTINCT FROM #{result}
+      SQL
     end
 
     it 'works properly when column is an array' do

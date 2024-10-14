@@ -25,7 +25,7 @@ module Torque
 
         # Allow quoted arrays to get here
         def visit_Arel_Nodes_Casted(o, collector)
-          value = o.respond_to?(:val) ? o.val : o.value
+          value = PostgreSQL::AR610 ? o.value_for_database : o.val
           return super unless value.is_a?(::Enumerable)
           quote_array(value, collector)
         end
