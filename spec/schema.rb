@@ -19,6 +19,7 @@ ActiveRecord::Schema.define(version: version) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
+  enable_extension "hstore"
 
   # Custom schemas used in this database.
   create_schema "internal", force: :cascade
@@ -159,6 +160,32 @@ ActiveRecord::Schema.define(version: version) do
     t.integer  "post_id"
     t.string   "url"
     t.integer  "activated"
+  end
+
+  create_struct "inner_struct", {
+    num: "smallint",
+    num_ary: "smallint[]",
+    str: "character varying(255)",
+    str_ary: "character varying(255)[]",
+    timestamp: "timestamp with time zone",
+    timestamp_ary: "timestamp with time zone[]",
+    hsh: "hstore",
+    json: "jsonb",
+    question: "questions",
+    question_ary: "questions[]"
+  }
+
+  create_struct "unregistered_struct", {
+    num: "smallint",
+  }
+
+  create_struct "nested_struct", {
+    ary: "inner_struct[]",
+    unregistered: "unregistered_struct[]" # for testing that unhandled UDT's do not break anything
+  }
+
+  create_table "nesteds", force: :cascade do |t|
+    t.column "nested", "nested_struct"
   end
 
   create_table "activity_post_samples", force: :cascade, inherits: :activity_posts

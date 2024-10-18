@@ -74,6 +74,32 @@ module Torque
           load_additional_types([oid])
         end
 
+        # Given a name and a hash of fieldname->type, creates an enum type.
+        def create_struct(name, fields)
+          # TODO: Support macro types like e.g. :timestamp
+          sql_values = fields.map do |k,v|
+            "#{k} #{v}"
+          end.join(", ")
+          query = <<~SQL
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                  SELECT 1 FROM pg_type t
+                  WHERE t.typname = '#{name}'
+                ) THEN
+                    CREATE TYPE \"#{name}\" AS (#{sql_values});
+                END IF;
+            END
+            $$;
+          SQL
+          exec_query(query)
+
+          # Since we've created a new type, type map needs to be rebooted to include
+          # the new ones, both normal and array one
+          oid = query_value("SELECT #{quote(name)}::regtype::oid", "SCHEMA").to_i
+          load_additional_types([oid])
+        end
+
         # Change some of the types being mapped
         def initialize_type_map(m = type_map)
           super
@@ -104,20 +130,28 @@ module Torque
             INNER JOIN  pg_type a ON (a.oid = t.typarray)
             LEFT JOIN   pg_catalog.pg_namespace n ON n.oid = t.typnamespace
             WHERE       n.nspname NOT IN ('pg_catalog', 'information_schema')
-            AND     t.typtype IN ( 'e' )
+            AND     t.typtype IN ( 'e', 'c' )
             #{filter}
             AND     NOT EXISTS(
                       SELECT 1 FROM pg_catalog.pg_type el
                         WHERE el.oid = t.typelem AND el.typarray = t.oid
                       )
             AND     (t.typrelid = 0 OR (
-                      SELECT c.relkind = 'c' FROM pg_catalog.pg_class c
+                      SELECT c.relkind IN ('c', 'r') FROM pg_catalog.pg_class c
                         WHERE c.oid = t.typrelid
                       ))
           SQL
 
           execute_and_clear(query, 'SCHEMA', []) do |records|
-            records.each { |row| OID::Enum.create(row, type_map) }
+            records.each do |row|
+              if row['typtype'] == 'e'
+                OID::Enum.create(row, type_map)
+              elsif row['typtype'] == 'c'
+                OID::Struct.create(self, row, type_map)
+              else
+                raise "Invalid typetyp #{row['typtype'].inspect}, expected e (enum) or c (struct); #{row.inspect}"
+              end
+            end
           end
         end
 
@@ -132,6 +166,7 @@ module Torque
             SELECT t.typname AS name,
                    CASE t.typtype
                      WHEN 'e' THEN 'enum'
+                     WHEN 'c' THEN 'struct'
                      END     AS type
             FROM pg_type t
                    LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace

@@ -56,6 +56,17 @@ These are the currently available features:
 * [Line](https://github.com/crashtech/torque-postgresql/wiki/Line)
 * [Segment](https://github.com/crashtech/torque-postgresql/wiki/Segment)
 
+## Structs
+
+If you are using `create type X as (field_name Y, other_field_name Z)`, torque-postgresql will
+automatically map a subclass of ::Torque::Struct to that type using the singular-form ActiveRecord
+table naming rules.
+
+EG if you have a type named my_struct, columns of that struct in your app
+will be automatically mapped to instances of `class MyStruct < Torque::Struct`, if it is defined.
+
+Nesting is supported; (eg structs can have fields that are themselves structs/arrays of structs).
+
 ## Querying
 
 * [Arel](https://github.com/crashtech/torque-postgresql/wiki/Arel)
@@ -86,3 +97,4 @@ Finally, fix and send a pull request.
 ## License
 
 Copyright © 2017- Carlos Silva. See [The MIT License](MIT-LICENSE) for further details.
+
