@@ -5,8 +5,7 @@ module Torque
     module Adapter
       module OID
         class Interval < ActiveModel::Type::Value
-
-          CAST_PARTS = [:years, :months, :days, :hours, :minutes, :seconds]
+          CAST_PARTS = %i[years months days hours minutes seconds]
 
           def type
             :interval
@@ -26,6 +25,7 @@ module Torque
           #   produces: 12 minutes, and 0 seconds
           def cast(value)
             return if value.blank?
+
             case value
             when ::String then deserialize(value)
             when ::ActiveSupport::Duration then value
@@ -51,6 +51,7 @@ module Torque
           # The value must be Integer when no precision is given
           def deserialize(value)
             return if value.blank?
+
             ActiveSupport::Duration.parse(value)
           end
 
@@ -58,6 +59,7 @@ module Torque
           # See ActiveSupport::Duration#iso8601
           def serialize(value)
             return if value.blank?
+
             value = cast(value) unless value.is_a?(ActiveSupport::Duration)
             value = remove_weeks(value) if value.parts.to_h.key?(:weeks)
             value.iso8601(precision: @scale)
@@ -96,7 +98,8 @@ module Torque
           # https://github.com/crashtech/torque-postgresql/issues/26
           # https://github.com/rails/rails/issues/34655
           def remove_weeks(value)
-            parts = value.parts.dup
+            parts = value.parts.to_h.dup
+            parts[:days] ||= 0
             parts[:days] += parts.delete(:weeks) * 7
             ActiveSupport::Duration.new(value.seconds.to_i, parts)
           end
