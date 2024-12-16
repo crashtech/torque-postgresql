@@ -67,7 +67,7 @@ module Torque
 
         # TODO: Deprecate this method
         def join_keys
-          OpenStruct.new(key: join_primary_key, foreign_key: join_foreign_key)
+          KeyAndForeignKey.new(key: join_primary_key, foreign_key: join_foreign_key)
         end
 
         private
@@ -79,6 +79,8 @@ module Torque
             build_id_constraint(klass_attr, source_attr)
           end
       end
+
+      KeyAndForeignKey = Struct.new(:key, :foreign_key, keyword_init: true)
 
       ::ActiveRecord::Reflection::AbstractReflection.prepend(AbstractReflection)
     end
