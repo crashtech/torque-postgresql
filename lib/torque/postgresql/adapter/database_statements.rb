@@ -116,7 +116,7 @@ module Torque
                       ))
           SQL
 
-          execute(query) do |records|
+          exec_query(query) do |records|
             records.each { |row| OID::Enum.create(row, type_map) }
           end
         end
