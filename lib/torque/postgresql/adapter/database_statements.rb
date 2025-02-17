@@ -116,7 +116,7 @@ module Torque
                       ))
           SQL
 
-          execute_and_clear(query, 'SCHEMA', []) do |records|
+          execute(query) do |records|
             records.each { |row| OID::Enum.create(row, type_map) }
           end
         end
