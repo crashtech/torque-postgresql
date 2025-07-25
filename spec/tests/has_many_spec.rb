@@ -11,7 +11,7 @@ RSpec.describe 'HasMany' do
 
   context 'on original' do
     let(:other) { Text }
-    let(:key) { Torque::PostgreSQL::AR720 ? :texts : 'texts' }
+    let(:key) { :texts }
 
     before { User.has_many :texts }
     subject { User.create(name: 'User 1') }
@@ -247,7 +247,7 @@ RSpec.describe 'HasMany' do
 
   context 'on array' do
     let(:other) { Video }
-    let(:key) { Torque::PostgreSQL::AR720 ? :videos : 'videos' }
+    let(:key) { :videos }
 
     before { Tag.has_many :videos, array: true }
     subject { Tag.create(name: 'A') }
@@ -266,7 +266,7 @@ RSpec.describe 'HasMany' do
     it 'loads associated records' do
       expect(subject.videos.to_sql).to match(Regexp.new(<<-SQL.squish))
         SELECT "videos"\\.\\* FROM "videos"
-        WHERE \\(?"videos"\\."tag_ids" && ARRAY\\[#{subject.id}\\]::bigint\\[\\]\\)?
+        WHERE \\(?"videos"\\."tag_ids" && '\\{#{subject.id}\\}'::bigint\\[\\]\\)?
       SQL
 
       expect(subject.videos.load).to be_a(ActiveRecord::Associations::CollectionProxy)
@@ -476,7 +476,7 @@ RSpec.describe 'HasMany' do
     it 'loads associated records' do
       expect(subject.games.to_sql).to match(Regexp.new(<<-SQL.squish))
         SELECT "games"\\.\\* FROM "games"
-        WHERE \\(?"games"\\."player_ids" && ARRAY\\['#{subject.id}'\\]::uuid\\[\\]\\)?
+        WHERE \\(?"games"\\."player_ids" && '\\{#{subject.id}\\}'::uuid\\[\\]\\)?
       SQL
 
       expect(subject.games.load).to be_a(ActiveRecord::Associations::CollectionProxy)

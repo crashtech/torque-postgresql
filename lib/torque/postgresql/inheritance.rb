@@ -20,15 +20,14 @@ module Torque
         klass.find(self.id)
       end
 
-      module ClassMethods
+      class_methods do
         delegate :_auto_cast_attribute, :_record_class_attribute, to: ActiveRecord::Relation
 
         # Get a full list of all attributes from a model and all its dependents
         def inheritance_merged_attributes
           @inheritance_merged_attributes ||= begin
-            list = attribute_names
-            list += casted_dependents.values.map(&:attribute_names)
-            list.flatten.uniq.freeze
+            children = casted_dependents.values.flat_map(&:attribute_names)
+            attribute_names.to_set.merge(children).to_a.freeze
           end
         end
 
@@ -45,11 +44,11 @@ module Torque
               end
             end
 
-            result = types.select do
-              |_, types| types.each_with_object(types.shift).all?(&:==)
-            end.keys + attribute_names
+            result = types.filter_map do |attribute, types|
+              attribute if types.each_with_object(types.shift).all?(&:==)
+            end
 
-            result.freeze
+            (attribute_names + result).freeze
           end
         end
 
@@ -111,22 +110,19 @@ module Torque
         # For all main purposes, physical inherited classes should have
         # base_class as their own
         def base_class
-          return super unless physically_inherited?
-          self
+          physically_inherited? ? self : super
         end
 
         # Primary key is one exception when getting information about the class,
         # it must returns the superclass PK
         def primary_key
-          return super unless physically_inherited?
-          superclass.primary_key
+          physically_inherited? ? superclass.primary_key : super
         end
 
         # Add an additional check to return the name of the table even when the
         # class is inherited, but only if it is a physical inheritance
         def compute_table_name
-          return super unless physically_inherited?
-          decorated_table_name
+          physically_inherited? ? decorated_table_name : super
         end
 
         # Raises an error message saying that the giver record class was not
@@ -142,37 +138,57 @@ module Torque
 
         private
 
-          def instantiate_instance_of(klass, attributes, column_types = {}, &block)
+          # If the class is physically inherited, the klass needs to be properly
+          # changed before moving forward
+          def instantiate_instance_of(klass, attributes, types = {}, &block)
             return super unless klass.physically_inheritances?
 
-            auto_cast = _auto_cast_attribute.to_s
-            record_class = _record_class_attribute.to_s
-            return super unless attributes.key?(record_class) &&
-              attributes.delete(auto_cast) && attributes[record_class] != table_name
+            real_class = torque_discriminate_class_for_record(klass, attributes)
+            return super if real_class.nil?
 
-            klass = casted_dependents[attributes[record_class]]
-            raise_unable_to_cast(attributes[record_class]) if klass.nil?
-            filter_attributes_for_cast(attributes, klass)
-
-            super(klass, attributes, column_types, &block)
+            attributes, types = sanitize_attributes(real_class, attributes, types)
+            super(real_class, attributes, types, &block)
           end
 
-          # Filter the record attributes to be loaded to not included those from
-          # another inherited dependent
-          def filter_attributes_for_cast(record, klass)
-            new_record = record.slice(*klass.attribute_names)
-            table = new_record[_record_class_attribute.to_s] = klass.table_name
+          # Unwrap the attributes and column types from the given class when
+          # there are unmergeable attributes
+          def sanitize_attributes(real_class, attributes, types)
+            skip = (inheritance_merged_attributes - real_class.attribute_names).to_set
+            skip.merge(real_class.attribute_names - inheritance_mergeable_attributes)
+            return [attributes, types] if skip.empty?
 
-            # Recover aliased attributes
-            (klass.attribute_names - inheritance_mergeable_attributes).each do |attribute|
-              new_record[attribute] = record["#{table}__#{attribute}"]
+            dropped = 0
+            new_types = {}
+
+            row = attributes.instance_variable_get(:@row).dup
+            indexes = attributes.instance_variable_get(:@column_indexes).dup
+            indexes = indexes.each_with_object({}) do |(column, index), new_indexes|
+              attribute, prefix = column.split('__', 2).reverse
+              current_index = index - dropped
+
+              if prefix != table_name && skip.include?(attribute)
+                row.delete_at(current_index)
+                dropped += 1
+              else
+                new_types.merge!(types.slice(attribute))
+                new_types[current_index] = types[index]
+                new_indexes[attribute] = current_index
+              end
             end
 
-            # Add any additional columns and replace the record with the new record data
-            new_record.merge!(record.slice(*(record.keys - inheritance_merged_attributes)))
-            record.replace(new_record)
+            [ActiveRecord::Result::IndexedRow.new(indexes, row), new_types]
           end
 
+          # Get the real class when handling physical inheritances and casting
+          # the record when existing properly is present
+          def torque_discriminate_class_for_record(klass, record)
+            return if record[_auto_cast_attribute.to_s] == false
+
+            embedded_type = record[_record_class_attribute.to_s]
+            return if embedded_type.blank? || embedded_type == table_name
+
+            casted_dependents[embedded_type] || raise_unable_to_cast(embedded_type)
+          end
       end
     end
 

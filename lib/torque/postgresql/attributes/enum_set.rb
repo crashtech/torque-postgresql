@@ -18,7 +18,7 @@ module Torque
           # Find or create the class that will handle the value
           def lookup(name, enum_klass)
             const     = name.to_s.camelize + 'Set'
-            namespace = Torque::PostgreSQL.config.enum.namespace
+            namespace = PostgreSQL.config.enum.namespace
 
             return namespace.const_get(const) if namespace.const_defined?(const)
 
@@ -30,7 +30,7 @@ module Torque
           # Provide a method on the given class to setup which enum sets will be
           # manually initialized
           def include_on(klass, method_name = nil)
-            method_name ||= Torque::PostgreSQL.config.enum.set_method
+            method_name ||= PostgreSQL.config.enum.set_method
             Builder.include_on(klass, method_name, Builder::Enum, set_features: true) do |builder|
               defined_enums[builder.attribute.to_s] = builder.subtype
             end

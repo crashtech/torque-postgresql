@@ -2,7 +2,6 @@ require 'spec_helper'
 
 RSpec.describe 'Arel' do
   context 'on inflix operation' do
-    let(:list) { Torque::PostgreSQL::Arel::INFLIX_OPERATION }
     let(:collector) { ::Arel::Collectors::SQLString }
     let(:attribute) { ::Arel::Table.new('a')['sample'] }
     let(:conn) { ActiveRecord::Base.connection }
@@ -21,12 +20,13 @@ RSpec.describe 'Arel' do
       [:doesnt_right_extend, ::Arel.sql('numrange(5, 6)'), 'numrange(5, 6)'],
       [:doesnt_left_extend,  ::Arel.sql('numrange(7, 8)'), 'numrange(7, 8)'],
       [:adjacent_to,         ::Arel.sql('numrange(9, 0)'), 'numrange(9, 0)'],
-    ].each do |(operator, value, quoted_value)|
-      klass_name = operator.to_s.camelize
+    ].each do |(operation, value, quoted_value)|
+      klass_name = operation.to_s.camelize
 
-      context "##{operator}" do
+      context "##{operation}" do
+        let(:operator) { instance.operator }
         let(:instance) do
-          attribute.public_send(operator, value.is_a?(Array) ? ::Arel.array(value) : value)
+          attribute.public_send(operation, value.is_a?(Array) ? ::Arel.array(value) : value)
         end
 
         context 'for attribute' do
@@ -41,7 +41,7 @@ RSpec.describe 'Arel' do
           let(:result) { visitor.accept(instance, collector.new).value }
 
           it 'returns a formatted operation' do
-            expect(result).to be_eql("\"a\".\"sample\" #{list[klass_name]} #{quoted_value}")
+            expect(result).to be_eql("\"a\".\"sample\" #{operator} #{quoted_value}")
           end
         end
       end
@@ -123,9 +123,34 @@ RSpec.describe 'Arel' do
       quoted = ::Arel::Nodes::build_quoted([1])
       casted = ::Arel::Nodes::build_quoted(1, attribute)
 
+      expect(attribute.pg_cast('text').to_sql).to be_eql('"a"."sample"::text')
+      expect(quoted.pg_cast('bigint', true).to_sql).to be_eql('ARRAY[1]::bigint[]')
+      expect(casted.pg_cast('string').to_sql).to be_eql("1::string")
+    end
+
+    it 'provides proper support to cast methods' do
+      attribute = ::Arel::Table.new('a')['sample']
+      quoted = ::Arel::Nodes::build_quoted([1])
+      casted = ::Arel::Nodes::build_quoted(1)
+
       expect(attribute.cast('text').to_sql).to be_eql('"a"."sample"::text')
       expect(quoted.cast('bigint', true).to_sql).to be_eql('ARRAY[1]::bigint[]')
-      expect(casted.cast('string').to_sql).to be_eql("1::string")
+
+      changed_result = ActiveRecord.gem_version >= Gem::Version.new('8.0.2')
+      changed_result = changed_result ? 'CAST(1 AS string)' : '1::string'
+      expect(casted.pg_cast('string').to_sql).to be_eql("1::string")
+    end
+
+    it 'properly works combined on a query' do
+      condition = Video.arel_table[:tag_ids].contains([1,2]).cast(:bigint, :array)
+      query = Video.all.where(condition).to_sql
+
+      expect(query).to include('WHERE "videos"."tag_ids" @> ARRAY[1, 2]::bigint[]')
+
+      condition = QuestionSelect.arel_table[:options].overlaps(%w[a b]).cast(:string, :array)
+      query = QuestionSelect.all.where(condition).to_sql
+
+      expect(query).to include('"options" && ARRAY[\'a\', \'b\']::string[]')
     end
   end
 end

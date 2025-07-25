@@ -13,7 +13,7 @@ module Torque
           include ::Arel::Math
 
           def initialize(left, right, array = false)
-            right = right.to_s
+            right = +right.to_s
             right << '[]' if array
             super left, right
           end
@@ -24,7 +24,7 @@ module Torque
       ::Arel.define_singleton_method(:array) do |*values, cast: nil|
         values = values.first if values.size.eql?(1) && values.first.is_a?(::Enumerable)
         result = ::Arel::Nodes.build_quoted(values)
-        result = result.cast(cast, true) if cast.present?
+        result = result.pg_cast(cast, true) if cast.present?
         result
       end
 

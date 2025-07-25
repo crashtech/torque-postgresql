@@ -4,21 +4,27 @@ module Torque
   module PostgreSQL
     module Adapter
       module Quoting
+        QUOTED_TYPE_NAMES = Concurrent::Map.new
 
         Name = ActiveRecord::ConnectionAdapters::PostgreSQL::Name
         Column = ActiveRecord::ConnectionAdapters::PostgreSQL::Column
         ColumnDefinition = ActiveRecord::ConnectionAdapters::ColumnDefinition
+        Utils = ActiveRecord::ConnectionAdapters::PostgreSQL::Utils
 
         # Quotes type names for use in SQL queries.
-        def quote_type_name(string, schema = nil)
-          name_schema, table = string.to_s.scan(/[^".\s]+|"[^"]*"/)
-          if table.nil?
-            table = name_schema
-            name_schema = nil
+        def quote_type_name(name, *args)
+          QUOTED_TYPE_NAMES[args] ||= begin
+            name = name.to_s
+            args << 'public' if args.empty? && !name.include?('.')
+            quote_identifier_name(name, *args)
           end
+        end
 
-          schema = schema || name_schema || 'public'
-          Name.new(schema, table).quoted
+        # Make sure to support all sorts of different compositions of names
+        def quote_identifier_name(name, schema = nil)
+          name = Utils.extract_schema_qualified_name(name.to_s) unless name.is_a?(Name)
+          name.instance_variable_set(:@schema, Utils.unquote_identifier(schema.to_s)) if schema
+          name.quoted.freeze
         end
 
         def quote_default_expression(value, column)

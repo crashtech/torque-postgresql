@@ -70,7 +70,6 @@ RSpec.describe 'Enum' do
   end
 
   context 'on value' do
-    subject { Enum::ContentStatus }
     let(:values) { %w(created draft published archived) }
     let(:error) { Torque::PostgreSQL::Attributes::Enum::EnumError }
     let(:mock_enum) do
@@ -78,6 +77,8 @@ RSpec.describe 'Enum' do
       klass.instance_variable_set(:@values, values << '15')
       klass
     end
+
+    subject { Enum::ContentStatus }
 
     it 'class exists' do
       namespace = Torque::PostgreSQL.config.enum.namespace
@@ -341,10 +342,11 @@ RSpec.describe 'Enum' do
   end
 
   context 'on model' do
+    let(:instance) { FactoryBot.build(:user) }
+
     before(:each) { decorate(User, :role) }
 
     subject { User }
-    let(:instance) { FactoryBot.build(:user) }
 
     it 'has all enum methods' do
       expect(subject).to  respond_to(:roles)

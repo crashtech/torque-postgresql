@@ -2,13 +2,7 @@ require 'spec_helper'
 
 RSpec.describe 'Schema' do
   let(:connection) { ActiveRecord::Base.connection }
-  let(:source) do
-    if Torque::PostgreSQL::AR720
-      ActiveRecord::Base.connection_pool
-    else
-      ActiveRecord::Base.connection
-    end
-  end
+  let(:source) { ActiveRecord::Base.connection_pool }
 
   before do
     connection.instance_variable_set(:@schemas_blacklist, nil)
@@ -16,7 +10,7 @@ RSpec.describe 'Schema' do
   end
 
   context 'on migration' do
-    it 'can check for existance' do
+    it 'can check for existence' do
       expect(connection.schema_exists?(:information_schema)).to be_falsey
       expect(connection.schema_exists?(:information_schema, filtered: false)).to be_truthy
     end

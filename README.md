@@ -2,7 +2,7 @@
   <img src="./docs/assets/images/github.png" alt="Torque PostgreSQL - Advanced PG features in a seamlessly RoR interface" />
 </a>
 
-[![CircleCI](https://circleci.com/gh/crashtech/torque-postgresql/tree/master_v2.svg?style=svg)](https://circleci.com/gh/crashtech/torque-postgresql/tree/master_v2)
+[![CircleCI](https://circleci.com/gh/crashtech/torque-postgresql/tree/master.svg?style=svg)](https://circleci.com/gh/crashtech/torque-postgresql/tree/master)
 [![Code Climate](https://codeclimate.com/github/crashtech/torque-postgresql/badges/gpa.svg)](https://codeclimate.com/github/crashtech/torque-postgresql)
 [![Gem Version](https://badge.fury.io/rb/torque-postgresql.svg)](https://badge.fury.io/rb/torque-postgresql)
 <!--([![Test Coverage](https://codeclimate.com/github/crashtech/torque-postgresql/badges/coverage.svg)](https://codeclimate.com/github/crashtech/torque-postgresql/coverage))-->
@@ -25,7 +25,8 @@ gem 'torque-postgresql', '~> 2.0'   # For Rails >= 6.0 < 6.1
 gem 'torque-postgresql', '~> 2.0.4' # For Rails >= 6.1
 gem 'torque-postgresql', '~> 3.0'   # For Rails >= 7.0 < 7.1
 gem 'torque-postgresql', '~> 3.3'   # For Rails >= 7.1 < 7.2
-gem 'torque-postgresql', '~> 3.4'   # For Rails >= 7.2
+gem 'torque-postgresql', '~> 3.4'   # For Rails >= 7.2 < 8.0
+gem 'torque-postgresql', '~> 4.0'   # For Rails >= 8.0
 ```
 
 Also, run:

@@ -7,6 +7,10 @@ module Torque
         def connected_through_array?
           options[:array]
         end
+
+        def array_attribute
+          klass.arel_table[foreign_key]
+        end
       end
 
       ::ActiveRecord::Reflection::HasManyReflection.include(HasManyReflection)

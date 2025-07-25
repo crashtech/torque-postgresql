@@ -5,7 +5,7 @@ module Torque
     module Adapter
       module DatabaseStatements
 
-        EXTENDED_DATABASE_TYPES = %i(enum enum_set interval)
+        EXTENDED_DATABASE_TYPES = %i[enum enum_set interval]
 
         # Switch between dump mode or not
         def dump_mode!
@@ -48,8 +48,8 @@ module Torque
         def schema_exists?(name, filtered: true)
           return user_defined_schemas.include?(name.to_s) if filtered
 
-          query_value(<<-SQL) == 1
-            SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname = '#{name}'
+          query_value(<<-SQL, "SCHEMA") == 1
+            SELECT 1 FROM pg_catalog.pg_namespace WHERE nspname = #{quote(name)}
           SQL
         end
 
@@ -59,96 +59,75 @@ module Torque
         end
         alias data_type_exists? type_exists?
 
-        # Configure the interval format
-        def configure_connection
-          super
-          execute("SET SESSION IntervalStyle TO 'iso_8601'", 'SCHEMA')
-        end
-
-        # Since enums create new types, type map needs to be rebooted to include
-        # the new ones, both normal and array one
-        def create_enum(name, *)
-          super
-
-          oid = query_value("SELECT #{quote(name)}::regtype::oid", "SCHEMA").to_i
-          load_additional_types([oid])
-        end
-
         # Change some of the types being mapped
         def initialize_type_map(m = type_map)
           super
-          m.register_type 'box',      OID::Box.new
-          m.register_type 'circle',   OID::Circle.new
-          m.register_type 'interval', OID::Interval.new
-          m.register_type 'line',     OID::Line.new
-          m.register_type 'segment',  OID::Segment.new
 
-          m.alias_type 'regclass', 'varchar'
+          if PostgreSQL.config.geometry.enabled
+            m.register_type 'box',      OID::Box.new
+            m.register_type 'circle',   OID::Circle.new
+            m.register_type 'line',     OID::Line.new
+            m.register_type 'segment',  OID::Segment.new
+          end
+
+          if PostgreSQL.config.interval.enabled
+            m.register_type 'interval', OID::Interval.new
+          end
         end
 
         # :nodoc:
         def load_additional_types(oids = nil)
+          type_map.alias_type 'regclass', 'varchar'
+          type_map.alias_type 'regconfig', 'varchar'
           super
           torque_load_additional_types(oids)
         end
 
         # Add the composite types to be loaded too.
         def torque_load_additional_types(oids = nil)
-          filter = ("AND     a.typelem::integer IN (%s)" % oids.join(', ')) if oids
+          return unless torque_load_additional_types?
 
-          query = <<-SQL
-            SELECT      a.typelem AS oid, t.typname, t.typelem,
-                        t.typdelim, t.typbasetype, t.typtype,
-                        t.typarray
-            FROM        pg_type t
-            INNER JOIN  pg_type a ON (a.oid = t.typarray)
-            LEFT JOIN   pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-            WHERE       n.nspname NOT IN ('pg_catalog', 'information_schema')
-            AND     t.typtype IN ( 'e' )
-            #{filter}
-            AND     NOT EXISTS(
-                      SELECT 1 FROM pg_catalog.pg_type el
-                        WHERE el.oid = t.typelem AND el.typarray = t.oid
-                      )
-            AND     (t.typrelid = 0 OR (
-                      SELECT c.relkind = 'c' FROM pg_catalog.pg_class c
-                        WHERE c.oid = t.typrelid
-                      ))
+          # Types: (b)ase, (c)omposite, (d)omain, (e)num, (p)seudotype, (r)ange
+          # (m)ultirange
+
+          query = <<~SQL
+            SELECT t.oid, t.typname, t.typelem, t.typdelim, t.typinput,
+                   r.rngsubtype, t.typtype, t.typbasetype, t.typarray
+            FROM pg_type as t
+            LEFT JOIN pg_range as r ON oid = rngtypid
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+            WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
           SQL
 
-          execute_and_clear(query, 'SCHEMA', []) do |records|
-            records.each { |row| OID::Enum.create(row, type_map) }
+          if oids
+            query += " AND t.oid IN (%s)" % oids.join(", ")
+          else
+            query += " AND t.typtype IN ('e')"
           end
+
+          options = { allow_retry: true, materialize_transactions: false }
+          internal_execute(query, 'SCHEMA', **options).each do |row|
+            if row['typtype'] == 'e' && PostgreSQL.config.enum.enabled
+              OID::Enum.create(row, type_map)
+            end
+          end
+        end
+
+        def torque_load_additional_types?
+          PostgreSQL.config.enum.enabled
         end
 
         # Gets a list of user defined types.
         # You can even choose the +category+ filter
         def user_defined_types(*categories)
-          category_condition = categories.present? \
-            ? "AND t.typtype IN ('#{categories.join("', '")}')" \
-            : "AND t.typtype NOT IN ('b', 'd')"
+          categories = categories.compact.presence || %w[c e p r m]
 
-          select_all(<<-SQL, 'SCHEMA').rows.to_h
-            SELECT t.typname AS name,
-                   CASE t.typtype
-                     WHEN 'e' THEN 'enum'
-                     END     AS type
-            FROM pg_type t
-                   LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+          query(<<-SQL, 'SCHEMA').to_h
+            SELECT t.typname, t.typtype
+            FROM pg_type as t
+            LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
             WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
-              #{category_condition}
-              AND NOT EXISTS(
-                SELECT 1
-                FROM pg_catalog.pg_type el
-                WHERE el.oid = t.typelem
-                  AND el.typarray = t.oid
-              )
-              AND (t.typrelid = 0 OR (
-              SELECT c.relkind = 'c'
-              FROM pg_catalog.pg_class c
-              WHERE c.oid = t.typrelid
-            ))
-            ORDER BY t.typtype DESC
+            AND t.typtype IN ('#{categories.join("', '")}')
           SQL
         end
 
@@ -195,20 +174,20 @@ module Torque
         # Get the list of columns, and their definition, but only from the
         # actual table, does not include columns that comes from inherited table
         def column_definitions(table_name)
-          local = 'AND a.attislocal' if @_dump_mode
-
-          query(<<-SQL, 'SCHEMA')
-            SELECT a.attname, format_type(a.atttypid, a.atttypmod),
-                    pg_get_expr(d.adbin, d.adrelid), a.attnotnull, a.atttypid, a.atttypmod,
-                    c.collname, col_description(a.attrelid, a.attnum) AS comment,
-                    #{supports_virtual_columns? ? 'attgenerated' : quote('')} as attgenerated
-              FROM pg_attribute a
-              LEFT JOIN pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum
-              LEFT JOIN pg_type t ON a.atttypid = t.oid
-              LEFT JOIN pg_collation c ON a.attcollation = c.oid AND a.attcollation <> t.typcollation
-              WHERE a.attrelid = #{quote(quote_table_name(table_name))}::regclass
-                AND a.attnum > 0 AND NOT a.attisdropped #{local}
-              ORDER BY a.attnum
+          query(<<~SQL, "SCHEMA")
+              SELECT a.attname, format_type(a.atttypid, a.atttypmod),
+                     pg_get_expr(d.adbin, d.adrelid), a.attnotnull, a.atttypid, a.atttypmod,
+                     c.collname, col_description(a.attrelid, a.attnum) AS comment,
+                     #{supports_identity_columns? ? 'attidentity' : quote('')} AS identity,
+                     #{supports_virtual_columns? ? 'attgenerated' : quote('')} as attgenerated
+                FROM pg_attribute a
+                LEFT JOIN pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum
+                LEFT JOIN pg_type t ON a.atttypid = t.oid
+                LEFT JOIN pg_collation c ON a.attcollation = c.oid AND a.attcollation <> t.typcollation
+               WHERE a.attrelid = #{quote(quote_table_name(table_name))}::regclass
+                 AND a.attnum > 0 AND NOT a.attisdropped
+                 #{'AND a.attislocal' if @_dump_mode}
+               ORDER BY a.attnum
           SQL
         end
 

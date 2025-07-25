@@ -6,8 +6,14 @@ module Torque
       module Operations
 
         # Create a cast operation
-        def cast(type, array = false)
+        def pg_cast(type, array = false)
           Nodes::Cast.new(self, type, array)
+        end
+
+        # Make sure to add proper support over AR's own +cast+ method while
+        # still allow attributes to be casted
+        def cast(type, array = false)
+          defined?(super) && !array ? super(type) : pg_cast(type, array)
         end
 
       end

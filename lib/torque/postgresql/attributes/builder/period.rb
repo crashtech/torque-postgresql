@@ -4,13 +4,12 @@ module Torque
   module PostgreSQL
     module Attributes
       module Builder
-        # TODO: Allow documenting by building the methods outside and importing
-        # only the raw string
+        # TODO: Use binds instead of quoted values
         class Period
           DIRECT_ACCESS_REGEX = /_?%s_?/
           SUPPORTED_TYPES = %i[daterange tsrange tstzrange].freeze
           CURRENT_GETTERS = {
-            daterange: 'Date.today',
+            daterange: 'Date.current',
             tsrange:   'Time.zone.now',
             tstzrange: 'Time.zone.now',
           }.freeze
@@ -223,12 +222,12 @@ module Torque
                   "arel_table['#{threshold}']"
                 when ActiveSupport::Duration
                   value = "'#{threshold.to_i} seconds'"
-                  "::Arel.sql(\"#{value}\").cast(:interval)"
+                  "::Arel.sql(\"#{value}\").pg_cast(:interval)"
                 when Numeric
                   value = threshold.to_i.to_s
                   value << type_caster.eql?(:date) ? ' days' : ' seconds'
                   value = "'#{value}'"
-                  "::Arel.sql(\"#{value}\").cast(:interval)"
+                  "::Arel.sql(\"#{value}\").pg_cast(:interval)"
                 end
               end
             end
@@ -248,7 +247,7 @@ module Torque
               return arel_start_at unless threshold.present?
               @arel_real_start_at ||= begin
                 result = +"(#{arel_start_at} - #{arel_threshold_value})"
-                result << '.cast(:date)' if  type.eql?(:daterange)
+                result << '.pg_cast(:date)' if type.eql?(:daterange)
                 result
               end
             end
@@ -258,7 +257,7 @@ module Torque
               return arel_finish_at unless threshold.present?
               @arel_real_finish_at ||= begin
                 result = +"(#{arel_finish_at} + #{arel_threshold_value})"
-                result << '.cast(:date)' if  type.eql?(:daterange)
+                result << '.pg_cast(:date)' if type.eql?(:daterange)
                 result
               end
             end
@@ -302,24 +301,24 @@ module Torque
             def arel_daterange(real = false)
               arel_named_function(
                 'daterange',
-                (real ? arel_real_start_at : arel_start_at) + '.cast(:date)',
-                (real ? arel_real_finish_at : arel_finish_at) + '.cast(:date)',
+                (real ? arel_real_start_at : arel_start_at) + '.pg_cast(:date)',
+                (real ? arel_real_finish_at : arel_finish_at) + '.pg_cast(:date)',
                 '::Arel.sql("\'[]\'")',
               )
             end
 
             def arel_check_condition(type)
               checker = arel_nullif(arel_real_attribute, arel_empty_value)
-              checker << ".#{type}(value.cast(#{type_caster.inspect}))"
+              checker << ".#{type}(value.pg_cast(#{type_caster.inspect}))"
               arel_coalesce(checker, arel_default_sql)
             end
 
             def arel_formatting_value(condition = nil, value = 'value', cast: nil)
               [
                 "#{value} = arel_table[#{value}] if #{value}.is_a?(Symbol)",
-                "unless #{value}.respond_to?(:cast)",
+                "unless #{value}.respond_to?(:pg_cast)",
                 "  #{value} = ::Arel.sql(connection.quote(#{value}))",
-                ("  #{value} = #{value}.cast(#{cast.inspect})" if cast),
+                ("  #{value} = #{value}.pg_cast(#{cast.inspect})" if cast),
                 'end',
                 condition,
               ].compact.join("\n")

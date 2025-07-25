@@ -3,13 +3,7 @@ require 'spec_helper'
 RSpec.describe 'Interval' do
   let(:table_definition) { ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition }
   let(:connection) { ActiveRecord::Base.connection }
-  let(:source) do
-    if Torque::PostgreSQL::AR720
-      ActiveRecord::Base.connection_pool
-    else
-      ActiveRecord::Base.connection
-    end
-  end
+  let(:source) { ActiveRecord::Base.connection_pool }
 
   context 'on settings' do
     it 'must be set to ISO 8601' do

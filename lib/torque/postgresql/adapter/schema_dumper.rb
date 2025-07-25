@@ -4,22 +4,20 @@ module Torque
   module PostgreSQL
     module Adapter
       module SchemaDumper
+        SEARCH_VECTOR_SCANNER = /
+          to_tsvector\(
+            ('[^']+'|[a-z][a-z0-9_]*)[^,]*,[^\(]*
+            \(?coalesce\(([a-z][a-z0-9_]*)[^\)]*\)\)?
+          (?:::[^\)]*\))?
+          (?:\s*,\s*'([A-D])')?
+        /ix
+
         def dump(stream) # :nodoc:
           @connection.dump_mode!
           super
 
           @connection.dump_mode!
           stream
-        end
-
-        def extensions(stream) # :nodoc:
-          super
-          user_defined_schemas(stream)
-        end
-
-        # Translate +:enum_set+ into +:enum+
-        def schema_type(column)
-          column.type == :enum_set ? :enum : super
         end
 
         private
@@ -39,41 +37,46 @@ module Torque
 
           def dump_tables(stream)
             inherited_tables = @connection.inherited_tables
-            sorted_tables = (@connection.tables - @connection.views).sort_by do |table_name|
-              table_name.split(/(?:public)?\./).reverse
-            end
+            sorted_tables = (@connection.tables - @connection.views).filter_map do |table_name|
+              name_parts = table_name.split(/(?:public)?\./).reverse.compact_blank
+              next if ignored?(table_name) || ignored?(name_parts.join('.'))
+
+              [table_name, name_parts]
+            end.sort_by(&:last).to_h
+
+            postponed = []
 
             stream.puts "  # These are the common tables"
-            (sorted_tables - inherited_tables.keys).each do |table_name|
-              table(table_name, stream) unless ignored?(table_name)
+            sorted_tables.each do |table, (table_name, _)|
+              next postponed << table if inherited_tables.key?(table_name)
+
+              table(table, stream)
+              stream.puts # Ideally we would not do this in the last one
             end
 
-            if inherited_tables.present?
+            if postponed.present?
               stream.puts "  # These are tables that have inheritance"
-              inherited_tables.each do |table_name, inherits|
-                next if ignored?(table_name)
-
+              postponed.each do |table|
                 sub_stream = StringIO.new
-                table(table_name, sub_stream)
-
-                # Add the inherits setting
-                sub_stream.rewind
-                inherits.map! { |parent| parent.to_s.sub(/\Apublic\./, '') }
-                inherits = inherits.first if inherits.size === 1
-                inherits = ", inherits: #{inherits.inspect} do |t|"
-                table_dump = sub_stream.read.gsub(/ do \|t\|$/, inherits)
-
-                # Ensure bodyless definitions
-                table_dump.gsub!(/do \|t\|\n  end/, '')
-                stream.print table_dump
+                table(table, sub_stream)
+                stream.puts sub_stream.string.sub(/do \|t\|\n  end/, '')
+                stream.puts
               end
             end
 
-            # Dump foreign keys at the end to make sure all dependent tables exist.
+            # Fixes double new lines to single new lines
+            stream.pos -= 1
+
+            # dump foreign keys at the end to make sure all dependent tables exist.
             if @connection.supports_foreign_keys?
+              foreign_keys_stream = StringIO.new
               sorted_tables.each do |tbl|
-                foreign_keys(tbl, stream) unless ignored?(tbl)
+                foreign_keys(tbl, foreign_keys_stream)
               end
+
+              foreign_keys_string = foreign_keys_stream.string
+              stream.puts if foreign_keys_string.length > 0
+              stream.print foreign_keys_string
             end
           end
 
@@ -83,12 +86,65 @@ module Torque
           end
 
           # Dump user defined schemas
-          def user_defined_schemas(stream)
+          def schemas(stream)
+            return super if !PostgreSQL.config.schemas.enabled
             return if (list = (@connection.user_defined_schemas - ['public'])).empty?
 
             stream.puts "  # Custom schemas defined in this database."
             list.each { |name| stream.puts "  create_schema \"#{name}\", force: :cascade" }
             stream.puts
+          end
+
+          # Adjust the schema type for search vector
+          def schema_type_with_virtual(column)
+            column.virtual? && column.type == :tsvector ? :search_vector : super
+          end
+
+          # Adjust the schema type for search language
+          def schema_type(column)
+            column.sql_type == 'regconfig' ? :search_language : super
+          end
+
+          # Adjust table options to make the dump more readable
+          def prepare_column_options(column)
+            options = super
+            parse_search_vector_options(column, options) if column.type == :tsvector
+            options
+          end
+
+          # Parse the search vector operation into a readable format
+          def parse_search_vector_options(column, options)
+            settings = options[:as].scan(SEARCH_VECTOR_SCANNER)
+            return if settings.empty?
+
+            languages = settings.map(&:shift).uniq
+            return if languages.many?
+
+            language = languages.first
+            language = language[0] == "'" ? language[1..-2] : language.to_sym
+            columns = parse_search_vector_columns(settings)
+
+            options.except!(:as, :type)
+            options.merge!(language: language.inspect, columns: columns)
+          end
+
+          # Simplify the whole columns configuration to make it more manageable
+          def parse_search_vector_columns(settings)
+            return ":#{settings.first.first}" if settings.one?
+
+            settings = settings.sort_by(&:last)
+            weights = %w[A B C D]
+
+            columns = settings.each.with_index.reduce([]) do |acc, (setting, index)|
+              column, weight = setting
+              break if (weights[index] || 'D') != weight
+
+              acc << column
+              acc
+            end
+
+            return columns.map(&:to_sym).inspect if columns
+            settings.to_h.transform_values(&:inspect)
           end
 
           def fx_functions_position

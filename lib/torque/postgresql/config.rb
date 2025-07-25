@@ -4,10 +4,6 @@ module Torque
   module PostgreSQL
     include ActiveSupport::Configurable
 
-    # Stores a version check for compatibility purposes
-    AR710 = (ActiveRecord.gem_version >= Gem::Version.new('7.1.0'))
-    AR720 = (ActiveRecord.gem_version >= Gem::Version.new('7.2.0'))
-
     # Use the same logger as the Active Record one
     def self.logger
       ActiveRecord::Base.logger
@@ -46,6 +42,9 @@ module Torque
     # Configure multiple schemas
     config.nested(:schemas) do |schemas|
 
+      # Enables schemas handler by this gem, not Rails's own implementation
+      schemas.enabled = true
+
       # Defines a list of LIKE-based schemas to not consider for a multiple
       # schema database
       schemas.blacklist = %w[information_schema pg_%]
@@ -58,6 +57,10 @@ module Torque
 
     # Configure auxiliary statement features
     config.nested(:auxiliary_statement) do |cte|
+
+      # Enables auxiliary statements handler by this gem, not Rails's own
+      # implementation
+      cte.enabled = true
 
       # Define the key that is used on auxiliary statements to send extra
       # arguments to format string or send on a proc
@@ -76,6 +79,9 @@ module Torque
     # Configure ENUM features
     config.nested(:enum) do |enum|
 
+      # Enables enum handler by this gem, not Rails's own implementation
+      enum.enabled = true
+
       # The name of the method to be used on any ActiveRecord::Base to
       # initialize model-based enum features
       enum.base_method = :torque_enum
@@ -93,7 +99,7 @@ module Torque
       enum.raise_conflicting = false
 
       # Specify the namespace of each enum type of value
-      enum.namespace = ::Object.const_set('Enum', Module.new)
+      enum.namespace = nil
 
       # Specify the scopes for I18n translations
       enum.i18n_scopes = [
@@ -116,6 +122,9 @@ module Torque
 
     # Configure geometry data types
     config.nested(:geometry) do |geometry|
+
+      # Enables geometry handler by this gem, not Rails's own implementation
+      geometry.enabled = true
 
       # Define the class that will be handling Point data types after decoding
       # it. Any class provided here must respond to 'x', and 'y'
@@ -161,6 +170,9 @@ module Torque
 
     # Configure period features
     config.nested(:period) do |period|
+
+      # Enables period handler by this gem
+      period.enabled = true
 
       # The name of the method to be used on any ActiveRecord::Base to
       # initialize model-based period features
@@ -228,5 +240,74 @@ module Torque
       }
 
     end
+
+    # Configure period features
+    config.nested(:interval) do |interval|
+
+      # Enables interval handler by this gem, not Rails's own implementation
+      interval.enabled = true
+
+    end
+
+    # Configure arel additional features
+    config.nested(:arel) do |arel|
+
+      # List of Arel INFIX operators that will be made available for using as
+      # methods on Arel::Nodes::Node and Arel::Attribute
+      arel.infix_operators = {
+        'contained_by'        => '<@',
+        'has_key'             => '?',
+        'has_all_keys'        => '?&',
+        'has_any_keys'        => '?|',
+        'strictly_left'       => '<<',
+        'strictly_right'      => '>>',
+        'doesnt_right_extend' => '&<',
+        'doesnt_left_extend'  => '&>',
+        'adjacent_to'         => '-|-',
+      }
+
+    end
+
+    # Configure full text search features
+    config.nested(:full_text_search) do |fts|
+
+      # Enables full text search handler by this gem
+      fts.enabled = true
+
+      # The name of the method to be used on any ActiveRecord::Base to
+      # initialize model-based full text search features
+      fts.base_method = :torque_search_for
+
+      # Defines the default language when generating search vector columns
+      fts.default_language = 'english'
+
+      # Defines the default index type to be used when creating search vector.
+      # It still requires that the column requests an index
+      fts.default_index_type = :gin
+
+    end
+
+    # Configure predicate builder additional features
+    config.nested(:predicate_builder) do |builder|
+
+      # List which handlers are enabled by default
+      builder.enabled = %i[regexp arel_attribute enumerator_lazy]
+
+      # When active, values provided to array attributes will be handled more
+      # efficiently. It will use the +ANY+ operator on a equality check and
+      # overlaps when the given value is an array
+      builder.handle_array_attributes = false
+
+      # Make sure that the predicate builder will not spend more than 20ms
+      # trying to produce the underlying array
+      builder.lazy_timeout = 0.02
+
+      # Since lazy array is uncommon, it is better to limit the number of
+      # entries we try to pull so we don't cause a timeout or a long wait
+      # iteration
+      builder.lazy_limit = 2_000
+
+    end
+
   end
 end

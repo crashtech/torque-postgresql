@@ -18,7 +18,7 @@ module Torque
           # Find or create the class that will handle the value
           def lookup(name)
             const     = name.to_s.camelize
-            namespace = Torque::PostgreSQL.config.enum.namespace
+            namespace = PostgreSQL.config.enum.namespace
 
             return namespace.const_get(const) if namespace.const_defined?(const)
             namespace.const_set(const, Class.new(Enum))
@@ -27,7 +27,7 @@ module Torque
           # Provide a method on the given class to setup which enums will be
           # manually initialized
           def include_on(klass, method_name = nil)
-            method_name ||= Torque::PostgreSQL.config.enum.base_method
+            method_name ||= PostgreSQL.config.enum.base_method
             Builder.include_on(klass, method_name, Builder::Enum) do |builder|
               defined_enums[builder.attribute.to_s] = builder.subtype.klass
             end
@@ -183,7 +183,7 @@ module Torque
               list_from = :i18n_scopes
             end
 
-            Torque::PostgreSQL.config.enum.send(list_from).map do |key|
+            PostgreSQL.config.enum.send(list_from).map do |key|
               (key % values).to_sym
             end
           end

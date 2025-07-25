@@ -5,9 +5,7 @@ module Torque
     module Reflection
       module AbstractReflection
         AREL_ATTR = ::Arel::Attributes::Attribute
-
-        ARR_NO_CAST = 'bigint'
-        ARR_CAST = 'bigint[]'
+        AREL_NODE = ::Arel::Nodes::Node
 
         # Check if the foreign key actually exists
         def connected_through_array?
@@ -19,7 +17,8 @@ module Torque
         def join_scope(table, foreign_table, foreign_klass)
           return super unless connected_through_array?
 
-          predicate_builder = predicate_builder(table)
+          table_md = ActiveRecord::TableMetadata.new(klass, table)
+          predicate_builder = klass.predicate_builder.with(table_md)
           scope_chain_items = join_scopes(table, predicate_builder)
           klass_scope       = klass_join_scope(table, predicate_builder)
 
@@ -48,12 +47,18 @@ module Torque
           # Klass and key are associated with the reflection Class
           klass_type = klass.columns_hash[join_keys.key.to_s]
 
-          # Apply an ANY operation which checks if the single value on the left
-          # side exists in the array on the right side
-          if source_attr.is_a?(AREL_ATTR)
-            any_value = [klass_attr, source_attr]
-            any_value.reverse! if klass_type.try(:array?)
-            return any_value.shift.eq(::Arel::Nodes::NamedFunction.new('ANY', any_value))
+          # If we exactly one attribute and one non attribute, then we can take
+          # advantage of the ANY operation, which is more cache-friendly
+          [klass_attr, source_attr].partition do |item|
+            item.is_a?(AREL_ATTR)
+          end.then do |attributes, (value, *)|
+            if attributes.many? || attributes.first != array_attribute
+              attributes.reverse! if klass_type.try(:array?)
+
+              value ||= attributes.pop
+              value = ::Arel::Nodes::NamedFunction.new('ANY', Array.wrap(value))
+              return attributes.first.eq(value)
+            end
           end
 
           # If the left side is not an array, just use the IN condition
@@ -61,8 +66,10 @@ module Torque
 
           # Build the overlap condition (array && array) ensuring that the right
           # side has the same type as the left side
-          source_attr = ::Arel::Nodes.build_quoted(Array.wrap(source_attr))
-          klass_attr.overlaps(source_attr.cast(klass_type.sql_type_metadata.sql_type))
+          cast_type = klass_type.sql_type_metadata.sql_type
+          source_node = source_attr.is_a?(AREL_NODE)
+          source_attr = ::Arel::Nodes.build_quoted(source_attr) unless source_node
+          klass_attr.overlaps(source_attr.pg_cast(cast_type))
         end
 
         # TODO: Deprecate this method

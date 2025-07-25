@@ -3,9 +3,9 @@ require 'spec_helper'
 RSpec.describe 'BelongsToMany' do
   context 'on model' do
     let(:model) { Video }
+    let(:key) { :tests }
     let(:builder) { Torque::PostgreSQL::Associations::Builder::BelongsToMany }
     let(:reflection) { Torque::PostgreSQL::Reflection::BelongsToManyReflection }
-    let(:key) { Torque::PostgreSQL::AR720 ? :tests : 'tests' }
 
     after { model._reflections = {} }
 
@@ -34,8 +34,8 @@ RSpec.describe 'BelongsToMany' do
 
   context 'on association' do
     let(:other) { Tag }
+    let(:key) { :tags }
     let(:initial) { FactoryBot.create(:tag) }
-    let(:key) { Torque::PostgreSQL::AR720 ? :tags : 'tags' }
 
     before { Video.belongs_to_many(:tags) }
     subject { Video.create(title: 'A') }
@@ -58,7 +58,7 @@ RSpec.describe 'BelongsToMany' do
     it 'loads associated records' do
       subject.update(tag_ids: [initial.id])
       expect(subject.tags.to_sql).to be_eql(<<-SQL.squish)
-        SELECT "tags".* FROM "tags" WHERE "tags"."id" IN (#{initial.id})
+        SELECT "tags".* FROM "tags" WHERE "tags"."id" = ANY('{#{initial.id}}')
       SQL
 
       expect(subject.tags.load).to be_a(ActiveRecord::Associations::CollectionProxy)
@@ -370,6 +370,18 @@ RSpec.describe 'BelongsToMany' do
       expect { query.load }.not_to raise_error
     end
 
+    context 'when handling binds' do
+      let(:tag_ids) { FactoryBot.create_list(:tag, 5).map(&:id) }
+      let!(:record) { Video.new(tag_ids: tag_ids) }
+
+      it 'uses a single bind, instead of one per id' do
+        sql, binds = get_query_with_binds { record.tags.load }
+
+        expect(sql).to include(' WHERE "tags"."id" = ANY($1)')
+        expect(binds.size).to be_eql(1)
+      end
+    end
+
     context 'when the attribute has a default value' do
       subject { FactoryBot.create(:item) }
 
@@ -427,7 +439,7 @@ RSpec.describe 'BelongsToMany' do
     it 'loads associated records' do
       subject.update(player_ids: [other.id])
       expect(subject.players.to_sql).to be_eql(<<-SQL.squish)
-        SELECT "players".* FROM "players" WHERE "players"."id" IN ('#{other.id}')
+        SELECT "players".* FROM "players" WHERE "players"."id" = ANY('{#{other.id}}')
       SQL
 
       expect(subject.players.load).to be_a(ActiveRecord::Associations::CollectionProxy)
@@ -449,6 +461,49 @@ RSpec.describe 'BelongsToMany' do
       query = game.all.joins(:players)
       expect(query.to_sql).to match(/INNER JOIN "players"/)
       expect { query.load }.not_to raise_error
+    end
+  end
+
+  context 'using callbacks' do
+    let(:tags) { FactoryBot.create_list(:tag, 3) }
+    let(:collectors) { Hash.new { |h, k| h[k] = [] } }
+
+    subject { Video.create(title: 'A') }
+
+    after do
+      Video.reset_callbacks(:save)
+      Video._reflections = {}
+    end
+
+    before do
+      subject.update_attribute(:tag_ids, tags.first(2).pluck(:id))
+      Video.belongs_to_many(:tags,
+        before_add:    ->(_, tag) { collectors[:before_add]    << tag },
+        after_add:     ->(_, tag) { collectors[:after_add]     << tag },
+        before_remove: ->(_, tag) { collectors[:before_remove] << tag },
+        after_remove:  ->(_, tag) { collectors[:after_remove]  << tag },
+      )
+    end
+
+    it 'works with id changes' do
+      subject.tag_ids = tags.drop(1).pluck(:id)
+      subject.save!
+
+      expect(collectors[:before_add]).to be_eql([tags.last])
+      expect(collectors[:after_add]).to be_eql([tags.last])
+
+      expect(collectors[:before_remove]).to be_eql([tags.first])
+      expect(collectors[:after_remove]).to be_eql([tags.first])
+    end
+
+    it 'works with record changes' do
+      subject.tags = tags.drop(1)
+
+      expect(collectors[:before_add]).to be_eql([tags.last])
+      expect(collectors[:after_add]).to be_eql([tags.last])
+
+      expect(collectors[:before_remove]).to be_eql([tags.first])
+      expect(collectors[:after_remove]).to be_eql([tags.first])
     end
   end
 
@@ -478,7 +533,7 @@ RSpec.describe 'BelongsToMany' do
       subject.update(friendly_tag_ids: tags.pluck(:friendly_id))
 
       expect(subject.tags.to_sql).to be_eql(<<-SQL.squish)
-        SELECT "tags".* FROM "tags" WHERE "tags"."friendly_id" IN ('a', 'b', 'c')
+        SELECT "tags".* FROM "tags" WHERE "tags"."friendly_id" = ANY('{a,b,c}')
       SQL
 
       expect(subject.tags.load).to be_a(ActiveRecord::Associations::CollectionProxy)

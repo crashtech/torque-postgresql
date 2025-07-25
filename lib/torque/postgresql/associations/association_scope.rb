@@ -45,9 +45,16 @@ module Torque
           # constraint condition using array logics
           def build_id_constraint(reflection, keys, value, bind_param = false)
             table = reflection.aliased_table
-            value = Array.wrap(value).map do |value|
-              build_bind_param_for_constraint(reflection, value, keys.foreign_key)
-            end if bind_param
+
+            if bind_param
+              source_attr = reflection.array_attribute
+              value = ::Arel::Nodes.build_quoted(Array.wrap(value), source_attr)
+              value = build_bind_param_for_constraint(
+                reflection,
+                value.value_for_database,
+                source_attr.name,
+              )
+            end
 
             reflection.build_id_constraint(table[keys.key], value)
           end

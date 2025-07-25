@@ -7,7 +7,7 @@ module Torque
         class Range < ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Range
           HASH_PICK = %i[from start end to].freeze
 
-          module Comparasion
+          module Comparison
             def <=>(other)
               return super unless other.acts_like?(:date) || other.acts_like?(:time)
               other = other.to_time if other.acts_like?(:date)
@@ -17,9 +17,9 @@ module Torque
 
           def cast_value(value)
             case value
-            when Array
+            when ::Array
               cast_custom(value[0], value[1])
-            when Hash
+            when ::Hash
               pieces = value.with_indifferent_access.values_at(*HASH_PICK)
               cast_custom(pieces[0] || pieces[1], pieces[2] || pieces[3])
             else
@@ -54,7 +54,7 @@ module Torque
         ::ActiveRecord::ConnectionAdapters::PostgreSQL::OID.send(:remove_const, :Range)
         ::ActiveRecord::ConnectionAdapters::PostgreSQL::OID.const_set(:Range, Range)
 
-        ::Float.prepend(Range::Comparasion)
+        ::Float.prepend(Range::Comparison)
       end
     end
   end

@@ -43,13 +43,7 @@ RSpec.describe 'Enum' do
   end
 
   context 'on schema' do
-    let(:source) do
-      if Torque::PostgreSQL::AR720
-        ActiveRecord::Base.connection_pool
-      else
-        ActiveRecord::Base.connection
-      end
-    end
+    let(:source) { ActiveRecord::Base.connection_pool }
 
     let(:dump_result) do
       ActiveRecord::SchemaDumper.dump(source, (dump_result = StringIO.new))
@@ -275,10 +269,11 @@ RSpec.describe 'Enum' do
   end
 
   context 'on model' do
+    let(:instance) { Course.new }
+
     before(:each) { decorate(Course, :types) }
 
     subject { Course }
-    let(:instance) { Course.new }
 
     it 'has all enum set methods' do
       expect(subject).to  respond_to(:types)
