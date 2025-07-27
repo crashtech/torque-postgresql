@@ -105,6 +105,21 @@ module Torque
               Attributes::FullTextSearch.include_on(ActiveRecord::Base)
             end
 
+            ## Versioned Commands Setup
+            if (config = torque_config.versioned_commands).enabled
+              require_relative 'versioned_commands'
+
+              if config.views
+                drop_file = File.join(__dir__, 'versioned_commands', 'drop_any_view.sql')
+                VersionedCommands.register(:views, drop_with: File.read(drop_file))
+              end
+
+              if config.functions
+                drop_file = File.join(__dir__, 'versioned_commands', 'drop_any_function.sql')
+                VersionedCommands.register(:functions, drop_with: File.read(drop_file))
+              end
+            end
+
             ## Arel Setup
             PostgreSQL::Arel.build_operations(torque_config.arel.infix_operators)
 

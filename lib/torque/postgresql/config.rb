@@ -314,5 +314,22 @@ module Torque
 
     end
 
+    # Configure versioned commands features
+    config.nested(:versioned_commands) do |vs|
+
+      # Since this is still experimental and includes a SQL file that some users
+      # may not want to use, it is disabled by default
+      vs.enabled = false
+
+      # Enable views as a versioned command, which enhances migrations while
+      # keeping the dumper as clean as possible
+      vs.views = true
+
+      # Enable functions as a versioned command, which enhances migrations
+      # while keeping the dumper as clean as possible
+      vs.functions = true
+
+    end
+
   end
 end

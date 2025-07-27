@@ -53,6 +53,12 @@ module Torque
 
     Arel.build_operations(config.arel.infix_operators)
 
+    drop_file = Pathname.new(__dir__).join('../lib/torque/postgresql/versioned_commands/drop_any_view.sql')
+    VersionedCommands.register(:views, drop_with: File.read(drop_file)) if defined?(VersionedCommands)
+
+    drop_file = Pathname.new(__dir__).join('../lib/torque/postgresql/versioned_commands/drop_any_function.sql')
+    VersionedCommands.register(:functions, drop_with: File.read(drop_file)) if defined?(VersionedCommands)
+
     ActiveRecord::Base.connection.torque_load_additional_types
   end
 end
