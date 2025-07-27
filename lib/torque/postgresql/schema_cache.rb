@@ -1,11 +1,8 @@
 # frozen_string_literal: true
 
 require 'torque/postgresql/schema_cache/inheritance'
-
-if Torque::PostgreSQL::AR710
-  require 'torque/postgresql/schema_cache/schema_reflection'
-  require 'torque/postgresql/schema_cache/bound_schema_reflection'
-end
+require 'torque/postgresql/schema_cache/schema_reflection'
+require 'torque/postgresql/schema_cache/bound_schema_reflection'
 
 module Torque
   module PostgreSQL
@@ -73,7 +70,7 @@ module Torque
       end
 
       def clear_data_source_cache!(connection_or_name, name = connection_or_name) # :nodoc:
-        Torque::PostgreSQL::AR710 ? super : super(name)
+        super
         @data_sources_model_names.delete name
         @inheritance_dependencies.delete name
         @inheritance_associations.delete name
@@ -130,8 +127,7 @@ module Torque
         def reload_inheritance_data!(source)
           return if @inheritance_loaded
 
-          method_name = Torque::PostgreSQL::AR720 ? :with_connection : :then
-          source.public_send(method_name) do |connection|
+          source.with_connection do |connection|
             @inheritance_dependencies = connection.inherited_tables
             @inheritance_associations = generate_associations
             @inheritance_loaded = true
@@ -145,14 +141,12 @@ module Torque
         end
 
         # Use this method to also load any irregular model name
-        method_name = Torque::PostgreSQL::AR720 ? :add_all : :prepare_data_sources
-        define_method(method_name) do |source = nil|
-          Torque::PostgreSQL::AR710 ? super(source) : super()
+        def add_all(source = nil)
+          super
 
           data_sources = source.present? ? tables_to_cache(source) : @data_sources.keys
           @data_sources_model_names = prepare_irregular_models(data_sources)
         end
-
     end
 
     ActiveRecord::ConnectionAdapters::SchemaCache.prepend SchemaCache

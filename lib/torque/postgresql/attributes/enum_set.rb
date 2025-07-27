@@ -18,7 +18,7 @@ module Torque
           # Find or create the class that will handle the value
           def lookup(name, enum_klass)
             const     = name.to_s.camelize + 'Set'
-            namespace = Torque::PostgreSQL.config.enum.namespace
+            namespace = PostgreSQL.config.enum.namespace
 
             return namespace.const_get(const) if namespace.const_defined?(const)
 
@@ -30,7 +30,7 @@ module Torque
           # Provide a method on the given class to setup which enum sets will be
           # manually initialized
           def include_on(klass, method_name = nil)
-            method_name ||= Torque::PostgreSQL.config.enum.set_method
+            method_name ||= PostgreSQL.config.enum.set_method
             Builder.include_on(klass, method_name, Builder::Enum, set_features: true) do |builder|
               defined_enums[builder.attribute.to_s] = builder.subtype
             end
@@ -76,14 +76,14 @@ module Torque
             end.reduce(:+)
           end
 
-          # Build an active record scope for a given atribute agains a value
+          # Build an active record scope for a given attribute against a value
           def scope(attribute, value)
-            attribute.contains(::Arel.array(value, cast: enum_source.type_name))
+            attribute.contains(FN.bind_with(attribute, value).pg_cast(type_name))
           end
 
           private
 
-            # Allows checking value existance
+            # Allows checking value existence
             def respond_to_missing?(method_name, include_private = false)
               valid?(method_name) || super
             end
@@ -226,7 +226,7 @@ module Torque
             end
           end
 
-          # Throw an exception for invalid valus
+          # Throw an exception for invalid values
           def raise_invalid(value)
             if value.is_a?(Numeric)
               raise EnumSetError, "#{value.inspect} is out of bounds of #{self.class.name}"
@@ -235,7 +235,7 @@ module Torque
             end
           end
 
-          # Throw an exception for comparasion between different enums
+          # Throw an exception for comparison between different enums
           def raise_comparison(other)
             raise EnumSetError, "Comparison of #{self.class.name} with #{self.inspect} failed"
           end

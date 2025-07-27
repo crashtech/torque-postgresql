@@ -1,33 +1,33 @@
 module Mocks
   module CacheQuery
-    if Torque::PostgreSQL::AR720
-      def get_last_executed_query(&block)
-        cache = ActiveRecord::Base.connection.query_cache
-        cache.instance_variable_set(:@enabled, true)
+    def get_last_executed_query(&block)
+      cache = ActiveRecord::Base.connection.query_cache
+      cache.instance_variable_set(:@enabled, true)
 
-        map = cache.instance_variable_get(:@map)
+      map = cache.instance_variable_get(:@map)
 
-        block.call
-        result = map.keys.first
+      block.call
+      result = map.keys.first
 
-        cache.instance_variable_set(:@enabled, false)
-        map.delete(result)
+      cache.instance_variable_set(:@enabled, false)
+      map.delete(result)
 
-        result
+      result
+    end
+
+    def get_query_with_binds(&block)
+      result = nil
+
+      original_method = ActiveRecord::Base.connection.method(:raw_execute)
+      original_method.receiver.define_singleton_method(:raw_execute) do |*args, **xargs, &block|
+        result ||= [args.first, args.third]
+        super(*args, **xargs, &block)
       end
-    else
-      def get_last_executed_query(&block)
-        conn = ActiveRecord::Base.connection
-        conn.instance_variable_set(:@query_cache_enabled, true)
 
-        block.call
-        result = conn.query_cache.keys.first
+      block.call
+      original_method.receiver.define_singleton_method(:raw_execute, &original_method.to_proc)
 
-        conn.instance_variable_set(:@query_cache_enabled, false)
-        conn.instance_variable_get(:@query_cache).delete(result)
-
-        result
-      end
+      result
     end
   end
 end

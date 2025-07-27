@@ -44,6 +44,10 @@ module Torque
           foreign_key
         end
 
+        def array_attribute
+          active_record.arel_table[foreign_key]
+        end
+
         private
 
           def derive_primary_key

@@ -73,14 +73,7 @@ RSpec.describe 'TableInheritance' do
   end
 
   context 'on schema' do
-    let(:source) do
-      if Torque::PostgreSQL::AR720
-        ActiveRecord::Base.connection_pool
-      else
-        ActiveRecord::Base.connection
-      end
-    end
-
+    let(:source) { ActiveRecord::Base.connection_pool }
     let(:dump_result) do
       ActiveRecord::SchemaDumper.dump(source, (dump_result = StringIO.new))
       dump_result.string
@@ -89,24 +82,24 @@ RSpec.describe 'TableInheritance' do
     it 'dumps single inheritance with body' do
       parts = '"activity_books"'
       parts << ', id: false'
-      parts << ', force: :cascade'
       parts << ', inherits: "activities"'
+      parts << ', force: :cascade'
       expect(dump_result).to match(/create_table #{parts} do /)
     end
 
     it 'dumps single inheritance without body' do
       parts = '"activity_post_samples"'
       parts << ', id: false'
-      parts << ', force: :cascade'
       parts << ', inherits: "activity_posts"'
+      parts << ', force: :cascade'
       expect(dump_result).to match(/create_table #{parts}(?! do \|t\|)/)
     end
 
     it 'dumps multiple inheritance' do
       parts = '"activity_posts"'
       parts << ', id: false'
-      parts << ', force: :cascade'
       parts << ', inherits: (\["images", "activities"\]|\["activities", "images"\])'
+      parts << ', force: :cascade'
       expect(dump_result).to match(/create_table #{parts}/)
     end
   end
@@ -115,12 +108,9 @@ RSpec.describe 'TableInheritance' do
     let(:schema_cache) { ActiveRecord::Base.connection.schema_cache }
     let(:schema_cache_reflection) { schema_cache.instance_variable_get(:@schema_reflection) }
     let(:new_schema_cache) { schema_cache_reflection.send(:cache, schema_cache_source) }
+    let(:schema_cache_source) { schema_cache.instance_variable_get(:@pool) }
 
-    let(:schema_cache_source) do
-      schema_cache.instance_variable_get(Torque::PostgreSQL::AR720 ? :@pool : :@connection)
-    end
-
-    subject { Torque::PostgreSQL::AR710 ? new_schema_cache : schema_cache }
+    subject { new_schema_cache }
 
     it 'correctly defines the associations' do
       scenario = {
@@ -148,8 +138,8 @@ RSpec.describe 'TableInheritance' do
     end
 
     context 'on looking up models' do
-      let(:prepare_arguments) { Torque::PostgreSQL::AR710 ? [schema_cache_source] : nil }
-      let(:prepare_method) { Torque::PostgreSQL::AR720 ? :add_all : :prepare_data_sources }
+      let(:prepare_arguments) { [schema_cache_source] }
+      let(:prepare_method) { :add_all }
 
       after(:all) do
         schema_cache = ActiveRecord::Base.connection.schema_cache
@@ -375,27 +365,36 @@ RSpec.describe 'TableInheritance' do
         ActivityPost::Sample.create(title: 'Activity post')
         records = base.cast_records.order(:id).load.to_a
 
-        expect(records[0].class).to eql(Activity)
-        expect(records[1].class).to eql(ActivityBook)
-        expect(records[2].class).to eql(ActivityPost)
-        expect(records[3].class).to eql(ActivityPost::Sample)
+        expect(records[0]).to be_instance_of(Activity)
+        expect(records[1]).to be_instance_of(ActivityBook)
+        expect(records[2]).to be_instance_of(ActivityPost)
+        expect(records[3]).to be_instance_of(ActivityPost::Sample)
       end
 
       it 'does not cast unnecessary records' do
         ActivityPost.create(title: 'Activity post')
         records = base.cast_records(ActivityBook).order(:id).load.to_a
 
-        expect(records[0].class).to eql(Activity)
-        expect(records[1].class).to eql(ActivityBook)
-        expect(records[2].class).to eql(Activity)
+        expect(records[0]).to be_instance_of(Activity)
+        expect(records[1]).to be_instance_of(ActivityBook)
+        expect(records[2]).to be_instance_of(Activity)
       end
 
-      it 'correctly identify same name attributes' do
+      it 'correctly identifies same name attributes' do
         ActivityPost.create(title: 'Activity post', url: 'posturl1')
         records = base.cast_records.order(:id).load.to_a
 
         expect(records[1].url).to eql('bookurl1')
         expect(records[2].url).to eql('posturl1')
+      end
+
+      # TODO: Maybe in the future
+      xit 'does not make internal inheritance attributes accessible' do
+        record = base.cast_records.order(:id).load.last
+
+        expect(record).to be_instance_of(ActivityBook)
+        expect(record).not_to respond_to(:_record_class)
+        expect(record).not_to respond_to(:_auto_cast)
       end
     end
 

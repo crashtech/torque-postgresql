@@ -6,6 +6,7 @@ module Torque
       module Builder
         class Enum
           VALID_TYPES = %i[enum enum_set].freeze
+          FN = '::Torque::PostgreSQL::FN'
 
           attr_accessor :klass, :attribute, :subtype, :options, :values,
             :klass_module, :instance_module
@@ -154,15 +155,17 @@ module Torque
             def set_scopes
               cast_type = subtype.name.chomp('[]')
               klass_module.module_eval <<-RUBY, __FILE__, __LINE__ + 1
-                def has_#{attribute.pluralize}(*values)                             # def has_roles(*values)
-                  attr = arel_table['#{attribute}']                                 #   attr = arel_table['role']
-                  where(attr.contains(::Arel.array(values, cast: '#{cast_type}')))  #   where(attr.contains(::Arel.array(values, cast: 'roles')))
-                end                                                                 # end
+                def has_#{attribute.pluralize}(*values)                     # def has_roles(*values)
+                  attr = arel_table['#{attribute}']                         #   attr = arel_table['role']
+                  value = #{FN}.bind_with(attr, values)                     #   value = ::Torque::PostgreSQL::FN.bind_with(attr, values)
+                  where(attr.contains(value.pg_cast('#{cast_type}[]')))     #   where(attr.contains(value.pg_cast('roles[]')))
+                end                                                         # end
 
-                def has_any_#{attribute.pluralize}(*values)                         # def has_roles(*values)
-                  attr = arel_table['#{attribute}']                                 #   attr = arel_table['role']
-                  where(attr.overlaps(::Arel.array(values, cast: '#{cast_type}')))  #   where(attr.overlaps(::Arel.array(values, cast: 'roles')))
-                end                                                                 # end
+                def has_any_#{attribute.pluralize}(*values)                 # def has_any_roles(*values)
+                  attr = arel_table['#{attribute}']                         #   attr = arel_table['role']
+                  value = #{FN}.bind_with(attr, values)                     #   value = ::Torque::PostgreSQL::FN.bind_with(attr, values)
+                  where(attr.overlaps(value.pg_cast('#{cast_type}[]')))     #   where(attr.overlaps(value.pg_cast('roles[]')))
+                end                                                         # end
               RUBY
             end
 

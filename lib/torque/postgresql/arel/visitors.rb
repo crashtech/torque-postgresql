@@ -4,13 +4,6 @@ module Torque
   module PostgreSQL
     module Arel
       module Visitors
-        # Enclose select manager with parenthesis
-        # :TODO: Remove when checking the new version of Arel
-        def visit_Arel_SelectManager(o, collector)
-          collector << '('
-          visit(o.ast, collector) << ')'
-        end
-
         # Add ONLY modifier to query
         def visit_Arel_Nodes_JoinSource(o, collector)
           collector << 'ONLY ' if o.only?
@@ -26,8 +19,9 @@ module Torque
         # Allow quoted arrays to get here
         def visit_Arel_Nodes_Casted(o, collector)
           value = o.value_for_database
-          return super unless value.is_a?(::Enumerable)
-          quote_array(value, collector)
+          klass = ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Array::Data
+          return super unless value.is_a?(klass)
+          quote_array(value.values, collector)
         end
 
         ## TORQUE VISITORS

@@ -3,39 +3,26 @@
 module Torque
   module PostgreSQL
     module Arel
-      nodes = ::Arel::Nodes
-      inflix = nodes::InfixOperation
-      visitors = ::Arel::Visitors::PostgreSQL
-      default_alias = :visit_Arel_Nodes_InfixOperation
-
       Math = Module.new
-      INFLIX_OPERATION = {
-        'Overlaps'          => :'&&',
-        'Contains'          => :'@>',
-        'ContainedBy'       => :'<@',
-        'HasKey'            => :'?',
-        'HasAllKeys'        => :'?&',
-        'HasAnyKeys'        => :'?|',
-        'StrictlyLeft'      => :'<<',
-        'StrictlyRight'     => :'>>',
-        'DoesntRightExtend' => :'&<',
-        'DoesntLeftExtend'  => :'&>',
-        'AdjacentTo'        => :'-|-',
-      }.freeze
 
-      INFLIX_OPERATION.each do |operator_name, operator|
-        next if nodes.const_defined?(operator_name)
+      def self.build_operations(operations)
+        default_alias = :visit_Arel_Nodes_InfixOperation
 
-        klass = Class.new(inflix)
-        klass.send(:define_method, :initialize) { |*args| super(operator, *args) }
+        operations&.each do |name, operator|
+          klass_name = name.to_s.camelize
+          next if ::Arel::Nodes.const_defined?(klass_name)
 
-        nodes.const_set(operator_name, klass)
-        visitors.send(:alias_method, :"visit_Arel_Nodes_#{operator_name}", default_alias)
+          klass = Class.new(::Arel::Nodes::InfixOperation)
+          operator = (-operator).to_sym
+          klass.send(:define_method, :initialize) { |*args| super(operator, *args) }
 
-        # Don't worry about quoting here, if the right side is something that
-        # doesn't need quoting, it will leave it as it is
-        Math.send(:define_method, operator_name.underscore) do |other|
-          klass.new(self, other)
+          ::Arel::Nodes.const_set(klass_name, klass)
+          visitor = :"visit_Arel_Nodes_#{klass_name}"
+          ::Arel::Visitors::PostgreSQL.send(:alias_method, visitor, default_alias)
+
+          # Don't worry about quoting here, if the right side is something that
+          # doesn't need quoting, it will leave it as it is
+          Math.send(:define_method, klass_name.underscore) { |other| klass.new(self, other) }
         end
       end
 

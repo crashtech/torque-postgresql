@@ -18,7 +18,7 @@ module Torque
           # Find or create the class that will handle the value
           def lookup(name)
             const     = name.to_s.camelize
-            namespace = Torque::PostgreSQL.config.enum.namespace
+            namespace = PostgreSQL.config.enum.namespace
 
             return namespace.const_get(const) if namespace.const_defined?(const)
             namespace.const_set(const, Class.new(Enum))
@@ -27,7 +27,7 @@ module Torque
           # Provide a method on the given class to setup which enums will be
           # manually initialized
           def include_on(klass, method_name = nil)
-            method_name ||= Torque::PostgreSQL.config.enum.base_method
+            method_name ||= PostgreSQL.config.enum.base_method
             Builder.include_on(klass, method_name, Builder::Enum) do |builder|
               defined_enums[builder.attribute.to_s] = builder.subtype.klass
             end
@@ -46,7 +46,7 @@ module Torque
             end
           end
 
-          # List of valus as symbols
+          # List of values as symbols
           def keys
             values.map(&:to_sym)
           end
@@ -86,7 +86,7 @@ module Torque
             self.values.include?(value.to_s)
           end
 
-          # Build an active record scope for a given atribute agains a value
+          # Build an active record scope for a given attribute against a value
           def scope(attribute, value)
             attribute.eq(value)
           end
@@ -183,7 +183,7 @@ module Torque
               list_from = :i18n_scopes
             end
 
-            Torque::PostgreSQL.config.enum.send(list_from).map do |key|
+            PostgreSQL.config.enum.send(list_from).map do |key|
               (key % values).to_sym
             end
           end
@@ -209,7 +209,7 @@ module Torque
             end
           end
 
-          # Throw an exception for invalid valus
+          # Throw an exception for invalid values
           def raise_invalid(value)
             if value.is_a?(Numeric)
               raise EnumError, "#{value.inspect} is out of bounds of #{self.class.name}"
@@ -218,7 +218,7 @@ module Torque
             end
           end
 
-          # Throw an exception for comparasion between different enums
+          # Throw an exception for comparison between different enums
           def raise_comparison(other)
             raise EnumError, "Comparison of #{self.class.name} with #{self.inspect} failed"
           end

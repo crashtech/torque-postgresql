@@ -21,6 +21,7 @@ module Torque
             super
             add_touch_callbacks(model, reflection)   if reflection.options[:touch]
             add_default_callbacks(model, reflection) if reflection.options[:default]
+            add_change_callbacks(model, reflection)
           end
 
           def self.define_readers(mixin, name)
@@ -91,6 +92,21 @@ module Torque
                   record.send(touch_method)
                 end
               end
+            end
+          end
+
+          def self.add_change_callbacks(model, reflection)
+            foreign_key = reflection.foreign_key
+            name = reflection.name
+
+            model.before_save ->(record) do
+              before, after = record.changes[foreign_key]
+              record.association(name).trigger(:before, before, after) if before && after
+            end
+
+            model.after_save ->(record) do
+              before, after = record.previous_changes[foreign_key]
+              record.association(name).trigger(:after, before, after) if before && after
             end
           end
 

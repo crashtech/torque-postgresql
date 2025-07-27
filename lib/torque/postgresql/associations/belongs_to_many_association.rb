@@ -70,6 +70,27 @@ module Torque
           @_building_changes = nil
         end
 
+        def trigger(prefix, before_ids, after_ids)
+          removed_ids = before_ids - after_ids
+          added_ids = after_ids - before_ids
+
+          if removed_ids.any?
+            callbacks_for(method = :"#{prefix}_remove").each do |callback|
+              target_scope.find(removed_ids).each do |record|
+                callback.call(method, owner, record)
+              end
+            end
+          end
+
+          if added_ids.any?
+            callbacks_for(method = :"#{prefix}_add").each do |callback|
+              target_scope.find(added_ids).each do |record|
+                callback.call(method, owner, record)
+              end
+            end
+          end
+        end
+
         ## HAS MANY
         def handle_dependency
           case options[:dependent]
@@ -191,6 +212,10 @@ module Torque
 
           def column_default_value
             owner.class.columns_hash[source_attr].default
+          end
+
+          def callback(*)
+            true # This is handled/trigger when the owner record actually changes
           end
 
           ## HAS MANY

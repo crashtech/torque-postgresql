@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-version = 4
+version = 5
 
 return if ActiveRecord::Migrator.current_version == version
 ActiveRecord::Schema.define(version: version) do
@@ -60,6 +60,7 @@ ActiveRecord::Schema.define(version: version) do
     t.enum     "type", enum_type: :types
     t.enum     "conflicts", enum_type: :conflicts, array: true
     t.jsonb    "metadata"
+    # t.column   "pieces", :int4multirange
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -92,12 +93,14 @@ ActiveRecord::Schema.define(version: version) do
   end
 
   create_table "courses", force: :cascade do |t|
-    t.integer  "category_id"
-    t.string   "title", null: false
-    t.interval "duration"
-    t.enum     "types", enum_type: :types, array: true
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.integer         "category_id"
+    t.string          "title", null: false
+    t.interval        "duration"
+    t.enum            "types", enum_type: :types, array: true
+    t.search_language "lang", null: false, default: 'english'
+    t.search_vector   "search_vector", columns: :title, language: :lang
+    t.datetime        "created_at", null: false
+    t.datetime        "updated_at", null: false
   end
 
   create_table "images", force: :cascade, id: false do |t|
@@ -105,11 +108,12 @@ ActiveRecord::Schema.define(version: version) do
   end
 
   create_table "posts", force: :cascade do |t|
-    t.integer  "author_id"
-    t.integer  "activity_id"
-    t.string   "title"
-    t.text     "content"
-    t.enum     "status", enum_type: :content_status
+    t.integer       "author_id"
+    t.integer       "activity_id"
+    t.string        "title"
+    t.text          "content"
+    t.enum          "status", enum_type: :content_status
+    t.search_vector "search_vector", columns: %i[title content]
     t.index ["author_id"], name: "index_posts_on_author_id", using: :btree
   end
 
@@ -172,6 +176,9 @@ ActiveRecord::Schema.define(version: version) do
   # create_table "activity_images", force: :cascade, inherits: [:activities, :images]
 
   add_foreign_key "posts", "authors"
+rescue Exception => e
+  byebug
+  raise
 end
 
 ActiveRecord::Base.connection.schema_cache.clear!

@@ -1,7 +1,0 @@
-source 'https://rubygems.org'
-
-gem 'rails', '~> 7.0', '< 7.1'
-gem 'pg', '~> 1.4.0'
-gem "byebug"
-
-gemspec path: "../"

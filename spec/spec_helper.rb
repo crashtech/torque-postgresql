@@ -21,7 +21,11 @@ cleaner = ->() do
   cache.instance_variable_set(:@inheritance_associations, {})
 end
 
-load File.join('schema.rb')
+# Load all the files that are optional and managed by Railtie
+require_relative 'initialize'
+
+# This needs to come after loading all optional features
+require_relative 'schema'
 Dir.glob(File.join('spec', '{models,factories,mocks}', '**', '*.rb')) do |file|
   require file[5..-4]
 end

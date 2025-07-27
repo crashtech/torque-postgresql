@@ -5,8 +5,6 @@ module Torque
     module Relation
       module Inheritance
 
-        # REGCLASS = ::Arel.sql('tableoid').cast('regclass')
-
         # :nodoc:
         def cast_records_value; get_value(:cast_records); end
         # :nodoc:
@@ -46,7 +44,7 @@ module Torque
 
         # Like #cast_records, but modifies relation in place
         def cast_records!(*types, **options)
-          where!(regclass.cast(:varchar).in(types.map(&:table_name))) if options[:filter]
+          where!(regclass.pg_cast(:varchar).in(types.map(&:table_name))) if options[:filter]
           self.select_extra_values += [regclass.as(_record_class_attribute.to_s)]
           self.cast_records_value = (types.present? ? types : model.casted_dependents.values)
           self
@@ -73,8 +71,7 @@ module Torque
               next arel_tables.first[column] if arel_tables.size == 1
 
               if mergeable.include?(column)
-                list = arel_tables.each_with_object(column).map(&:[])
-                ::Arel::Nodes::NamedFunction.new('COALESCE', list).as(column)
+                FN.coalesce(*arel_tables.each_with_object(column).map(&:[])).as(column)
               else
                 arel_tables.map { |table| table[column].as("#{table.left.name}__#{column}") }
               end
@@ -105,12 +102,12 @@ module Torque
           end
 
           def build_auto_caster_marker(arel, types)
-            attribute = regclass.cast(:varchar).in(types.map(&:table_name))
+            attribute = regclass.pg_cast(:varchar).in(types.map(&:table_name))
             attribute.as(self.class._auto_cast_attribute.to_s)
           end
 
           def regclass
-            arel_table['tableoid'].cast(:regclass)
+            arel_table['tableoid'].pg_cast(:regclass)
           end
 
       end

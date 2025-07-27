@@ -4,13 +4,11 @@ module Torque
   module PostgreSQL
     module Attributes
       module Builder
-        # TODO: Allow documenting by building the methods outside and importing
-        # only the raw string
         class Period
           DIRECT_ACCESS_REGEX = /_?%s_?/
           SUPPORTED_TYPES = %i[daterange tsrange tstzrange].freeze
           CURRENT_GETTERS = {
-            daterange: 'Date.today',
+            daterange: 'Date.current',
             tsrange:   'Time.zone.now',
             tstzrange: 'Time.zone.now',
           }.freeze
@@ -20,6 +18,8 @@ module Torque
             tsrange:   :timestamp,
             tstzrange: :timestamp,
           }.freeze
+
+          FN = '::Torque::PostgreSQL::FN'
 
           attr_accessor :klass, :attribute, :options, :type, :default, :current_getter,
             :type_caster, :threshold, :dynamic_threshold, :klass_module, :instance_module
@@ -208,11 +208,11 @@ module Torque
             end
 
             def arel_default_sql
-              @arel_default_sql ||= arel_sql_quote(@default.inspect)
+              @arel_default_sql ||= arel_sql_bind(@default.inspect)
             end
 
-            def arel_sql_quote(value)
-              "::Arel.sql(connection.quote(#{value}))"
+            def arel_sql_bind(value)
+              "#{FN}.bind_with(#{arel_attribute}, #{value})"
             end
 
             # Check how to provide the threshold value
@@ -223,12 +223,12 @@ module Torque
                   "arel_table['#{threshold}']"
                 when ActiveSupport::Duration
                   value = "'#{threshold.to_i} seconds'"
-                  "::Arel.sql(\"#{value}\").cast(:interval)"
+                  "::Arel.sql(\"#{value}\").pg_cast(:interval)"
                 when Numeric
                   value = threshold.to_i.to_s
                   value << type_caster.eql?(:date) ? ' days' : ' seconds'
                   value = "'#{value}'"
-                  "::Arel.sql(\"#{value}\").cast(:interval)"
+                  "::Arel.sql(\"#{value}\").pg_cast(:interval)"
                 end
               end
             end
@@ -248,7 +248,7 @@ module Torque
               return arel_start_at unless threshold.present?
               @arel_real_start_at ||= begin
                 result = +"(#{arel_start_at} - #{arel_threshold_value})"
-                result << '.cast(:date)' if  type.eql?(:daterange)
+                result << '.pg_cast(:date)' if type.eql?(:daterange)
                 result
               end
             end
@@ -258,7 +258,7 @@ module Torque
               return arel_finish_at unless threshold.present?
               @arel_real_finish_at ||= begin
                 result = +"(#{arel_finish_at} + #{arel_threshold_value})"
-                result << '.cast(:date)' if  type.eql?(:daterange)
+                result << '.pg_cast(:date)' if type.eql?(:daterange)
                 result
               end
             end
@@ -278,9 +278,9 @@ module Torque
 
             # Create an arel named function
             def arel_named_function(name, *args)
-              result = +"::Arel::Nodes::NamedFunction.new(#{name.to_s.inspect}"
-              result << ', [' << args.join(', ') << ']' if args.present?
-              result << ')'
+              result = +"#{FN}.#{name}"
+              result << '(' << args.join(', ') << ')' if args.present?
+              result
             end
 
             # Create an arel version of +nullif+ function
@@ -302,24 +302,24 @@ module Torque
             def arel_daterange(real = false)
               arel_named_function(
                 'daterange',
-                (real ? arel_real_start_at : arel_start_at) + '.cast(:date)',
-                (real ? arel_real_finish_at : arel_finish_at) + '.cast(:date)',
+                (real ? arel_real_start_at : arel_start_at) + '.pg_cast(:date)',
+                (real ? arel_real_finish_at : arel_finish_at) + '.pg_cast(:date)',
                 '::Arel.sql("\'[]\'")',
               )
             end
 
             def arel_check_condition(type)
               checker = arel_nullif(arel_real_attribute, arel_empty_value)
-              checker << ".#{type}(value.cast(#{type_caster.inspect}))"
+              checker << ".#{type}(value.pg_cast(#{type_caster.inspect}))"
               arel_coalesce(checker, arel_default_sql)
             end
 
             def arel_formatting_value(condition = nil, value = 'value', cast: nil)
               [
                 "#{value} = arel_table[#{value}] if #{value}.is_a?(Symbol)",
-                "unless #{value}.respond_to?(:cast)",
-                "  #{value} = ::Arel.sql(connection.quote(#{value}))",
-                ("  #{value} = #{value}.cast(#{cast.inspect})" if cast),
+                "unless #{value}.respond_to?(:pg_cast)",
+                "  #{value} = #{FN}.bind_with(#{arel_attribute}, #{value})",
+                ("  #{value} = #{value}.pg_cast(#{cast.inspect})" if cast),
                 'end',
                 condition,
               ].compact.join("\n")
@@ -347,14 +347,14 @@ module Torque
 
             def klass_current
               [
-                "value = #{arel_sql_quote(current_getter)}",
+                "value = #{arel_sql_bind(current_getter)}",
                 "where(#{arel_check_condition(:contains)})",
               ].join("\n")
             end
 
             def klass_not_current
               [
-                "value = #{arel_sql_quote(current_getter)}",
+                "value = #{arel_sql_bind(current_getter)}",
                 "where.not(#{arel_check_condition(:contains)})",
               ].join("\n")
             end

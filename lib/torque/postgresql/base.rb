@@ -16,11 +16,12 @@ module Torque
         class_attribute :schema, instance_writer: false
       end
 
-      module ClassMethods
+      class_methods do
         delegate :distinct_on, :with, :itself_only, :cast_records, to: :all
 
         # Make sure that table name is an instance of TableName class
         def reset_table_name
+          return super unless PostgreSQL.config.schemas.enabled
           self.table_name = TableName.new(self, super)
         end
 
@@ -41,7 +42,7 @@ module Torque
             next klass.table_name unless klass.physically_inheritances?
 
             query = klass.unscoped.where(subclass.primary_key => id)
-            query.pluck(klass.arel_table['tableoid'].cast('regclass')).first
+            query.pluck(klass.arel_table['tableoid'].pg_cast('regclass')).first
           end
         end
 
@@ -198,14 +199,6 @@ module Torque
           klass = Associations::Builder::BelongsToMany
           reflection = klass.build(self, name, scope, options, &extension)
           ::ActiveRecord::Reflection.add_reflection(self, name, reflection)
-        end
-
-        # Allow extra keyword arguments to be sent to +InsertAll+
-        unless Torque::PostgreSQL::AR720
-          def upsert_all(attributes, **xargs)
-            xargs = xargs.reverse_merge(on_duplicate: :update)
-            ::ActiveRecord::InsertAll.new(self, attributes, **xargs).execute
-          end
         end
 
         protected

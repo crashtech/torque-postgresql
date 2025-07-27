@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'relation/distinct_on'
-require_relative 'relation/auxiliary_statement'
 require_relative 'relation/inheritance'
 
 require_relative 'relation/merger'
@@ -12,7 +11,6 @@ module Torque
       extend ActiveSupport::Concern
 
       include DistinctOn
-      include AuxiliaryStatement
       include Inheritance
 
       SINGLE_VALUE_METHODS = [:itself_only]
@@ -107,7 +105,7 @@ module Torque
           end
         end
 
-      module ClassMethods
+      class_methods do
         # Easy and storable way to access the name used to get the record table
         # name when using inheritance tables
         def _record_class_attribute
@@ -115,7 +113,7 @@ module Torque
             .inheritance.record_class_column_name.to_sym
         end
 
-        # Easy and storable way to access the name used to get the indicater of
+        # Easy and storable way to access the name used to get the indicate of
         # auto casting inherited records
         def _auto_cast_attribute
           @@auto_cast ||= Torque::PostgreSQL.config
@@ -135,16 +133,14 @@ module Torque
         end
 
         # Allow extra keyword arguments to be sent to +InsertAll+
-        if Torque::PostgreSQL::AR720
-          def upsert_all(attributes, **xargs)
-            xargs = xargs.reverse_merge(on_duplicate: :update)
-            ::ActiveRecord::InsertAll.execute(self, attributes, **xargs)
-          end
+        def upsert_all(attributes, **xargs)
+          xargs = xargs.reverse_merge(on_duplicate: :update)
+          ::ActiveRecord::InsertAll.execute(self, attributes, **xargs)
         end
       end
     end
 
-    # Include the methos here provided and then change the constants to ensure
+    # Include the methods here provided and then change the constants to ensure
     # the operation of ActiveRecord Relation
     ActiveRecord::Relation.include Relation
     ActiveRecord::Relation.prepend Relation::Initializer

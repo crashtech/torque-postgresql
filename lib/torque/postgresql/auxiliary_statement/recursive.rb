@@ -136,10 +136,10 @@ module Torque
 
               col = table[name]
               base.select_extra_values += [col.as(as)] unless as.nil?
-              parts = [col, source.cast(:varchar)]
+              parts = [col, source.pg_cast(:varchar)]
 
-              columns << ::Arel.array([source]).cast(:varchar, true).as(name)
-              sub_columns << ::Arel::Nodes::NamedFunction.new('array_append', parts).as(name)
+              columns << ::Arel.array([source]).pg_cast(:varchar, true).as(name)
+              sub_columns << FN.array_append(*parts).as(name)
             end
           end
 
