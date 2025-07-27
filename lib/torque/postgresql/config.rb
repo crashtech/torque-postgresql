@@ -30,6 +30,10 @@ module Torque
       end.to_h
     end
 
+    # When provided, the initializer will expose the function helper on the
+    # module described here
+    config.expose_function_helper_on = nil
+
     # Configure associations features
     config.nested(:associations) do |assoc|
 

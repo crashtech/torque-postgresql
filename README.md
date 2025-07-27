@@ -68,6 +68,8 @@ These are the currently available features:
 * [Inherited Tables](https://github.com/crashtech/torque-postgresql/wiki/Inherited-Tables)
 * [Insert All](https://github.com/crashtech/torque-postgresql/wiki/Insert-All)
 * [Multiple Schemas](https://github.com/crashtech/torque-postgresql/wiki/Multiple-Schemas)
+* Predicate Builder (DOCS Pending)
+* Full-Text Search (DOCS Pending)
 
 # How to Contribute
 

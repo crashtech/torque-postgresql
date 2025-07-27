@@ -19,6 +19,12 @@ module Torque
             ActiveRecord::Base.belongs_to_many_required_by_default =
               torque_config.associations.belongs_to_many_required_by_default
 
+            ## FN Helper
+            if (mod = torque_config.expose_function_helper_on&.to_s)
+              parent, _, name = mod.rpartition('::')
+              parent.constantize.const_set(name, PostgreSQL::FN)
+            end
+
             ## Schemas Enabled Setup
             if (config = torque_config.schemas).enabled
               require_relative 'adapter/schema_overrides'

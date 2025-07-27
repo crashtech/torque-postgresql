@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.email       = ['me@carlosfsilva.com']
   s.homepage    = 'https://github.com/crashtech/torque-postgresql'
   s.summary     = 'ActiveRecord extension to access PostgreSQL advanced resources'
-  s.description = 'Add support to complex resources of PostgreSQL, like data types, array associations, and auxiliary statements (CTE)'
+  s.description = 'Add support to complex resources of PostgreSQL, like data types, array associations, auxiliary statements (CTE), and full-text search (FTS)'
   s.license     = 'MIT'
   s.metadata    = {
     'homepage_uri'    => 'https://torque.dev/postgresql',
