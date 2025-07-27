@@ -56,10 +56,7 @@ module Torque
           #
           # def full_text_search(value, order: :asc, rank: :rank, language: 'english', phrase: true)
           #   attr = arel_table["search_vector"]
-          #   binder = ->(prop, val) do
-          #     attr_klass = ActiveRecord::Relation::QueryAttribute
-          #     Arel::Nodes::BindParam.new(attr_klass.new(prop, val, attr.type_caster))
-          #   end
+          #   fn = ::Torque::PostgreSQL::FN
           #
           #   lang = language.to_s if !language.is_a?(::Symbol)
           #   lang ||= arel_table[language.to_s].pg_cast(:regconfig) if has_attribute?(language)
@@ -69,14 +66,13 @@ module Torque
           #     Unable to determine language from #{language.inspect}.
           #   MSG
           #
-          #   value = binder.call(:value, value.to_s)
-          #   lang = binder.call(:lang, lang) if lang.is_a?(::String)
+          #   value = fn.bind(:value, value.to_s, attr.type_caster)
+          #   lang = fn.bind(:lang, lang, attr.type_caster) if lang.is_a?(::String)
           #
-          #   function = phrase ? 'PHRASETO_TSQUERY' : 'TO_TSQUERY'
-          #   query = Arel::Nodes::NamedFunction.new(function, [lang, value])
-          #   ranker = Arel::Nodes::NamedFunction.new('TS_RANK', [attr, query]) if rank || order
+          #   query = fn.public_send(phrase ? :phraseto_tsquery : :to_tsquery, lang, value)
+          #   ranker = fn.ts_rank(attr, query) if rank || order
           #
-          #   result = where(Arel::Nodes::InfixOperation.new(:"@@", attr, query))
+          #   result = where(fn.infix(:"@@", attr, query))
           #   result = result.order(ranker.public_send(order == :desc ? :desc : :asc)) if order
           #   result.select_extra_values += [ranker.as(rank == true ? 'rank' : rank.to_s)] if rank
           #   result
@@ -85,10 +81,7 @@ module Torque
             klass_module.module_eval <<-RUBY, __FILE__, __LINE__ + 1
               def #{scope_name}(value#{scope_args})
                 attr = arel_table['#{attribute}']
-                binder = ->(prop, val) do
-                  attr_klass = ::ActiveRecord::Relation::QueryAttribute
-                  ::Arel::Nodes::BindParam.new(attr_klass.new(prop, val, attr.type_caster))
-                end
+                fn = ::Torque::PostgreSQL::FN
 
                 lang = language.to_s if !language.is_a?(::Symbol)
                 lang ||= arel_table[language.to_s] if has_attribute?(language)
@@ -98,14 +91,13 @@ module Torque
                   Unable to determine language from \#{language.inspect}.
                 MSG
 
-                value = binder.call(:value, value.to_s)
-                lang = binder.call(:lang, lang) if lang.is_a?(::String)
+                value = fn.bind(:value, value.to_s, attr.type_caster)
+                lang = fn.bind(:lang, lang, attr.type_caster) if lang.is_a?(::String)
 
-                function = phrase ? 'PHRASETO_TSQUERY' : 'TO_TSQUERY'
-                query = ::Arel::Nodes::NamedFunction.new(function, [lang, value])
-                ranker = ::Arel::Nodes::NamedFunction.new('TS_RANK', [attr, query]) if rank || order
+                query = fn.public_send(phrase ? :phraseto_tsquery : :to_tsquery, lang, value)
+                ranker = fn.ts_rank(attr, query) if rank || order
 
-                result = where(::Arel::Nodes::InfixOperation.new(:"@@", attr, query))
+                result = where(fn.infix(:"@@", attr, query))
                 result = result.order(ranker.public_send(order == :desc ? :desc : :asc)) if order
                 result.select_extra_values += [ranker.as(rank == true ? 'rank' : rank.to_s)] if rank
                 result

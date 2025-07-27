@@ -58,7 +58,7 @@ RSpec.describe 'BelongsToMany' do
     it 'loads associated records' do
       subject.update(tag_ids: [initial.id])
       expect(subject.tags.to_sql).to be_eql(<<-SQL.squish)
-        SELECT "tags".* FROM "tags" WHERE "tags"."id" = ANY('{#{initial.id}}')
+        SELECT "tags".* FROM "tags" WHERE "tags"."id" = #{initial.id}
       SQL
 
       expect(subject.tags.load).to be_a(ActiveRecord::Associations::CollectionProxy)
@@ -374,11 +374,11 @@ RSpec.describe 'BelongsToMany' do
       let(:tag_ids) { FactoryBot.create_list(:tag, 5).map(&:id) }
       let!(:record) { Video.new(tag_ids: tag_ids) }
 
-      it 'uses a single bind, instead of one per id' do
+      it 'uses rails default with in and several binds' do
         sql, binds = get_query_with_binds { record.tags.load }
 
-        expect(sql).to include(' WHERE "tags"."id" = ANY($1)')
-        expect(binds.size).to be_eql(1)
+        expect(sql).to include(' WHERE "tags"."id" IN ($1, $2, $3, $4, $5)')
+        expect(binds.size).to be_eql(5)
       end
     end
 
@@ -436,14 +436,26 @@ RSpec.describe 'BelongsToMany' do
 
     subject { game.create }
 
-    it 'loads associated records' do
+    it 'loads one associated records' do
       subject.update(player_ids: [other.id])
       expect(subject.players.to_sql).to be_eql(<<-SQL.squish)
-        SELECT "players".* FROM "players" WHERE "players"."id" = ANY('{#{other.id}}')
+        SELECT "players".* FROM "players" WHERE "players"."id" = '#{other.id}'
       SQL
 
       expect(subject.players.load).to be_a(ActiveRecord::Associations::CollectionProxy)
       expect(subject.players.to_a).to be_eql([other])
+    end
+
+    it 'loads several associated records' do
+      entries = [other, player.create]
+      subject.update(player_ids: entries.map(&:id))
+      expect(subject.players.to_sql).to be_eql(<<-SQL.squish)
+        SELECT "players".* FROM "players"
+        WHERE "players"."id" IN ('#{entries[0].id}', '#{entries[1].id}')
+      SQL
+
+      expect(subject.players.load).to be_a(ActiveRecord::Associations::CollectionProxy)
+      expect(subject.players.to_a).to be_eql(entries)
     end
 
     it 'can preload records' do
@@ -533,7 +545,7 @@ RSpec.describe 'BelongsToMany' do
       subject.update(friendly_tag_ids: tags.pluck(:friendly_id))
 
       expect(subject.tags.to_sql).to be_eql(<<-SQL.squish)
-        SELECT "tags".* FROM "tags" WHERE "tags"."friendly_id" = ANY('{a,b,c}')
+        SELECT "tags".* FROM "tags" WHERE "tags"."friendly_id" IN ('a', 'b', 'c')
       SQL
 
       expect(subject.tags.load).to be_a(ActiveRecord::Associations::CollectionProxy)

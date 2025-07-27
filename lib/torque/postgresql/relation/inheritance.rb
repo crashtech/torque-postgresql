@@ -71,8 +71,7 @@ module Torque
               next arel_tables.first[column] if arel_tables.size == 1
 
               if mergeable.include?(column)
-                list = arel_tables.each_with_object(column).map(&:[])
-                ::Arel::Nodes::NamedFunction.new('COALESCE', list).as(column)
+                FN.coalesce(*arel_tables.each_with_object(column).map(&:[])).as(column)
               else
                 arel_tables.map { |table| table[column].as("#{table.left.name}__#{column}") }
               end

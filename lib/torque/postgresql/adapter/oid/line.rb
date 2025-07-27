@@ -7,9 +7,7 @@ module Torque
       alias c= intercept=
 
       def a=(value)
-        self.slope = vertical? \
-          ? Float::INFINITY \
-          : Rational(value, b)
+        self.slope = vertical? ? Float::INFINITY : Rational(value, b)
       end
 
       def a
@@ -17,9 +15,7 @@ module Torque
       end
 
       def b=(value)
-        self.slope = value.zero? \
-          ? Float::INFINITY \
-          : Rational(a, value)
+        self.slope = value.zero? ? Float::INFINITY : Rational(a, value)
       end
 
       def b

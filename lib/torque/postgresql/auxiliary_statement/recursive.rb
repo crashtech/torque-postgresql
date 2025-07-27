@@ -139,7 +139,7 @@ module Torque
               parts = [col, source.pg_cast(:varchar)]
 
               columns << ::Arel.array([source]).pg_cast(:varchar, true).as(name)
-              sub_columns << ::Arel::Nodes::NamedFunction.new('array_append', parts).as(name)
+              sub_columns << FN.array_append(*parts).as(name)
             end
           end
 

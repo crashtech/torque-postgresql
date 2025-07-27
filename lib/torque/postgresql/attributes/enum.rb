@@ -46,7 +46,7 @@ module Torque
             end
           end
 
-          # List of valus as symbols
+          # List of values as symbols
           def keys
             values.map(&:to_sym)
           end
@@ -86,7 +86,7 @@ module Torque
             self.values.include?(value.to_s)
           end
 
-          # Build an active record scope for a given atribute agains a value
+          # Build an active record scope for a given attribute against a value
           def scope(attribute, value)
             attribute.eq(value)
           end
@@ -209,7 +209,7 @@ module Torque
             end
           end
 
-          # Throw an exception for invalid valus
+          # Throw an exception for invalid values
           def raise_invalid(value)
             if value.is_a?(Numeric)
               raise EnumError, "#{value.inspect} is out of bounds of #{self.class.name}"
@@ -218,7 +218,7 @@ module Torque
             end
           end
 
-          # Throw an exception for comparasion between different enums
+          # Throw an exception for comparison between different enums
           def raise_comparison(other)
             raise EnumError, "Comparison of #{self.class.name} with #{self.inspect} failed"
           end

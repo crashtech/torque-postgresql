@@ -10,16 +10,11 @@ module Torque
 
         def call(attribute, value)
           operator = value.casefold? ? :"~*" : :"~"
-          bind = predicate_builder.build_bind_attribute(attribute.name, value.source)
-          build_node(operator, attribute, bind)
+          FN.infix(operator, attribute, FN.bind_with(attribute, value.source))
         end
 
         private
           attr_reader :predicate_builder
-
-          def build_node(*args)
-            ::Arel::Nodes::InfixOperation.new(*args)
-          end
       end
     end
   end

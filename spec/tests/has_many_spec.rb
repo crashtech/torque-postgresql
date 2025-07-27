@@ -264,13 +264,19 @@ RSpec.describe 'HasMany' do
     end
 
     it 'loads associated records' do
-      expect(subject.videos.to_sql).to match(Regexp.new(<<-SQL.squish))
-        SELECT "videos"\\.\\* FROM "videos"
-        WHERE \\(?"videos"\\."tag_ids" && '\\{#{subject.id}\\}'::bigint\\[\\]\\)?
+      expect(subject.videos.to_sql).to eq(<<~SQL.squish)
+        SELECT "videos".* FROM "videos" WHERE #{subject.id} = ANY("videos"."tag_ids")
       SQL
 
       expect(subject.videos.load).to be_a(ActiveRecord::Associations::CollectionProxy)
       expect(subject.videos.to_a).to be_eql([])
+    end
+
+    it 'uses binds instead of the literal value' do
+      query = subject.videos
+      sql, binds = get_query_with_binds { query.load }
+      expect(sql).to include('WHERE $1 = ANY("videos"."tag_ids")')
+      expect(binds.first.value).to eq(subject.id)
     end
 
     it 'can be marked as loaded' do
@@ -474,13 +480,20 @@ RSpec.describe 'HasMany' do
     subject { player.create }
 
     it 'loads associated records' do
-      expect(subject.games.to_sql).to match(Regexp.new(<<-SQL.squish))
-        SELECT "games"\\.\\* FROM "games"
-        WHERE \\(?"games"\\."player_ids" && '\\{#{subject.id}\\}'::uuid\\[\\]\\)?
+      expect(subject.games.to_sql).to eq(<<~SQL.squish)
+        SELECT "games".* FROM "games"
+        WHERE '#{subject.id}' = ANY("games"."player_ids")
       SQL
 
       expect(subject.games.load).to be_a(ActiveRecord::Associations::CollectionProxy)
       expect(subject.games.to_a).to be_eql([])
+    end
+
+    it 'uses binds instead of the literal value' do
+      query = subject.games
+      sql, binds = get_query_with_binds { query.load }
+      expect(sql).to include('WHERE $1 = ANY("games"."player_ids")')
+      expect(binds.first.value).to eq(subject.id)
     end
 
     it 'can preload records' do

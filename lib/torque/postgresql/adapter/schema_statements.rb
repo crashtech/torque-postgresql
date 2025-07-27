@@ -91,6 +91,7 @@ module Torque
           SQL
         end
 
+
         # Add the schema option when extracting table options
         def table_options(table_name)
           options = super

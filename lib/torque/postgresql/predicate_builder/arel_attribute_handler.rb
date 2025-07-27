@@ -4,28 +4,28 @@ module Torque
   module PostgreSQL
     module PredicateBuilder
       class ArelAttributeHandler
-        def initialize(predicate_builder)
-          @predicate_builder = predicate_builder
+        # Shortcut
+        def self.call(*args)
+          new.call(*args)
+        end
+
+        def initialize(*)
+          # There is no need to use or save the predicate builder here
         end
 
         def call(attribute, value)
           case
           when array_typed?(attribute) && array_typed?(value) then attribute.overlaps(value)
-          when array_typed?(attribute) then value.eq(any_function(attribute))
-          when array_typed?(value) then attribute.eq(any_function(value))
+          when array_typed?(attribute) then value.eq(FN.any(attribute))
+          when array_typed?(value) then attribute.eq(FN.any(value))
           else attribute.eq(value)
           end
         end
 
         private
-          attr_reader :predicate_builder
-
-          def any_function(value)
-            ::Arel::Nodes::NamedFunction.new('ANY', [value])
-          end
 
           def array_typed?(attribute)
-            attribute.type_caster.is_a?(ARRAY_OID)
+            attribute.able_to_type_cast? && attribute.type_caster.is_a?(ARRAY_OID)
           end
       end
     end

@@ -28,7 +28,7 @@ module Torque
 
         def self.search_vector_options(columns:, language: nil, stored: true, **options)
           weights = to_search_weights(columns)
-          operation = to_search_vector_operation(language, weights)
+          operation = to_search_vector_operation(language, weights).to_sql
 
           options[:index] = {
             using: PostgreSQL.config.full_text_search.default_index_type,
@@ -53,17 +53,16 @@ module Torque
           simple = weights.size == 1
 
           empty_string = ::Arel.sql("''")
-          fn = ::Arel::Nodes::NamedFunction
-
-          weights.map do |column, weight|
+          operations = weights.map do |column, weight|
             column = ::Arel.sql(column.to_s)
             weight = ::Arel.sql("'#{weight}'")
 
-            op = fn.new('COALESCE', [column, empty_string])
-            op = fn.new('TO_TSVECTOR', [language, op])
-            op = fn.new('SETWEIGHT', [op, weight]) unless simple
-            op.to_sql
-          end.join(' || ')
+            op = FN.to_tsvector(language, FN.coalesce(column, empty_string))
+            op = FN.setweight(op, weight) unless simple
+            op
+          end
+
+          FN.concat(*operations)
         end
       end
     end

@@ -75,26 +75,26 @@ RSpec.describe 'Period' do
 
     let(:cast_type) { '::timestamp' }
     let(:cast_db_value) { "#{db_value}#{cast_type}" }
-    let(:empty_condition) { "#{type}(NULL, NULL)" }
-    let(:nullif_condition) { "nullif(#{db_field}, #{empty_condition})" }
+    let(:empty_condition) { "#{type.to_s.upcase}(NULL, NULL)" }
+    let(:nullif_condition) { "NULLIF(#{db_field}, #{empty_condition})" }
 
     let(:date_type) { :daterange }
-    let(:lower_date) { "lower(#{db_field})::date" }
-    let(:upper_date) { "upper(#{db_field})::date" }
-    let(:date_db_field) { "#{date_type}(#{lower_date}, #{upper_date}, '[]')" }
+    let(:lower_date) { "LOWER(#{db_field})::date" }
+    let(:upper_date) { "UPPER(#{db_field})::date" }
+    let(:date_db_field) { "#{date_type.to_s.upcase}(#{lower_date}, #{upper_date}, '[]')" }
 
     context 'on model' do
       before { decorate(model, :period) }
 
       it 'queries current on period' do
         expect(model.period_on(value).to_sql).to include(<<-SQL.squish)
-          coalesce(#{nullif_condition} @> #{cast_db_value}, #{true_value})
+          COALESCE(#{nullif_condition} @> #{cast_db_value}, #{true_value})
         SQL
       end
 
       it 'queries current period' do
         expect(model.current_period.to_sql).to include(<<-SQL.squish)
-          coalesce(#{nullif_condition} @>
+          COALESCE(#{nullif_condition} @>
         SQL
 
         expect(model.current_period.to_sql).to include(<<-SQL.squish)
@@ -104,7 +104,7 @@ RSpec.describe 'Period' do
 
       it 'queries not current period' do
         expect(model.not_current_period.to_sql).to include(<<-SQL.squish)
-          NOT (coalesce(#{nullif_condition} @>
+          NOT (COALESCE(#{nullif_condition} @>
         SQL
 
         expect(model.not_current_period.to_sql).to include(<<-SQL.squish)
@@ -138,7 +138,7 @@ RSpec.describe 'Period' do
         SQL
 
         expect(model.period_overlapping(value, value).to_sql).to include(<<-SQL.squish)
-          #{db_field} && #{type}(#{db_value}, #{db_value})
+          #{db_field} && #{type.to_s.upcase}(#{db_value}, #{db_value})
         SQL
       end
 
@@ -148,47 +148,47 @@ RSpec.describe 'Period' do
         SQL
 
         expect(model.period_not_overlapping(value, value).to_sql).to include(<<-SQL.squish)
-          NOT (#{db_field} && #{type}(#{db_value}, #{db_value}))
+          NOT (#{db_field} && #{type.to_s.upcase}(#{db_value}, #{db_value}))
         SQL
       end
 
       it 'queries starting after period' do
         expect(model.period_starting_after(:test).to_sql).to include(<<-SQL.squish)
-          lower(#{db_field}) > "time_keepers"."test"
+          LOWER(#{db_field}) > "time_keepers"."test"
         SQL
 
         expect(model.period_starting_after(value).to_sql).to include(<<-SQL.squish)
-          lower(#{db_field}) > #{db_value}
+          LOWER(#{db_field}) > #{db_value}
         SQL
       end
 
       it 'queries starting before period' do
         expect(model.period_starting_before(:test).to_sql).to include(<<-SQL.squish)
-          lower(#{db_field}) < "time_keepers"."test"
+          LOWER(#{db_field}) < "time_keepers"."test"
         SQL
 
         expect(model.period_starting_before(value).to_sql).to include(<<-SQL.squish)
-          lower(#{db_field}) < #{db_value}
+          LOWER(#{db_field}) < #{db_value}
         SQL
       end
 
       it 'queries finishing after period' do
         expect(model.period_finishing_after(:test).to_sql).to include(<<-SQL.squish)
-          upper(#{db_field}) > "time_keepers"."test"
+          UPPER(#{db_field}) > "time_keepers"."test"
         SQL
 
         expect(model.period_finishing_after(value).to_sql).to include(<<-SQL.squish)
-          upper(#{db_field}) > #{db_value}
+          UPPER(#{db_field}) > #{db_value}
         SQL
       end
 
       it 'queries finishing before period' do
         expect(model.period_finishing_before(:test).to_sql).to include(<<-SQL.squish)
-          upper(#{db_field}) < "time_keepers"."test"
+          UPPER(#{db_field}) < "time_keepers"."test"
         SQL
 
         expect(model.period_finishing_before(value).to_sql).to include(<<-SQL.squish)
-          upper(#{db_field}) < #{db_value}
+          UPPER(#{db_field}) < #{db_value}
         SQL
       end
 
@@ -234,7 +234,7 @@ RSpec.describe 'Period' do
         SQL
 
         expect(model.period_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-          #{date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date)
+          #{date_db_field} && #{date_type.to_s.upcase}(#{db_value}::date, #{db_value}::date)
         SQL
       end
 
@@ -244,7 +244,7 @@ RSpec.describe 'Period' do
         SQL
 
         expect(model.period_not_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-          NOT (#{date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date))
+          NOT (#{date_db_field} && #{date_type.to_s.upcase}(#{db_value}::date, #{db_value}::date))
         SQL
       end
 
@@ -305,25 +305,25 @@ RSpec.describe 'Period' do
     context 'with field threshold' do
       before { decorate(model, :period, threshold: :th) }
 
-      let(:lower_db_field) { "(lower(#{db_field}) - #{threshold_value})" }
-      let(:upper_db_field) { "(upper(#{db_field}) + #{threshold_value})" }
+      let(:lower_db_field) { "(LOWER(#{db_field}) - #{threshold_value})" }
+      let(:upper_db_field) { "(UPPER(#{db_field}) + #{threshold_value})" }
       let(:threshold_value) { '"time_keepers"."th"' }
-      let(:threshold_db_field) { "#{type}(#{lower_db_field}, #{upper_db_field})" }
-      let(:nullif_condition) { "nullif(#{threshold_db_field}, #{empty_condition})" }
+      let(:threshold_db_field) { "#{type.to_s.upcase}(#{lower_db_field}, #{upper_db_field})" }
+      let(:nullif_condition) { "NULLIF(#{threshold_db_field}, #{empty_condition})" }
       let(:threshold_date_db_field) do
-        "daterange(#{lower_db_field}::date, #{upper_db_field}::date, '[]')"
+        "DATERANGE(#{lower_db_field}::date, #{upper_db_field}::date, '[]')"
       end
 
       context 'on model' do
         it 'queries current on period' do
           expect(model.period_on(value).to_sql).to include(<<-SQL.squish)
-            coalesce(#{nullif_condition} @> #{cast_db_value}, #{true_value})
+            COALESCE(#{nullif_condition} @> #{cast_db_value}, #{true_value})
           SQL
         end
 
         it 'queries current period' do
           expect(model.current_period.to_sql).to include(<<-SQL.squish)
-            coalesce(#{nullif_condition} @>
+            COALESCE(#{nullif_condition} @>
           SQL
 
           expect(model.current_period.to_sql).to include(<<-SQL.squish)
@@ -333,7 +333,7 @@ RSpec.describe 'Period' do
 
         it 'queries not current period' do
           expect(model.not_current_period.to_sql).to include(<<-SQL.squish)
-            NOT (coalesce(#{nullif_condition} @>
+            NOT (COALESCE(#{nullif_condition} @>
           SQL
 
           expect(model.not_current_period.to_sql).to include(<<-SQL.squish)
@@ -357,7 +357,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_real_overlapping(value, value).to_sql).to include(<<-SQL.squish)
-            #{threshold_db_field} && #{type}(#{db_value}, #{db_value})
+            #{threshold_db_field} && #{type.to_s.upcase}(#{db_value}, #{db_value})
           SQL
         end
 
@@ -427,7 +427,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-            #{date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date)
+            #{date_db_field} && #{date_type.to_s.upcase}(#{db_value}::date, #{db_value}::date)
           SQL
         end
 
@@ -437,7 +437,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_not_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-            NOT (#{date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date))
+            NOT (#{date_db_field} && #{date_type.to_s.upcase}(#{db_value}::date, #{db_value}::date))
           SQL
         end
 
@@ -457,7 +457,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_real_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-            #{threshold_date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date)
+            #{threshold_date_db_field} && #{date_type.to_s.upcase}(#{db_value}::date, #{db_value}::date)
           SQL
         end
       end
@@ -512,22 +512,22 @@ RSpec.describe 'Period' do
     context 'with value threshold' do
       before { decorate(model, :period, threshold: 5.minutes) }
 
-      let(:lower_db_field) { "(lower(#{db_field}) - #{threshold_value})" }
-      let(:upper_db_field) { "(upper(#{db_field}) + #{threshold_value})" }
+      let(:lower_db_field) { "(LOWER(#{db_field}) - #{threshold_value})" }
+      let(:upper_db_field) { "(UPPER(#{db_field}) + #{threshold_value})" }
       let(:threshold_value) { "'300 seconds'::interval" }
-      let(:threshold_db_field) { "#{type}(#{lower_db_field}, #{upper_db_field})" }
-      let(:nullif_condition) { "nullif(#{threshold_db_field}, #{empty_condition})" }
+      let(:threshold_db_field) { "#{type.to_s.upcase}(#{lower_db_field}, #{upper_db_field})" }
+      let(:nullif_condition) { "NULLIF(#{threshold_db_field}, #{empty_condition})" }
 
       context 'on model' do
         it 'queries current on period' do
           expect(model.period_on(value).to_sql).to include(<<-SQL.squish)
-            coalesce(#{nullif_condition} @> #{cast_db_value}, #{true_value})
+            COALESCE(#{nullif_condition} @> #{cast_db_value}, #{true_value})
           SQL
         end
 
         it 'queries current period' do
           expect(model.current_period.to_sql).to include(<<-SQL.squish)
-            coalesce(#{nullif_condition} @>
+            COALESCE(#{nullif_condition} @>
           SQL
 
           expect(model.current_period.to_sql).to include(<<-SQL.squish)
@@ -537,7 +537,7 @@ RSpec.describe 'Period' do
 
         it 'queries not current period' do
           expect(model.not_current_period.to_sql).to include(<<-SQL.squish)
-            NOT (coalesce(#{nullif_condition} @>
+            NOT (COALESCE(#{nullif_condition} @>
           SQL
 
           expect(model.not_current_period.to_sql).to include(<<-SQL.squish)
@@ -561,7 +561,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_real_overlapping(value, value).to_sql).to include(<<-SQL.squish)
-            #{threshold_db_field} && #{type}(#{db_value}, #{db_value})
+            #{threshold_db_field} && #{type.to_s.upcase}(#{db_value}, #{db_value})
           SQL
         end
 
@@ -631,7 +631,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-            #{date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date)
+            #{date_db_field} && #{date_type.to_s.upcase}(#{db_value}::date, #{db_value}::date)
           SQL
         end
 
@@ -641,7 +641,7 @@ RSpec.describe 'Period' do
           SQL
 
           expect(model.period_not_overlapping_date(value, value).to_sql).to include(<<-SQL.squish)
-            NOT (#{date_db_field} && #{date_type}(#{db_value}::date, #{db_value}::date))
+            NOT (#{date_db_field} && #{date_type.to_s.upcase}(#{db_value}::date, #{db_value}::date))
           SQL
         end
       end
@@ -701,26 +701,26 @@ RSpec.describe 'Period' do
 
     let(:cast_type) { '::date' }
     let(:cast_db_value) { "#{db_value}#{cast_type}" }
-    let(:empty_condition) { "#{type}(NULL, NULL)" }
-    let(:nullif_condition) { "nullif(#{threshold_db_field}, #{empty_condition})" }
+    let(:empty_condition) { "#{type.to_s.upcase}(NULL, NULL)" }
+    let(:nullif_condition) { "NULLIF(#{threshold_db_field}, #{empty_condition})" }
 
-    let(:lower_db_field) { "(lower(#{db_field}) - #{threshold_value})::date" }
-    let(:upper_db_field) { "(upper(#{db_field}) + #{threshold_value})::date" }
+    let(:lower_db_field) { "(LOWER(#{db_field}) - #{threshold_value})::date" }
+    let(:upper_db_field) { "(UPPER(#{db_field}) + #{threshold_value})::date" }
     let(:threshold_value) { "'86400 seconds'::interval" }
-    let(:threshold_db_field) { "#{type}(#{lower_db_field}, #{upper_db_field})" }
+    let(:threshold_db_field) { "#{type.to_s.upcase}(#{lower_db_field}, #{upper_db_field})" }
 
     before { decorate(model, :available, pessimistic: true, threshold: 1.day) }
 
     context 'on model' do
       it 'queries current on available' do
         expect(model.available_on(value).to_sql).to include(<<-SQL.squish)
-          coalesce(#{nullif_condition} @> #{cast_db_value}, #{false_value})
+          COALESCE(#{nullif_condition} @> #{cast_db_value}, #{false_value})
         SQL
       end
 
       it 'queries current available' do
         expect(model.current_available.to_sql).to include(<<-SQL.squish)
-          coalesce(#{nullif_condition} @>
+          COALESCE(#{nullif_condition} @>
         SQL
 
         expect(model.current_available.to_sql).to include(<<-SQL.squish)
@@ -730,7 +730,7 @@ RSpec.describe 'Period' do
 
       it 'queries not current available' do
         expect(model.not_current_available.to_sql).to include(<<-SQL.squish)
-          NOT (coalesce(#{nullif_condition} @>
+          NOT (COALESCE(#{nullif_condition} @>
         SQL
 
         expect(model.not_current_available.to_sql).to include(<<-SQL.squish)
@@ -764,7 +764,7 @@ RSpec.describe 'Period' do
         SQL
 
         expect(model.available_overlapping(value, value).to_sql).to include(<<-SQL.squish)
-          #{db_field} && #{type}(#{db_value}, #{db_value})
+          #{db_field} && #{type.to_s.upcase}(#{db_value}, #{db_value})
         SQL
       end
 
@@ -774,47 +774,47 @@ RSpec.describe 'Period' do
         SQL
 
         expect(model.available_not_overlapping(value, value).to_sql).to include(<<-SQL.squish)
-          NOT (#{db_field} && #{type}(#{db_value}, #{db_value}))
+          NOT (#{db_field} && #{type.to_s.upcase}(#{db_value}, #{db_value}))
         SQL
       end
 
       it 'queries starting after available' do
         expect(model.available_starting_after(:test).to_sql).to include(<<-SQL.squish)
-          lower(#{db_field}) > "time_keepers"."test"
+          LOWER(#{db_field}) > "time_keepers"."test"
         SQL
 
         expect(model.available_starting_after(value).to_sql).to include(<<-SQL.squish)
-          lower(#{db_field}) > #{db_value}
+          LOWER(#{db_field}) > #{db_value}
         SQL
       end
 
       it 'queries starting before available' do
         expect(model.available_starting_before(:test).to_sql).to include(<<-SQL.squish)
-          lower(#{db_field}) < "time_keepers"."test"
+          LOWER(#{db_field}) < "time_keepers"."test"
         SQL
 
         expect(model.available_starting_before(value).to_sql).to include(<<-SQL.squish)
-          lower(#{db_field}) < #{db_value}
+          LOWER(#{db_field}) < #{db_value}
         SQL
       end
 
       it 'queries finishing after available' do
         expect(model.available_finishing_after(:test).to_sql).to include(<<-SQL.squish)
-          upper(#{db_field}) > "time_keepers"."test"
+          UPPER(#{db_field}) > "time_keepers"."test"
         SQL
 
         expect(model.available_finishing_after(value).to_sql).to include(<<-SQL.squish)
-          upper(#{db_field}) > #{db_value}
+          UPPER(#{db_field}) > #{db_value}
         SQL
       end
 
       it 'queries finishing before available' do
         expect(model.available_finishing_before(:test).to_sql).to include(<<-SQL.squish)
-          upper(#{db_field}) < "time_keepers"."test"
+          UPPER(#{db_field}) < "time_keepers"."test"
         SQL
 
         expect(model.available_finishing_before(value).to_sql).to include(<<-SQL.squish)
-          upper(#{db_field}) < #{db_value}
+          UPPER(#{db_field}) < #{db_value}
         SQL
       end
 
@@ -834,7 +834,7 @@ RSpec.describe 'Period' do
         SQL
 
         expect(model.available_real_overlapping(value, value).to_sql).to include(<<-SQL.squish)
-          #{threshold_db_field} && #{type}(#{db_value}, #{db_value})
+          #{threshold_db_field} && #{type.to_s.upcase}(#{db_value}, #{db_value})
         SQL
       end
 

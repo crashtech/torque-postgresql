@@ -37,6 +37,11 @@ module Torque
       # default. False means that no validation will be performed
       assoc.belongs_to_many_required_by_default = false
 
+      # Although +belongs_to_many+ does not need a custom handler when joining
+      # the last chain scope, this can allow devs to pick which way they prefer:
+      # Rails default, or ANY with a single bind to improve prepared statements
+      # assoc.optimize_for_binds = false TODO: Add support
+
     end
 
     # Configure multiple schemas

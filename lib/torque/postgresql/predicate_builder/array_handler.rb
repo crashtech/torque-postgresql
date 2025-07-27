@@ -24,18 +24,15 @@ module Torque
         private
 
           def call_with_value(attribute, value)
-            left = predicate_builder.build_bind_attribute(attribute.name, value)
-            right = ::Arel::Nodes::NamedFunction.new('ANY', [attribute])
-            ::Arel::Nodes::Equality.new(left, right)
+            FN.infix(:"=", FN.bind_with(attribute, value), FN.any(attribute))
           end
 
           def call_with_array(attribute, value)
-            bind = predicate_builder.build_bind_attribute(attribute.name, value)
-            attribute.overlaps(bind)
+            attribute.overlaps(FN.bind_with(attribute, value))
           end
 
           def call_with_empty(attribute)
-            ::Arel::Nodes::NamedFunction.new('CARDINALITY', [attribute]).eq(0)
+            FN.cardinality(attribute).eq(0)
           end
 
           def array_attribute?(attribute)

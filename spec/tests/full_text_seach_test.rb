@@ -30,13 +30,13 @@ RSpec.describe 'FullTextSearch' do
     describe '.to_search_vector_operation' do
       it 'builds a simple one' do
         result = builder.to_search_vector_operation('english', { 'title' => 'A' })
-        expect(result).to eq("TO_TSVECTOR('english', COALESCE(title, ''))")
+        expect(result.to_sql).to eq("TO_TSVECTOR('english', COALESCE(title, ''))")
       end
 
       it 'builds with 2 columns' do
         columns = { 'title' => 'A', 'content' => 'B' }
         result = builder.to_search_vector_operation('english', columns)
-        expect(result).to eq(<<~SQL.squish)
+        expect(result.to_sql).to eq(<<~SQL.squish)
           SETWEIGHT(TO_TSVECTOR('english', COALESCE(title, '')), 'A') ||
           SETWEIGHT(TO_TSVECTOR('english', COALESCE(content, '')), 'B')
         SQL
@@ -45,7 +45,7 @@ RSpec.describe 'FullTextSearch' do
       it 'builds with a dynamic language' do
         columns = { 'title' => 'A', 'content' => 'B' }
         result = builder.to_search_vector_operation(:lang, columns)
-        expect(result).to eq(<<~SQL.squish)
+        expect(result.to_sql).to eq(<<~SQL.squish)
           SETWEIGHT(TO_TSVECTOR(lang, COALESCE(title, '')), 'A') ||
           SETWEIGHT(TO_TSVECTOR(lang, COALESCE(content, '')), 'B')
         SQL

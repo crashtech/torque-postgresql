@@ -296,17 +296,23 @@ RSpec.describe 'Enum' do
 
     it 'scope the model correctly' do
       query = subject.a.to_sql
-      expect(query).to match(/"courses"."types" @> ARRAY\['A'\]::types\[\]/)
+      expect(query).to include(%{WHERE "courses"."types" @> '{A}'::types[]})
     end
 
     it 'has a match all scope' do
       query = subject.has_types('B', 'A').to_sql
-      expect(query).to match(/"courses"."types" @> ARRAY\['B', 'A'\]::types\[\]/)
+      expect(query).to include(%{WHERE "courses"."types" @> '{B,A}'::types[]})
     end
 
     it 'has a match any scope' do
       query = subject.has_any_types('B', 'A').to_sql
-      expect(query).to match(/"courses"."types" && ARRAY\['B', 'A'\]::types\[\]/)
+      expect(query).to include(%{WHERE "courses"."types" && '{B,A}'::types[]})
+    end
+
+    it 'uses bind param instead of raw value' do
+      sql, binds = get_query_with_binds { subject.has_any_types('B', 'A').load }
+      expect(sql).to include('WHERE "courses"."types" && $1::types[]')
+      expect(binds.first.value).to eq(%w[B A])
     end
   end
 end

@@ -4,7 +4,6 @@ module Torque
   module PostgreSQL
     module Attributes
       module Builder
-        # TODO: Use binds instead of quoted values
         class Period
           DIRECT_ACCESS_REGEX = /_?%s_?/
           SUPPORTED_TYPES = %i[daterange tsrange tstzrange].freeze
@@ -19,6 +18,8 @@ module Torque
             tsrange:   :timestamp,
             tstzrange: :timestamp,
           }.freeze
+
+          FN = '::Torque::PostgreSQL::FN'
 
           attr_accessor :klass, :attribute, :options, :type, :default, :current_getter,
             :type_caster, :threshold, :dynamic_threshold, :klass_module, :instance_module
@@ -207,11 +208,11 @@ module Torque
             end
 
             def arel_default_sql
-              @arel_default_sql ||= arel_sql_quote(@default.inspect)
+              @arel_default_sql ||= arel_sql_bind(@default.inspect)
             end
 
-            def arel_sql_quote(value)
-              "::Arel.sql(connection.quote(#{value}))"
+            def arel_sql_bind(value)
+              "#{FN}.bind_with(#{arel_attribute}, #{value})"
             end
 
             # Check how to provide the threshold value
@@ -277,9 +278,9 @@ module Torque
 
             # Create an arel named function
             def arel_named_function(name, *args)
-              result = +"::Arel::Nodes::NamedFunction.new(#{name.to_s.inspect}"
-              result << ', [' << args.join(', ') << ']' if args.present?
-              result << ')'
+              result = +"#{FN}.#{name}"
+              result << '(' << args.join(', ') << ')' if args.present?
+              result
             end
 
             # Create an arel version of +nullif+ function
@@ -317,7 +318,7 @@ module Torque
               [
                 "#{value} = arel_table[#{value}] if #{value}.is_a?(Symbol)",
                 "unless #{value}.respond_to?(:pg_cast)",
-                "  #{value} = ::Arel.sql(connection.quote(#{value}))",
+                "  #{value} = #{FN}.bind_with(#{arel_attribute}, #{value})",
                 ("  #{value} = #{value}.pg_cast(#{cast.inspect})" if cast),
                 'end',
                 condition,
@@ -346,14 +347,14 @@ module Torque
 
             def klass_current
               [
-                "value = #{arel_sql_quote(current_getter)}",
+                "value = #{arel_sql_bind(current_getter)}",
                 "where(#{arel_check_condition(:contains)})",
               ].join("\n")
             end
 
             def klass_not_current
               [
-                "value = #{arel_sql_quote(current_getter)}",
+                "value = #{arel_sql_bind(current_getter)}",
                 "where.not(#{arel_check_condition(:contains)})",
               ].join("\n")
             end
