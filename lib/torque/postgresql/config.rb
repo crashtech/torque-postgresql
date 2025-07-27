@@ -30,10 +30,6 @@ module Torque
       end.to_h
     end
 
-    # When provided, the initializer will expose the function helper on the
-    # module described here
-    config.expose_function_helper_on = nil
-
     # Configure associations features
     config.nested(:associations) do |assoc|
 
@@ -260,6 +256,10 @@ module Torque
 
     # Configure arel additional features
     config.nested(:arel) do |arel|
+
+      # When provided, the initializer will expose the Arel function helper on
+      # the given module
+      config.expose_function_helper_on = nil
 
       # List of Arel INFIX operators that will be made available for using as
       # methods on Arel::Nodes::Node and Arel::Attribute

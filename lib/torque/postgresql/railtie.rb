@@ -19,12 +19,6 @@ module Torque
             ActiveRecord::Base.belongs_to_many_required_by_default =
               torque_config.associations.belongs_to_many_required_by_default
 
-            ## FN Helper
-            if (mod = torque_config.expose_function_helper_on&.to_s)
-              parent, _, name = mod.rpartition('::')
-              parent.constantize.const_set(name, PostgreSQL::FN)
-            end
-
             ## Schemas Enabled Setup
             if (config = torque_config.schemas).enabled
               require_relative 'adapter/schema_overrides'
@@ -113,6 +107,10 @@ module Torque
 
             ## Arel Setup
             PostgreSQL::Arel.build_operations(torque_config.arel.infix_operators)
+            if (mod = torque_config.arel.expose_function_helper_on&.to_s)
+              parent, _, name = mod.rpartition('::')
+              parent.constantize.const_set(name, PostgreSQL::FN)
+            end
 
             # Make sure to load all the types that are handled by this gem on
             # each individual PG connection
