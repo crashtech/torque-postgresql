@@ -109,7 +109,14 @@ module Torque
             PostgreSQL::Arel.build_operations(torque_config.arel.infix_operators)
             if (mod = torque_config.arel.expose_function_helper_on&.to_s)
               parent, _, name = mod.rpartition('::')
-              parent.constantize.const_set(name, PostgreSQL::FN)
+              parent = parent ? parent.constantize : ::Object
+
+              raise ArgumentError, <<~MSG.squish if parent.const_defined?(name)
+                Unable to expose Arel function helper on #{mod} because the constant
+                #{name} is already defined on #{parent}. Please choose a different name.
+              MSG
+
+              parent.const_set(name, PostgreSQL::FN)
             end
 
             # Make sure to load all the types that are handled by this gem on
