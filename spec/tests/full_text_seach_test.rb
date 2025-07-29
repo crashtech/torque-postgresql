@@ -215,11 +215,27 @@ RSpec.describe 'FullTextSearch' do
       expect(result.to_sql).to eql(parts)
     end
 
-    it 'can use regular query mode' do
-      result = Course.full_text_search('test', phrase: false)
+    it 'can use default query mode' do
+      result = Course.full_text_search('test', mode: :default)
       parts = 'SELECT "courses".* FROM "courses"'
       parts << ' WHERE "courses"."search_vector" @@'
       parts << " TO_TSQUERY('english', 'test')"
+      expect(result.to_sql).to eql(parts)
+    end
+
+    it 'can use plain query mode' do
+      result = Course.full_text_search('test', mode: :plain)
+      parts = 'SELECT "courses".* FROM "courses"'
+      parts << ' WHERE "courses"."search_vector" @@'
+      parts << " PLAINTO_TSQUERY('english', 'test')"
+      expect(result.to_sql).to eql(parts)
+    end
+
+    it 'can use web query mode' do
+      result = Course.full_text_search('test', mode: :web)
+      parts = 'SELECT "courses".* FROM "courses"'
+      parts << ' WHERE "courses"."search_vector" @@'
+      parts << " WEBSEARCH_TO_TSQUERY('english', 'test')"
       expect(result.to_sql).to eql(parts)
     end
 
@@ -247,6 +263,18 @@ RSpec.describe 'FullTextSearch' do
       expect(sql).to include("PHRASETO_TSQUERY($1, $2)")
       expect(binds.first.value).to eq('english')
       expect(binds.second.value).to eq('test')
+    end
+
+    it 'raises an error when the language is not found' do
+      expect do
+        Course.full_text_search('test', language: '')
+      end.to raise_error(ArgumentError, /Unable to determine language/)
+    end
+
+    it 'raises an error when the mode is invalid' do
+      expect do
+        Course.full_text_search('test', mode: :invalid)
+      end.to raise_error(ArgumentError, /Invalid mode :invalid for full text search/)
     end
   end
 end

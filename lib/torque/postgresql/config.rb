@@ -290,6 +290,14 @@ module Torque
       # Defines the default language when generating search vector columns
       fts.default_language = 'english'
 
+      # Defines the default mode to be used when generating full text search
+      # queries. It can be one of the following:
+      #   - :default (to_tsquery)
+      #   - :phrase (phraseto_tsquery)
+      #   - :plain (plainto_tsquery)
+      #   - :web (websearch_to_tsquery)
+      fts.default_mode = :phrase
+
       # Defines the default index type to be used when creating search vector.
       # It still requires that the column requests an index
       fts.default_index_type = :gin
@@ -303,7 +311,7 @@ module Torque
       builder.enabled = %i[regexp arel_attribute enumerator_lazy]
 
       # When active, values provided to array attributes will be handled more
-      # efficiently. It will use the +ANY+ operator on a equality check and
+      # friendly. It will use the +ANY+ operator on a equality check and
       # overlaps when the given value is an array
       builder.handle_array_attributes = false
 
