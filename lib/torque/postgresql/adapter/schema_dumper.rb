@@ -70,7 +70,7 @@ module Torque
             # dump foreign keys at the end to make sure all dependent tables exist.
             if @connection.supports_foreign_keys?
               foreign_keys_stream = StringIO.new
-              sorted_tables.each do |tbl|
+              sorted_tables.each do |(tbl, *)|
                 foreign_keys(tbl, foreign_keys_stream)
               end
 
