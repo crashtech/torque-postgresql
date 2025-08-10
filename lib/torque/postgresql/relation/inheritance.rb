@@ -6,14 +6,24 @@ module Torque
       module Inheritance
 
         # :nodoc:
-        def cast_records_value; get_value(:cast_records); end
+        def cast_records_values
+          @values.fetch(:cast_records, FROZEN_EMPTY_ARRAY)
+        end
         # :nodoc:
-        def cast_records_value=(value); set_value(:cast_records, value); end
+        def cast_records_values=(value)
+          assert_modifiable!
+          @values[:cast_records] = value
+        end
 
         # :nodoc:
-        def itself_only_value; get_value(:itself_only); end
+        def itself_only_value
+          @values.fetch(:itself_only, nil)
+        end
         # :nodoc:
-        def itself_only_value=(value); set_value(:itself_only, value); end
+        def itself_only_value=(value)
+          assert_modifiable!
+          @values[:itself_only] = value
+        end
 
         delegate :quote_table_name, :quote_column_name, to: :connection
 
@@ -46,7 +56,7 @@ module Torque
         def cast_records!(*types, **options)
           where!(regclass.pg_cast(:varchar).in(types.map(&:table_name))) if options[:filter]
           self.select_extra_values += [regclass.as(_record_class_attribute.to_s)]
-          self.cast_records_value = (types.present? ? types : model.casted_dependents.values)
+          self.cast_records_values = (types.present? ? types : model.casted_dependents.values)
           self
         end
 
@@ -62,11 +72,11 @@ module Torque
 
           # Build all necessary data for inheritances
           def build_inheritances(arel)
-            return unless self.cast_records_value.present?
+            return if self.cast_records_values.empty?
 
             mergeable = inheritance_mergeable_attributes
 
-            columns = build_inheritances_joins(arel, self.cast_records_value)
+            columns = build_inheritances_joins(arel, self.cast_records_values)
             columns = columns.map do |column, arel_tables|
               next arel_tables.first[column] if arel_tables.size == 1
 
@@ -77,7 +87,7 @@ module Torque
               end
             end
 
-            columns.push(build_auto_caster_marker(arel, self.cast_records_value))
+            columns.push(build_auto_caster_marker(arel, self.cast_records_values))
             self.select_extra_values += columns.flatten if columns.any?
           end
 

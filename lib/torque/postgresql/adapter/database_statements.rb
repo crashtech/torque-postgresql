@@ -154,19 +154,10 @@ module Torque
 
         # Build the query for allowed schemas
         def user_defined_schemas_sql
-          conditions = []
-          conditions << <<-SQL.squish if schemas_blacklist.any?
-            nspname NOT LIKE ALL (ARRAY['#{schemas_blacklist.join("', '")}'])
-          SQL
-
-          conditions << <<-SQL.squish if schemas_whitelist.any?
-            nspname LIKE ANY (ARRAY['#{schemas_whitelist.join("', '")}'])
-          SQL
-
           <<-SQL.squish
             SELECT nspname
             FROM pg_catalog.pg_namespace
-            WHERE 1=1 AND #{conditions.join(' AND ')}
+            WHERE 1=1 AND #{filter_by_schema.join(' AND ')}
             ORDER BY oid
           SQL
         end
@@ -189,6 +180,53 @@ module Torque
                  #{'AND a.attislocal' if @_dump_mode}
                ORDER BY a.attnum
           SQL
+        end
+
+        # Get all possible schema entries that can be created via versioned
+        # commands of the provided type. Mostly for covering removals and not
+        # dump them
+        def list_versioned_commands(type)
+          query =
+            case type
+            when :function
+              <<-SQL.squish
+                SELECT n.nspname AS schema, p.proname AS name
+                FROM pg_catalog.pg_proc p
+                INNER JOIN pg_namespace n ON n.oid = p.pronamespace
+                WHERE 1=1 AND #{filter_by_schema.join(' AND ')};
+              SQL
+            when :type
+              <<-SQL.squish
+                SELECT n.nspname AS schema, t.typname AS name
+                FROM pg_type t
+                INNER JOIN pg_namespace n ON n.oid = t.typnamespace
+                WHERE 1=1 AND t.typtype NOT IN ('e')
+                  AND #{filter_by_schema.join(' AND ')};
+              SQL
+            when :view
+              <<-SQL.squish
+                SELECT n.nspname AS schema, c.relname AS name
+                FROM pg_class c
+                INNER JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE 1=1 AND c.relkind IN ('v', 'm')
+                  AND #{filter_by_schema.join(' AND ')};
+              SQL
+            end
+
+          select_rows(query, 'SCHEMA')
+        end
+
+        # Build the condition for filtering by schema
+        def filter_by_schema
+          conditions = []
+          conditions << <<-SQL.squish if schemas_blacklist.any?
+            nspname NOT LIKE ALL (ARRAY['#{schemas_blacklist.join("', '")}'])
+          SQL
+
+          conditions << <<-SQL.squish if schemas_whitelist.any?
+            nspname LIKE ANY (ARRAY['#{schemas_whitelist.join("', '")}'])
+          SQL
+          conditions
         end
 
       end

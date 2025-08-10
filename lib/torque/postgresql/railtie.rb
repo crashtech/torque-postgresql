@@ -19,6 +19,17 @@ module Torque
             ActiveRecord::Base.belongs_to_many_required_by_default =
               torque_config.associations.belongs_to_many_required_by_default
 
+            ## General features
+            if config.join_series
+              require_relative 'relation/join_series'
+              Relation.include(Relation::JoinSeries)
+            end
+
+            if config.buckets
+              require_relative 'relation/buckets'
+              Relation.include(Relation::Buckets)
+            end
+
             ## Schemas Enabled Setup
             if (config = torque_config.schemas).enabled
               require_relative 'adapter/schema_overrides'
@@ -117,6 +128,13 @@ module Torque
               MSG
 
               parent.const_set(name, PostgreSQL::FN)
+            end
+
+            ## Versioned Commands Setup
+            if (config = torque_config.versioned_commands).enabled
+              require_relative 'versioned_commands'
+
+              ActiveRecord::Schema::Definition.include(Adapter::Definition)
             end
 
             # Make sure to load all the types that are handled by this gem on

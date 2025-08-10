@@ -137,6 +137,51 @@ module Torque
           super + [:schema, :inherits]
         end
 
+        # Add proper support for schema load when using versioned commands
+        def assume_migrated_upto_version(version)
+          return super unless PostgreSQL.config.versioned_commands.enabled
+          return super if (commands = pool.migration_context.migration_commands).empty?
+
+          version = version.to_i
+          migration_context = pool.migration_context
+          migrated = migration_context.get_all_versions
+          versions = migration_context.migrations.map(&:version)
+
+          inserting = (versions - migrated).select { |v| v < version }
+          inserting << version unless migrated.include?(version)
+          return if inserting.empty?
+
+          duplicated = inserting.tally.filter_map { |v, count| v if count > 1 }
+          raise <<~MSG.squish if duplicated.present?
+            Duplicate migration #{duplicated.first}.
+            Please renumber your migrations to resolve the conflict.
+          MSG
+
+          VersionedCommands::SchemaTable.new(pool).create_table
+          execute insert_versions_sql(inserting)
+        end
+
+        # Add proper support for schema load when using versioned commands
+        def insert_versions_sql(versions)
+          return super unless PostgreSQL.config.versioned_commands.enabled
+
+          commands = pool.migration_context.migration_commands.select do |migration|
+            versions.include?(migration.version)
+          end
+
+          return super if commands.empty?
+
+          table = quote_table_name(VersionedCommands::SchemaTable.new(pool).table_name)
+
+          sql = super(versions - commands.map(&:version))
+          sql << "\nINSERT INTO #{table} (version, type, object_name) VALUES\n"
+          sql << commands.map do |m|
+            +"(#{quote(m.version)}, #{quote(m.type)}, #{quote(m.object_name)})"
+          end.join(",\n")
+          sql << ";"
+          sql
+        end
+
         private
 
           # Remove the schema from the sequence name

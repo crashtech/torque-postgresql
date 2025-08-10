@@ -25,6 +25,10 @@ module Torque
         end
 
         ## TORQUE VISITORS
+        def visit_Torque_PostgreSQL_Arel_Nodes_Ref(o, collector)
+          collector << quote_table_name(o.expr)
+        end
+
         # Allow casting any node
         def visit_Torque_PostgreSQL_Arel_Nodes_Cast(o, collector)
           visit(o.left, collector) << '::' << o.right

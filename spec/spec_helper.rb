@@ -4,7 +4,7 @@ require 'factory_bot'
 require 'dotenv'
 require 'faker'
 require 'rspec'
-require 'byebug'
+require 'pry'
 
 Dotenv.load
 
