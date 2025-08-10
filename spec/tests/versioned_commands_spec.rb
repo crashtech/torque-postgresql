@@ -263,6 +263,15 @@ RSpec.describe 'VersionedCommands' do
           expect { base.validate!(:view, content, 'test') }.not_to raise_error
         end
 
+        it 'supports materialized views' do
+          content = <<~SQL
+            DROP MATERIALIZED VIEW IF EXISTS test;
+            CREATE MATERIALIZED VIEW test AS;
+          SQL
+
+          expect { base.validate!(:view, content, 'test') }.not_to raise_error
+        end
+
         it 'supports name with schema' do
           content = <<~SQL
             CREATE OR REPLACE VIEW internal.test AS;

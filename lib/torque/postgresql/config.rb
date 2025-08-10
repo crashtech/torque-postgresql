@@ -336,9 +336,9 @@ module Torque
     config.nested(:versioned_commands) do |vs|
 
       # This is a feature that developers must explicitly opt-in. It is designed
-      # in a way that prevents large impact on Rails' original migrations
-      # behavior. But, it is still a feature that may not be needed by everyone,
-      # and some may complain about the additional schema table which also uses
+      # in a way that prevents a large impact on Rails' original migrations
+      # behavior. But, it is still a feature that everyone may not need, and
+      # some may complain about the additional schema table, which also uses
       # inheritance
       vs.enabled = false
 

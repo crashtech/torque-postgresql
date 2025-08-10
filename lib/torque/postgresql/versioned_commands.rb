@@ -121,7 +121,7 @@ module Torque
           def validate_view!(content, name)
             result = content.scan(Regexp.new([
               '^\s*CREATE\s+(OR\s+REPLACE)?\s*',
-              '(?:(?:TEMP|TEMPORARY|MATERIALIZED)\s+)?',
+              '((?:TEMP|TEMPORARY|MATERIALIZED)\s+)?',
               '(?:RECURSIVE\s+)?',
               "VIEW\\s+#{NAME_MATCH}",
             ].join, 'mi'))
@@ -134,10 +134,21 @@ module Torque
               More than one view definition found.
             MSG
 
-            with_replace, view_name = result.first
-            raise ArgumentError, <<~MSG.squish if with_replace.blank?
-              'OR REPLACE' is required for proper migration support.
-            MSG
+            with_replace, opt, view_name = result.first
+            if opt&.strip == 'MATERIALIZED'
+              raise ArgumentError, <<~MSG.squish if with_replace.present?
+                Materialized view does not support 'OR REPLACE'.
+              MSG
+
+              with_drop = "DROP MATERIALIZED VIEW IF EXISTS #{view_name};"
+              raise ArgumentError, <<~MSG.squish unless content.include?(with_drop)
+                'DROP MATERIALIZED VIEW IF EXISTS' is required for proper migration support.
+              MSG
+            else
+              raise ArgumentError, <<~MSG.squish if with_replace.blank?
+                'OR REPLACE' is required for proper migration support.
+              MSG
+            end
 
             view_name = view_name.downcase.sub('.', '_')
             raise ArgumentError, <<~MSG.squish if view_name != name.downcase

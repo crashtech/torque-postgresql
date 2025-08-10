@@ -20,12 +20,12 @@ module Torque
               torque_config.associations.belongs_to_many_required_by_default
 
             ## General features
-            if config.join_series
+            if torque_config.join_series
               require_relative 'relation/join_series'
               Relation.include(Relation::JoinSeries)
             end
 
-            if config.buckets
+            if torque_config.buckets
               require_relative 'relation/buckets'
               Relation.include(Relation::Buckets)
             end
