@@ -2,6 +2,5 @@ source 'https://rubygems.org'
 
 gem 'rails', '~> 8.0', '< 8.1'
 gem 'pg', '~> 1.4.0'
-gem "byebug"
 
 gemspec path: "../"
