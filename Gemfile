@@ -11,7 +11,7 @@ gemspec
 # your gem to rubygems.org.
 
 # To use a debugger
-gem 'pry'
+gem 'debug'
 
 # Optional dependencies
 gem 'annotate'

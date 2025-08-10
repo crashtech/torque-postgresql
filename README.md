@@ -45,7 +45,6 @@ gem install torque-postgresql
 These are the currently available features:
 
 * [Configuring](https://github.com/crashtech/torque-postgresql/wiki/Configuring)
-* [Functions](https://github.com/crashtech/torque-postgresql/wiki/Functions)
 
 ## Data types
 
