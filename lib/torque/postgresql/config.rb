@@ -22,6 +22,12 @@ module Torque
     # same configuration is set to true
     config.eager_load = false
 
+    # Add support for joining any query/association with a generated series
+    config.join_series = true
+
+    # Add support for querying and calculating histogram buckets
+    config.buckets = true
+
     # Set a list of irregular model name when associated with table names
     config.irregular_models = {}
     def config.irregular_models=(hash)
@@ -323,6 +329,26 @@ module Torque
       # entries we try to pull so we don't cause a timeout or a long wait
       # iteration
       builder.lazy_limit = 2_000
+
+    end
+
+    # Configure versioned commands features
+    config.nested(:versioned_commands) do |vs|
+
+      # This is a feature that developers must explicitly opt-in. It is designed
+      # in a way that prevents a large impact on Rails' original migrations
+      # behavior. But, it is still a feature that everyone may not need, and
+      # some may complain about the additional schema table, which also uses
+      # inheritance
+      vs.enabled = false
+
+      # Define the list of commands that are going to be versioned by this
+      # method
+      vs.types = %i[function type view]
+
+      # The name of the table that will inherit from +schema_migrations+ and
+      # store the list of versioned commands that have been executed
+      vs.table_name = 'schema_versioned_commands'
 
     end
 

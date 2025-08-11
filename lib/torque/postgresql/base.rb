@@ -17,7 +17,8 @@ module Torque
       end
 
       class_methods do
-        delegate :distinct_on, :with, :itself_only, :cast_records, to: :all
+        delegate :distinct_on, :with, :itself_only, :cast_records, :join_series,
+          :buckets, to: :all
 
         # Make sure that table name is an instance of TableName class
         def reset_table_name

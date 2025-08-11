@@ -6,9 +6,14 @@ module Torque
       module AuxiliaryStatement
 
         # :nodoc:
-        def auxiliary_statements_values; get_value(:auxiliary_statements); end
+        def auxiliary_statements_values
+          @values.fetch(:auxiliary_statements, FROZEN_EMPTY_ARRAY)
+        end
         # :nodoc:
-        def auxiliary_statements_values=(value); set_value(:auxiliary_statements, value); end
+        def auxiliary_statements_values=(value)
+          assert_modifiable!
+          @values[:auxiliary_statements] = value
+        end
 
         # Set use of an auxiliary statement
         def with(*args, **settings)

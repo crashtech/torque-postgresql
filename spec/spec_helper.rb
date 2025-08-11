@@ -4,7 +4,12 @@ require 'factory_bot'
 require 'dotenv'
 require 'faker'
 require 'rspec'
-require 'byebug'
+
+begin
+  require 'debug/prelude'
+rescue LoadError
+  # No debugger available, skip
+end
 
 Dotenv.load
 

@@ -13,16 +13,25 @@ module Torque
       include DistinctOn
       include Inheritance
 
-      SINGLE_VALUE_METHODS = [:itself_only]
-      MULTI_VALUE_METHODS = [:distinct_on, :auxiliary_statements, :cast_records, :select_extra]
+      SINGLE_VALUE_METHODS = %i[itself_only buckets]
+      MULTI_VALUE_METHODS = %i[
+        select_extra distinct_on auxiliary_statements cast_records
+      ]
+
       VALUE_METHODS = SINGLE_VALUE_METHODS + MULTI_VALUE_METHODS
+      FROZEN_EMPTY_ARRAY = ::ActiveRecord::QueryMethods::FROZEN_EMPTY_ARRAY
 
       ARColumn = ::ActiveRecord::ConnectionAdapters::PostgreSQL::Column
 
       # :nodoc:
-      def select_extra_values; get_value(:select_extra); end
+      def select_extra_values
+        @values.fetch(:select_extra, FROZEN_EMPTY_ARRAY)
+      end
       # :nodoc:
-      def select_extra_values=(value); set_value(:select_extra, value); end
+      def select_extra_values=(value)
+        assert_modifiable!
+        @values[:select_extra] = value
+      end
 
       # Resolve column name when calculating models, allowing the column name to
       # be more complex while keeping the query selection quality
@@ -90,21 +99,6 @@ module Torque
           arel
         end
 
-        # Compatibility method with 5.0
-        unless ActiveRecord::Relation.method_defined?(:get_value)
-          def get_value(name)
-            @values[name] || ActiveRecord::QueryMethods::FROZEN_EMPTY_ARRAY
-          end
-        end
-
-        # Compatibility method with 5.0
-        unless ActiveRecord::Relation.method_defined?(:set_value)
-          def set_value(name, value)
-            assert_mutability! if respond_to?(:assert_mutability!)
-            @values[name] = value
-          end
-        end
-
       class_methods do
         # Easy and storable way to access the name used to get the record table
         # name when using inheritance tables
@@ -145,15 +139,11 @@ module Torque
     ActiveRecord::Relation.include Relation
     ActiveRecord::Relation.prepend Relation::Initializer
 
-    warn_level = $VERBOSE
-    $VERBOSE = nil
+    ActiveRecord::Relation::SINGLE_VALUE_METHODS.concat(Relation::SINGLE_VALUE_METHODS)
+    ActiveRecord::Relation::MULTI_VALUE_METHODS.concat(Relation::MULTI_VALUE_METHODS)
+    ActiveRecord::Relation::VALUE_METHODS.concat(Relation::VALUE_METHODS)
+    ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES.merge(%i[cast_records itself_only
+      distinct_on auxiliary_statements buckets])
 
-    ActiveRecord::Relation::SINGLE_VALUE_METHODS       += Relation::SINGLE_VALUE_METHODS
-    ActiveRecord::Relation::MULTI_VALUE_METHODS        += Relation::MULTI_VALUE_METHODS
-    ActiveRecord::Relation::VALUE_METHODS              += Relation::VALUE_METHODS
-    ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES += %i[cast_records itself_only
-      distinct_on auxiliary_statements]
-
-    $VERBOSE = warn_level
   end
 end

@@ -19,6 +19,20 @@ module Torque
           end
         end
 
+        class Ref < ::Arel::Nodes::Unary
+          attr_reader :reference
+          alias to_s expr
+
+          def initialize(expr, reference = nil)
+            @reference = reference
+            super expr
+          end
+
+          def as(other)
+            @reference&.as(other) || super
+          end
+        end
+
       end
 
       ::Arel.define_singleton_method(:array) do |*values, cast: nil|

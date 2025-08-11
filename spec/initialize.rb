@@ -16,6 +16,10 @@ require_relative '../lib/torque/postgresql/attributes/period'
 require_relative '../lib/torque/postgresql/attributes/full_text_search'
 
 require_relative '../lib/torque/postgresql/relation/auxiliary_statement'
+require_relative '../lib/torque/postgresql/relation/join_series'
+require_relative '../lib/torque/postgresql/relation/buckets'
+
+require_relative '../lib/torque/postgresql/versioned_commands'
 
 module Torque
   module PostgreSQL
@@ -27,6 +31,11 @@ module Torque
     Attributes::FullTextSearch.include_on(ActiveRecord::Base)
 
     Relation.include(Relation::AuxiliaryStatement)
+    Relation.include(Relation::JoinSeries)
+    Relation.include(Relation::Buckets)
+
+    config.versioned_commands.enabled = true
+    ActiveRecord::Schema::Definition.include(Adapter::Definition)
 
     ::Object.const_set('TorqueCTE', AuxiliaryStatement)
     ::Object.const_set('TorqueRecursiveCTE', AuxiliaryStatement::Recursive)

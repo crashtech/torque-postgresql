@@ -1,0 +1,3 @@
+<%= "DROP MATERIALIZED VIEW IF EXISTS #{name};\n" if options[:materialized] %>CREATE <%= options[:materialized] ? 'MATERIALIZED' : 'OR REPLACE' %> VIEW <%= name %> AS (
+  -- View body goes here
+);

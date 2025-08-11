@@ -25,6 +25,14 @@ module Torque
           bind(arel_attribute.name, value, arel_attribute.type_caster)
         end
 
+        # A facilitator to create a bind param with a specific type
+        def bind_type(value, type = nil, name: 'value', cast: nil)
+          type ||= ruby_type_to_model_type(value)
+          type = ActiveModel::Type.lookup(type) if type.is_a?(Symbol)
+          result = bind(name, value, type)
+          cast ? result.pg_cast(cast) : result
+        end
+
         # A facilitator to create an infix operation
         def infix(op, left, right)
           ::Arel::Nodes::InfixOperation.new(op, left, right)
@@ -36,6 +44,12 @@ module Torque
         def concat(*args)
           return args.first if args.one?
           args.reduce { |left, right| infix(:"||", left, right) }
+        end
+
+        # A simple helper to trick Rails into producing the right SQL for
+        # grouping operations
+        def group_by(arel, name)
+          Arel::Nodes::Ref.new(name.to_s, arel)
         end
 
         # As of now, this indicates that it supports any direct calls, since
@@ -52,6 +66,25 @@ module Torque
         def method_missing(name, *args, &block)
           ::Arel::Nodes::NamedFunction.new(name.to_s.upcase, args)
         end
+
+        private
+
+          def ruby_type_to_model_type(value)
+            case value
+            when Integer then :integer
+            when Float then :float
+            when String then :string
+            when Time, ActiveSupport::TimeWithZone then :time
+            when TrueClass, FalseClass then :boolean
+            when DateTime then :datetime
+            when Date then :date
+            when BigDecimal then :decimal
+            when ActiveSupport::Duration
+              Adapter::OID::Interval.new
+            else
+              raise ArgumentError, "Cannot infer type from value: #{value.inspect}."
+            end
+          end
 
       end
     end

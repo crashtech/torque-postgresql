@@ -70,6 +70,9 @@ These are the currently available features:
 * [Multiple Schemas](https://github.com/crashtech/torque-postgresql/wiki/Multiple-Schemas)
 * [Predicate Builder](https://github.com/crashtech/torque-postgresql/wiki/Predicate-Builder)
 * [Full‐Text Search](https://github.com/crashtech/torque-postgresql/wiki/Full‐Text-Search)
+* [Join Series](https://github.com/crashtech/torque-postgresql/wiki/Join-Series)
+* [Buckets](https://github.com/crashtech/torque-postgresql/wiki/Buckets)
+* [Versioned Commands (Views, Functions, Types)](https://github.com/crashtech/torque-postgresql/wiki/Versioned-Commands)
 
 # How to Contribute
 

@@ -45,7 +45,10 @@ RSpec.describe 'Schema' do
     context 'reverting' do
       let(:migration) { ActiveRecord::Migration::Current.new('Testing') }
 
-      before { connection.create_schema(:legacy) }
+      before do
+        allow_any_instance_of(ActiveRecord::Migration).to receive(:puts) # Disable messages
+        connection.create_schema(:legacy)
+      end
 
       it 'reverts the creation of a schema' do
         expect(connection.schema_exists?(:legacy, filtered: false)).to be_truthy

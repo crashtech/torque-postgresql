@@ -6,9 +6,14 @@ module Torque
       module DistinctOn
 
         # :nodoc:
-        def distinct_on_values; get_value(:distinct_on); end
+        def distinct_on_values
+          @values.fetch(:distinct_on, FROZEN_EMPTY_ARRAY)
+        end
         # :nodoc:
-        def distinct_on_values=(value); set_value(:distinct_on, value); end
+        def distinct_on_values=(value)
+          assert_modifiable!
+          @values[:distinct_on] = value
+        end
 
         # Specifies whether the records should be unique or not by a given set
         # of fields. For example:

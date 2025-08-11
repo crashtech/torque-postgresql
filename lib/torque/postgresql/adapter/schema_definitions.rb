@@ -49,6 +49,28 @@ module Torque
           end
       end
 
+      # Add exclusive support for versioned commands when importing from schema
+      # dump. This ensures that such methods are not available in regular
+      # migrations.
+      module Definition
+
+        def create_function(name, version:, dir: pool.migrations_paths)
+          return super unless VersionedCommands.valid_type?(:function)
+          execute VersionedCommands.fetch_command(dir, :function, name, version)
+        end
+
+        def create_type(name, version:, dir: pool.migrations_paths)
+          return super unless VersionedCommands.valid_type?(:type)
+          execute VersionedCommands.fetch_command(dir, :type, name, version)
+        end
+
+        def create_view(name, version:, dir: pool.migrations_paths)
+          return super unless VersionedCommands.valid_type?(:view)
+          execute VersionedCommands.fetch_command(dir, :view, name, version)
+        end
+
+      end
+
       ActiveRecord::ConnectionAdapters::PostgreSQL::Table.include ColumnMethods
       ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition.include TableDefinition
     end

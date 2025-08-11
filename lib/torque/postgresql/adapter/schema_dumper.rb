@@ -12,6 +12,15 @@ module Torque
           (?:\s*,\s*'([A-D])')?
         /ix
 
+        def initialize(*)
+          super
+
+          if with_versioned_commands?
+            @versioned_commands = VersionedCommands::SchemaTable.new(@connection.pool)
+            @ignore_tables << @versioned_commands.table_name
+          end
+        end
+
         def dump(stream) # :nodoc:
           @connection.dump_mode!
           super
@@ -22,6 +31,13 @@ module Torque
 
         private
 
+          def types(stream) # :nodoc:
+            super
+
+            versioned_commands(stream, :type)
+            versioned_commands(stream, :function)
+          end
+
           def tables(stream) # :nodoc:
             around_tables(stream) { dump_tables(stream) }
           end
@@ -30,6 +46,7 @@ module Torque
             functions(stream) if fx_functions_position == :beginning
 
             yield
+            versioned_commands(stream, :view, true)
 
             functions(stream) if fx_functions_position == :end
             triggers(stream) if defined?(::Fx::SchemaDumper::Trigger)
@@ -145,6 +162,35 @@ module Torque
 
             return columns.map(&:to_sym).inspect if columns
             settings.to_h.transform_values(&:inspect)
+          end
+
+          # Simply add all versioned commands to the stream
+          def versioned_commands(stream, type, add_newline = false)
+            return unless with_versioned_commands?
+
+            list = @versioned_commands.versions_of(type.to_s)
+            return if list.empty?
+
+            existing = list_existing_versioned_commands(type)
+
+            stream.puts if add_newline
+            stream.puts "  # These are #{type.to_s.pluralize} managed by versioned commands"
+            list.each do |(name, version)|
+              next if existing.exclude?(name)
+
+              stream.puts "  create_#{type} \"#{name}\", version: #{version}"
+            end
+            stream.puts unless add_newline
+          end
+
+          def list_existing_versioned_commands(type)
+            @connection.list_versioned_commands(type).each_with_object(Set.new) do |entry, set|
+              set << (entry.first == 'public' ? entry.last : entry.join('_'))
+            end
+          end
+
+          def with_versioned_commands?
+            PostgreSQL.config.versioned_commands.enabled
           end
 
           def fx_functions_position
