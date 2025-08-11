@@ -28,14 +28,14 @@ module Torque
         end
 
         # Like #buckets, but modifies relation in place.
-        def buckets!(attribute, values, size: nil, cast: nil, as: nil)
+        def buckets!(attribute, values, count: nil, cast: nil, as: nil)
           raise ArgumentError, <<~MSG.squish if !values.is_a?(Array) && !values.is_a?(Range)
             Buckets must be an array or a range.
           MSG
 
-          size ||= 1 if values.is_a?(Range)
+          count ||= 1 if values.is_a?(Range)
           attribute = arel_table[attribute] unless ::Arel.arel_node?(attribute)
-          self.buckets_value = [attribute, values, size, cast, as]
+          self.buckets_value = [attribute, values, count, cast, as]
           self
         end
 
@@ -80,14 +80,14 @@ module Torque
 
           # Build the Arel node for the buckets function
           def build_buckets_node
-            attribute, values, size, cast, * = buckets_value
+            attribute, values, count, cast, * = buckets_value
 
             if values.is_a?(Range)
               FN.width_bucket(
                 attribute,
                 FN.bind_type(values.begin, name: 'bucket_start', cast: 'numeric'),
                 FN.bind_type(values.end, name: 'bucket_end', cast: 'numeric'),
-                FN.bind_type(size, name: 'bucket_size', cast: 'integer'),
+                FN.bind_type(count, name: 'bucket_count', cast: 'integer'),
               )
             else
               FN.width_bucket(attribute, ::Arel.array(values, cast: cast))

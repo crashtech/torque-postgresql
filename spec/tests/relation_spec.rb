@@ -216,7 +216,7 @@ RSpec.describe 'Relation', type: :helper do
     let(:source) { User.all }
 
     it 'produces the right query' do
-      query = source.buckets(:age, 0..50, size: 5)
+      query = source.buckets(:age, 0..50, count: 5)
       sql, binds = get_query_with_binds { query.load }
 
       expect(sql).to include(<<~SQL.squish)
@@ -227,7 +227,7 @@ RSpec.describe 'Relation', type: :helper do
 
     it 'can query records by buckets' do
       list = [create(:user, age: 5), create(:user, age: 5), create(:user, age: 15)]
-      query = source.buckets(:age, 0..50, size: 5).records
+      query = source.buckets(:age, 0..50, count: 5).records
 
       expect(query).to be_a(Hash)
       expect(query.keys).to match_array([0...10, 10...20])
@@ -250,7 +250,7 @@ RSpec.describe 'Relation', type: :helper do
 
     it 'works with calculations' do
       list = [create(:user, age: 5), create(:user, age: 5), create(:user, age: 15)]
-      query = source.buckets(:age, 0..50, size: 5).count
+      query = source.buckets(:age, 0..50, count: 5).count
 
       expect(query).to be_a(Hash)
       expect(query.keys).to match_array([0...10, 10...20])
@@ -260,7 +260,7 @@ RSpec.describe 'Relation', type: :helper do
 
     it 'works with other types of calculations' do
       list = [create(:user, age: 5), create(:user, age: 5), create(:user, age: 15)]
-      query = source.buckets(:age, 0..50, size: 5).sum(:age)
+      query = source.buckets(:age, 0..50, count: 5).sum(:age)
 
       expect(query).to be_a(Hash)
       expect(query.keys).to match_array([0...10, 10...20])
@@ -274,7 +274,7 @@ RSpec.describe 'Relation', type: :helper do
       records << create(:comment, user: list[1], content: 'World')
       records << create(:comment, user: list[2], content: 'Test')
 
-      query = Comment.joins(:user).merge(source.buckets(:age, 0..50, size: 5)).records
+      query = Comment.joins(:user).merge(source.buckets(:age, 0..50, count: 5)).records
 
       expect(query).to be_a(Hash)
       expect(query.keys).to match_array([0...10, 10...20])
