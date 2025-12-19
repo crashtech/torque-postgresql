@@ -35,7 +35,7 @@ module Torque
 
           # Merge auxiliary statements activated by +with+
           def merge_auxiliary_statements
-            return unless relation.is_a?(Relation::AuxiliaryStatement)
+            return unless defined?(Relation::AuxiliaryStatement) && relation.is_a?(Relation::AuxiliaryStatement)
             return if other.auxiliary_statements_values.blank?
 
             current = relation.auxiliary_statements_values.map{ |cte| cte.class }
@@ -60,7 +60,7 @@ module Torque
 
           # Merge settings related to buckets
           def merge_buckets
-            return unless relation.is_a?(Relation::Buckets)
+            return unless defined?(Relation::Buckets) && relation.is_a?(Relation::Buckets)
             return if other.buckets_value.blank?
 
             relation.buckets_value = other.buckets_value

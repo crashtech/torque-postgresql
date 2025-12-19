@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-version = 6
+version = 7
 
 return if ActiveRecord::Migrator.current_version == version
 ActiveRecord::Schema.define(version: version) do
@@ -99,6 +99,7 @@ ActiveRecord::Schema.define(version: version) do
     t.enum            "types", enum_type: :types, array: true
     t.search_language "lang", null: false, default: 'english'
     t.search_vector   "search_vector", columns: :title, language: :lang
+    t.tsvector        "unhandled"
     t.datetime        "created_at", null: false
     t.datetime        "updated_at", null: false
   end

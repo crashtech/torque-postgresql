@@ -131,8 +131,8 @@ module Torque
 
           # Parse the search vector operation into a readable format
           def parse_search_vector_options(column, options)
-            settings = options[:as].scan(SEARCH_VECTOR_SCANNER)
-            return if settings.empty?
+            settings = options[:as]&.scan(SEARCH_VECTOR_SCANNER)
+            return if settings.blank?
 
             languages = settings.map(&:shift).uniq
             return if languages.many?

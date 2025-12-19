@@ -7,7 +7,7 @@ module Torque
 
         # Create the proper arel join
         class << self
-          def build(relation, range, with: nil, as: :series, step: nil, time_zone: nil, mode: :inner, &block)
+          def build(relation, range, with: nil, as: :series, step: nil, time_zone: nil, cast: nil, mode: :inner, &block)
             validate_build!(range, step)
 
             args = [bind_value(range.begin), bind_value(range.end)]
@@ -16,7 +16,7 @@ module Torque
 
             result = Arel::Nodes::Ref.new(as.to_s)
             func = FN.generate_series(*args).as(as.to_s)
-            condition = build_join_on(result, relation, with, &block)
+            condition = build_join_on(result, relation, with, cast, &block)
             arel_join(mode).new(func, func.create_on(condition))
           end
 
@@ -57,8 +57,7 @@ module Torque
               when DateTime
                 FN.bind_type(value, :datetime, name: 'series', cast: 'timestamp')
               when ActiveSupport::Duration
-                type = Adapter::OID::Interval.new
-                FN.bind_type(value, type, name: 'series', cast: 'interval')
+                FN.bind_type(value.iso8601, :string, name: 'series', cast: 'interval')
               when Date then bind_value(value.to_time(:utc))
               when ::Arel::Attributes::Attribute then value
               else
@@ -81,14 +80,17 @@ module Torque
             end
 
             # Build the join on clause
-            def build_join_on(result, relation, with)
+            def build_join_on(result, relation, with, cast)
               raise ArgumentError, <<~MSG.squish if with.nil? && !block_given?
                 missing keyword: :with
               MSG
 
               return yield(result, relation.arel_table) if block_given?
 
-              result.eq(with.is_a?(Symbol) ? relation.arel_table[with.to_s] : with)
+              with = relation.arel_table[with.to_s] if with.is_a?(Symbol)
+              with = with.pg_cast(cast) if cast && with.respond_to?(:pg_cast)
+
+              (cast ? result.pg_cast(cast) : result).eq(with)
             end
         end
 
