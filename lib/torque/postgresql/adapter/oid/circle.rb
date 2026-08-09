@@ -2,7 +2,7 @@
 
 module Torque
   module PostgreSQL
-    class Circle < Struct.new(:x, :y, :r)
+    class Circle < ::Struct.new(:x, :y, :r)
       alias radius r
       alias radius= r=
 

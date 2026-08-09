@@ -2,7 +2,7 @@
 
 module Torque
   module PostgreSQL
-    class Segment < Struct.new(:point0, :point1)
+    class Segment < ::Struct.new(:point0, :point1)
       def x1=(value)
         self.point0 = new_point(value, y1)
       end

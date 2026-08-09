@@ -9,10 +9,14 @@ require_relative '../lib/torque/postgresql/adapter/oid/enum_set'
 require_relative '../lib/torque/postgresql/adapter/oid/interval'
 require_relative '../lib/torque/postgresql/adapter/oid/line'
 require_relative '../lib/torque/postgresql/adapter/oid/segment'
+require_relative '../lib/torque/postgresql/adapter/oid/struct'
+require_relative '../lib/torque/postgresql/adapter/oid/struct_list'
+require_relative '../lib/torque/postgresql/adapter/oid/struct_set'
 
 require_relative '../lib/torque/postgresql/attributes/enum'
 require_relative '../lib/torque/postgresql/attributes/enum_set'
 require_relative '../lib/torque/postgresql/attributes/period'
+require_relative '../lib/torque/postgresql/attributes/struct'
 require_relative '../lib/torque/postgresql/attributes/full_text_search'
 
 require_relative '../lib/torque/postgresql/relation/auxiliary_statement'
@@ -28,6 +32,7 @@ module Torque
     Attributes::Enum.include_on(ActiveRecord::Base)
     Attributes::EnumSet.include_on(ActiveRecord::Base)
     Attributes::Period.include_on(ActiveRecord::Base)
+    Attributes::Struct.include_on(ActiveRecord::Base)
     Attributes::FullTextSearch.include_on(ActiveRecord::Base)
 
     Relation.include(Relation::AuxiliaryStatement)

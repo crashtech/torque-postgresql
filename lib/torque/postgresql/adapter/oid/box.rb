@@ -2,7 +2,7 @@
 
 module Torque
   module PostgreSQL
-    class Box < Struct.new(:x1, :y1, :x2, :y2)
+    class Box < ::Struct.new(:x1, :y1, :x2, :y2)
       def points
         klass = Torque::PostgreSQL.config.geometry.point_class
         [

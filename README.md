@@ -56,6 +56,7 @@ These are the currently available features:
 * [Interval](https://github.com/crashtech/torque-postgresql/wiki/Interval)
 * [Line](https://github.com/crashtech/torque-postgresql/wiki/Line)
 * [Segment](https://github.com/crashtech/torque-postgresql/wiki/Segment)
+* [Struct](https://github.com/crashtech/torque-postgresql/wiki/Struct)
 
 ## Querying
 

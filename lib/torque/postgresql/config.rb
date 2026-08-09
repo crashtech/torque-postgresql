@@ -179,6 +179,22 @@ module Torque
 
     end
 
+    # Configure struct features
+    config.nested(:struct) do |struct|
+
+      # Enables the JSON(B) columns backed by ActiveModel classes handler
+      struct.enabled = true
+
+      # The name of the method to be used on any ActiveRecord::Base to
+      # initialize model-based struct features
+      struct.base_method = :struct_for
+
+      # Whether struct classes reject properties that they don't declare
+      # by default
+      struct.default_strict = true
+
+    end
+
     # Configure period features
     config.nested(:period) do |period|
 

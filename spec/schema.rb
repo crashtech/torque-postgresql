@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-version = 7
+version = 10
 
 return if ActiveRecord::Migrator.current_version == version
 ActiveRecord::Schema.define(version: version) do
@@ -63,6 +63,14 @@ ActiveRecord::Schema.define(version: version) do
     # t.column   "pieces", :int4multirange
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "profiles", force: :cascade do |t|
+    t.string "name"
+    t.jsonb  "settings"
+    t.json   "bio"
+    t.jsonb  "previews"
+    t.jsonb  "snippets", array: true
   end
 
   create_table "authors", force: :cascade do |t|

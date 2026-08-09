@@ -85,6 +85,17 @@ module Torque
               end
             end
 
+            ## Struct Enabled Setup
+            if (config = torque_config.struct).enabled
+              require_relative 'adapter/oid/struct'
+              require_relative 'adapter/oid/struct_list'
+              require_relative 'adapter/oid/struct_set'
+
+              require_relative 'attributes/struct'
+
+              Attributes::Struct.include_on(ActiveRecord::Base)
+            end
+
             ## Geometry Enabled Setup
             if (config = torque_config.geometry).enabled
               require_relative 'adapter/oid/box'
