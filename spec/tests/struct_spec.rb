@@ -291,6 +291,11 @@ RSpec.describe 'Struct' do
       expect(subject.bio.headline).to be_nil
     end
 
+    it 'reads the instance of a null column as blank' do
+      expect(subject.bio).to be_empty
+      expect(subject.bio).to be_blank
+    end
+
     it 'keeps the column null when the instance is never changed' do
       subject.bio.headline
       subject.update!(name: 'b')
@@ -456,11 +461,30 @@ RSpec.describe 'Struct' do
     end
   end
 
+  context 'on emptiness' do
+    subject { Profile.new(name: 'a') }
+
+    it 'is empty while none of its properties were written to' do
+      expect(subject.bio).to be_empty
+      expect(subject.bio).to be_blank
+
+      subject.bio.headline = 'a'
+      expect(subject.bio).not_to be_empty
+      expect(subject.bio).to be_present
+    end
+
+    it 'is not empty when the class declares defaults' do
+      expect(subject.settings).not_to be_empty
+      expect(subject.settings).to be_present
+    end
+  end
+
   context 'on validation' do
     subject { Profile.new(name: 'a') }
 
     it 'skips validation while nothing is stored' do
-      expect(subject.bio).to be_present
+      expect(subject.bio).to be_a(Profile::Bio)
+      expect(subject.bio).to be_empty
       expect(subject).to be_valid
     end
 
@@ -660,6 +684,287 @@ RSpec.describe 'Struct' do
       instance.theme = 'dark'
       expect(instance.theme_changed?).to be_truthy
       expect(instance.changes).to include('theme')
+    end
+
+    it 'reports a property that was never written as changed from nil' do
+      instance = settings_klass.new
+      instance.tags = %w[a]
+
+      expect(instance.changes['tags']).to be_eql([nil, %w[a]])
+      expect(instance.tags_was).to be_nil
+    end
+  end
+
+  context 'on json serialization' do
+    it 'serializes the properties, and not the internals' do
+      instance = settings_klass.new(theme: 'dark')
+
+      expect(instance.as_json).to be_eql('theme' => 'dark', 'notifications' => true)
+      expect(instance.to_json).to be_eql(%({"theme":"dark","notifications":true}))
+    end
+
+    it 'leaves out the properties that were never written' do
+      expect(Profile::Bio.new.as_json).to be_eql({})
+    end
+  end
+
+  context 'on enum' do
+    let(:enum_klass) do
+      Class.new(Torque::PostgreSQL::Attributes::Struct) do
+        attribute :status, :string
+        enum :status, { active: 'a', off: 'o' }
+      end
+    end
+
+    it 'casts the value both ways' do
+      instance = enum_klass.new(status: 'active')
+
+      expect(instance.status).to be_eql('active')
+      expect(instance.read_attribute_for_database(:status)).to be_eql('a')
+    end
+
+    it 'defines only the predicates' do
+      instance = enum_klass.new(status: 'active')
+
+      expect(instance.active?).to be_truthy
+      expect(instance.off?).to be_falsey
+      expect(instance).not_to respond_to(:active!)
+      expect(enum_klass).not_to respond_to(:active)
+      expect(enum_klass).not_to respond_to(:not_active)
+    end
+
+    it 'exposes the values and the definition' do
+      expect(enum_klass.statuses.to_h).to be_eql('active' => 'a', 'off' => 'o')
+      expect(enum_klass.defined_enums).to be_eql('status' => { 'active' => 'a', 'off' => 'o' })
+    end
+
+    it 'raises on an invalid value' do
+      expect { enum_klass.new(status: 'bogus') }.to raise_error(ArgumentError, /not a valid status/)
+    end
+
+    it 'supports the prefix option' do
+      klass = Class.new(Torque::PostgreSQL::Attributes::Struct) do
+        attribute :state, :string
+        enum :state, { active: 'a' }, prefix: true
+      end
+
+      expect(klass.new(state: 'active').state_active?).to be_truthy
+    end
+
+    it 'validates instead of raising when asked to' do
+      klass = stub_const('SampleEnumStruct', Class.new(Torque::PostgreSQL::Attributes::Struct))
+      klass.attribute(:kind, :string)
+      klass.enum(:kind, { a: 'a' }, validate: true)
+
+      instance = klass.new(kind: 'bogus')
+      expect(instance).to be_invalid
+      expect(instance.errors[:kind]).to be_present
+    end
+
+    it 'refuses a value that would shadow an existing method' do
+      expect do
+        Class.new(Torque::PostgreSQL::Attributes::Struct) do
+          attribute :kind, :string
+          enum :kind, { empty: 'e' }
+        end
+      end.to raise_error(ArgumentError, /already defined/)
+    end
+  end
+
+  if defined?(ActiveRecord::Normalization)
+    context 'on normalization' do
+      let(:normalized_klass) do
+        Class.new(Torque::PostgreSQL::Attributes::Struct) do
+          attribute :email, :string
+          normalizes :email, with: ->(value) { value.strip.downcase }
+        end
+      end
+
+      it 'normalizes on assignment' do
+        expect(normalized_klass.new(email: '  A@B.C ').email).to be_eql('a@b.c')
+      end
+
+      it 'leaves nil alone' do
+        expect(normalized_klass.new.email).to be_nil
+      end
+    end
+  end
+
+  context 'on store accessor' do
+    let(:stored_klass) do
+      Class.new(Torque::PostgreSQL::Attributes::Struct) do
+        attribute :prefs, ActiveRecord::Type::Json.new
+        store_accessor :prefs, :theme, :locale
+      end
+    end
+
+    it 'expands the keys of a json property' do
+      instance = stored_klass.new
+      instance.theme = 'dark'
+
+      expect(instance.theme).to be_eql('dark')
+      expect(instance.prefs).to be_eql('theme' => 'dark')
+    end
+
+    it 'tracks the changes of each key' do
+      instance = stored_klass.new
+      instance.theme = 'dark'
+
+      expect(instance.theme_changed?).to be_truthy
+      expect(instance.theme_was).to be_nil
+      expect(instance.locale_changed?).to be_falsey
+    end
+
+    it 'exposes the stored attributes' do
+      expect(stored_klass.stored_attributes[:prefs]).to be_eql(%i[theme locale])
+    end
+  end
+
+  context 'on nested documents' do
+    let(:inner_klass) do
+      stub_const('SampleInner', Class.new(Torque::PostgreSQL::Attributes::Struct))
+      SampleInner.attribute(:city, :string)
+      SampleInner.attribute(:zip, :integer)
+      SampleInner
+    end
+
+    let(:outer_klass) do
+      inner = inner_klass
+      stub_const('SampleOuter', Class.new(Torque::PostgreSQL::Attributes::Struct))
+      SampleOuter.attribute(:label, :string)
+      SampleOuter.attribute(:address, Torque::PostgreSQL::Adapter::OID::Struct.new(inner))
+      SampleOuter
+    end
+
+    let(:model) do
+      klass = outer_klass
+      stub_const('SampleNestedProfile', Class.new(ActiveRecord::Base))
+      SampleNestedProfile.table_name = 'profiles'
+      SampleNestedProfile.struct_for(:settings, klass)
+      SampleNestedProfile
+    end
+
+    it 'casts a hash into the nested class' do
+      instance = outer_klass.new(label: 'home', address: { city: 'SP', zip: 1 })
+
+      expect(instance.address).to be_a(inner_klass)
+      expect(instance.address.zip).to be_eql(1)
+    end
+
+    it 'stores the nested value as a document, and not as a string' do
+      type = Torque::PostgreSQL::Adapter::OID::Struct.new(outer_klass)
+      document = type.serialize(outer_klass.new(label: 'h', address: { city: 'SP', zip: 1 }))
+
+      expect(document).to be_eql(%({"label":"h","address":{"city":"SP","zip":1}}))
+    end
+
+    it 'round-trips through the database' do
+      record = model.create!(name: 'n', settings: { label: 'h', address: { city: 'SP', zip: 1 } })
+
+      expect(record.reload.settings.address).to be_a(inner_klass)
+      expect(record.settings.address.city).to be_eql('SP')
+    end
+  end
+
+  context 'on where clauses' do
+    let(:dark) { Profile.create!(name: 'a', settings: { theme: 'dark', notifications: true }) }
+    let(:light) { Profile.create!(name: 'b', settings: { theme: 'light', notifications: false }) }
+
+    it 'breaks a hash into conditions over each property' do
+      expect(Profile.where(settings: { theme: 'dark' }).to_sql)
+        .to include(%{("profiles"."settings" #>> ARRAY['theme']) = 'dark'})
+
+      dark && light
+      expect(Profile.where(settings: { theme: 'dark' }).pluck(:name)).to be_eql(%w[a])
+    end
+
+    it 'casts the property to what the class declares for it' do
+      expect(Profile.where(settings: { notifications: true }).to_sql)
+        .to include(%{("profiles"."settings" #>> ARRAY['notifications'])::boolean = TRUE})
+
+      dark && light
+      expect(Profile.where(settings: { notifications: true }).pluck(:name)).to be_eql(%w[a])
+    end
+
+    it 'hands each property back to the predicate builder' do
+      expect(Profile.where(settings: { theme: %w[light dark] }).to_sql)
+        .to include(%{("profiles"."settings" #>> ARRAY['theme']) IN ('light', 'dark')})
+
+      expect(Profile.where(settings: { theme: 'a'..'z' }).to_sql)
+        .to include(%{("profiles"."settings" #>> ARRAY['theme']) BETWEEN 'a' AND 'z'})
+
+      dark && light
+      expect(Profile.where(settings: { theme: %w[light] }).pluck(:name)).to be_eql(%w[b])
+    end
+
+    it 'keeps comparing a whole document as a document' do
+      expect(Profile.where(settings: Profile::Settings.new(theme: 'dark')).to_sql)
+        .to include(%{"profiles"."settings" = })
+    end
+
+    it 'reaches the properties of a nested document' do
+      inner = stub_const('WhereInner', Class.new(Torque::PostgreSQL::Attributes::Struct))
+      inner.attribute(:city, :string)
+      outer = stub_const('WhereOuter', Class.new(Torque::PostgreSQL::Attributes::Struct))
+      outer.attribute(:address, Torque::PostgreSQL::Adapter::OID::Struct.new(inner))
+
+      model = stub_const('WhereProfile', Class.new(ActiveRecord::Base))
+      model.table_name = 'profiles'
+      model.struct_for(:settings, outer)
+
+      expect(model.where(settings: { address: { city: 'SP' } }).to_sql)
+        .to include(%{("profiles"."settings" #>> ARRAY['address', 'city']) = 'SP'})
+
+      model.create!(name: 'n', settings: { address: { city: 'SP' } })
+      expect(model.where(settings: { address: { city: 'SP' } }).pluck(:name)).to be_eql(%w[n])
+    end
+
+    it 'refuses a json column' do
+      expect { Profile.where(bio: { headline: 'x' }).to_sql }
+        .to raise_error(ArgumentError, /json columns cannot be queried/)
+    end
+
+    it 'refuses an undeclared property of a strict class' do
+      expect { Profile.where(settings: { nope: 1 }).to_sql }
+        .to raise_error(ArgumentError, /not a declared property/)
+    end
+  end
+
+  context 'on encryption options' do
+    before do
+      ActiveRecord::Encryption.configure(
+        primary_key: 'test master key',
+        deterministic_key: 'test deterministic key',
+        key_derivation_salt: 'testing salt',
+      )
+    end
+
+    let(:encrypted_klass) do
+      Class.new(Torque::PostgreSQL::Attributes::Struct) do
+        attribute :token, :string
+        attribute :label, :string
+
+        encrypts :token
+        encrypts :label, deterministic: true
+      end
+    end
+
+    it 'registers every encrypted property' do
+      expect(encrypted_klass.encrypted_attributes).to be_eql(Set[:token, :label])
+    end
+
+    it 'produces the same ciphertext when deterministic' do
+      one = encrypted_klass.new(label: 'same').read_attribute_for_database(:label)
+      two = encrypted_klass.new(label: 'same').read_attribute_for_database(:label)
+
+      expect(one).to be_eql(two)
+    end
+
+    it 'produces a different ciphertext when not deterministic' do
+      one = encrypted_klass.new(token: 'same').read_attribute_for_database(:token)
+      two = encrypted_klass.new(token: 'same').read_attribute_for_database(:token)
+
+      expect(one).not_to be_eql(two)
     end
   end
 end

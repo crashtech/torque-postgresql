@@ -27,6 +27,10 @@ module Torque
             end
           end
 
+          def document_for(value)
+            ::Array.wrap(value).map { |item| item.is_a?(klass) ? document(item) : item }
+          end
+
           def empty?(value)
             value.is_a?(::Array) ? value.empty? : super
           end

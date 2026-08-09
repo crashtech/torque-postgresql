@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-version = 10
+version = 12
 
 return if ActiveRecord::Migrator.current_version == version
 ActiveRecord::Schema.define(version: version) do
@@ -30,6 +30,27 @@ ActiveRecord::Schema.define(version: version) do
   create_enum "roles", ["visitor", "assistant", "manager", "admin"]
   create_enum "conflicts", ["valid", "invalid", "untrusted"]
   create_enum "types", ["A", "B", "C", "D"]
+
+  create_composite_type "address", force: :cascade do |t|
+    t.string  "street"
+    t.string  "city"
+    t.integer "number"
+    t.enum    "category", enum_type: :types
+  end
+
+  create_composite_type "full_address", force: :cascade do |t|
+    t.composite "base", composite_type: :address
+    t.string    "country"
+    t.date      "since"
+    t.decimal   "rate", precision: 8, scale: 2
+  end
+
+  create_table "places", force: :cascade do |t|
+    t.string    "name"
+    t.composite "home", composite_type: :address
+    t.composite "offices", composite_type: :address, array: true
+    t.composite "location", composite_type: :full_address
+  end
 
   create_table "geometries", force: :cascade do |t|
     t.point   "point"

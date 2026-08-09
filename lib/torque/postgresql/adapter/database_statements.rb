@@ -5,7 +5,7 @@ module Torque
     module Adapter
       module DatabaseStatements
 
-        EXTENDED_DATABASE_TYPES = %i[enum enum_set interval]
+        EXTENDED_DATABASE_TYPES = %i[enum enum_set interval composite]
 
         # Switch between dump mode or not
         def dump_mode!
@@ -92,9 +92,10 @@ module Torque
 
           query = <<~SQL
             SELECT t.oid, t.typname, t.typelem, t.typdelim, t.typinput,
-                   r.rngsubtype, t.typtype, t.typbasetype, t.typarray
+                   r.rngsubtype, t.typtype, t.typbasetype, t.typarray, c.relkind
             FROM pg_type as t
-            LEFT JOIN pg_range as r ON oid = rngtypid
+            LEFT JOIN pg_range as r ON t.oid = rngtypid
+            LEFT JOIN pg_class as c ON c.oid = t.typrelid
             LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
             WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
           SQL
@@ -102,19 +103,55 @@ module Torque
           if oids
             query += " AND t.oid IN (%s)" % oids.join(", ")
           else
-            query += " AND t.typtype IN ('e')"
+            conditions = []
+            conditions << "t.typtype IN ('e')" if PostgreSQL.config.enum.enabled
+            conditions << "(t.typtype = 'c' AND c.relkind = 'c')" \
+              if PostgreSQL.config.composite.enabled
+
+            query += " AND (#{conditions.join(' OR ')})"
           end
 
           options = { allow_retry: true, materialize_transactions: false }
           internal_execute(query, 'SCHEMA', **options).each do |row|
-            if row['typtype'] == 'e' && PostgreSQL.config.enum.enabled
-              OID::Enum.create(row, type_map)
+            if row['typtype'] == 'e'
+              OID::Enum.create(row, type_map) if PostgreSQL.config.enum.enabled
+            elsif row['typtype'] == 'c' && row['relkind'] == 'c'
+              OID::Composite.create(row, type_map) if PostgreSQL.config.composite.enabled
             end
           end
         end
 
         def torque_load_additional_types?
-          PostgreSQL.config.enum.enabled
+          PostgreSQL.config.enum.enabled || PostgreSQL.config.composite.enabled
+        end
+
+        # Get the ordered list of columns of a composite type, as a hash of
+        # column name and its proper cast type
+        def composite_column_types(name)
+          rows = query(<<~SQL, 'SCHEMA')
+            SELECT a.attname, a.atttypid, a.atttypmod
+            FROM pg_attribute a
+            WHERE a.attrelid = #{quote(quote_type_name(name).to_s)}::regclass
+              AND a.attnum > 0 AND NOT a.attisdropped
+            ORDER BY a.attnum
+          SQL
+
+          rows.each_with_object({}) do |(attr_name, oid, fmod), hash|
+            hash[attr_name] = get_oid_type(oid.to_i, fmod.to_i, attr_name)
+          end
+        end
+
+        # Get the list of user-defined composite types, sorted so that types
+        # that depend on other composite types come later
+        def composite_types
+          dependencies = composite_type_dependencies
+          result = []
+
+          dependencies.each_key do |name|
+            sort_composite_type(name, dependencies, result)
+          end
+
+          result
         end
 
         # Gets a list of user defined types.
@@ -228,6 +265,46 @@ module Torque
           SQL
           conditions
         end
+
+        private
+
+          # Every user-defined composite type associated with the list of other
+          # composite types that its columns rely on
+          def composite_type_dependencies
+            rows = select_rows(<<~SQL, 'SCHEMA')
+              SELECT t.typname, t.oid::int, COALESCE(elem.oid, mt.oid)::int AS column_oid
+              FROM pg_type t
+              JOIN pg_class c ON c.oid = t.typrelid AND c.relkind = 'c'
+              JOIN pg_namespace n ON n.oid = t.typnamespace
+              LEFT JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0
+                AND NOT a.attisdropped
+              LEFT JOIN pg_type mt ON mt.oid = a.atttypid
+              LEFT JOIN pg_type elem ON elem.oid = mt.typelem AND mt.typelem <> 0
+              WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
+              ORDER BY t.oid
+            SQL
+
+            names = rows.to_h { |name, oid, _| [oid, name] }
+            result = names.values.uniq.to_h { |name| [name, []] }
+
+            rows.each do |name, _oid, column_oid|
+              dependency = names[column_oid]
+              result[name] << dependency unless dependency.nil? || dependency == name
+            end
+
+            result
+          end
+
+          # Add the type to the list, but only after every type it depends on
+          def sort_composite_type(name, dependencies, result)
+            return if result.include?(name)
+
+            dependencies[name].each do |dependency|
+              sort_composite_type(dependency, dependencies, result)
+            end
+
+            result << name
+          end
 
       end
     end

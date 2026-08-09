@@ -65,11 +65,25 @@ module Torque
             document(value).empty?
           end
 
+          # The value as it goes inside another document, which is a hash, and
+          # not the encoded JSON that a column receives
+          def document_for(value)
+            value.nil? ? nil : document(value)
+          end
+
           # The hash that represents the value on the database, holding only the
-          # properties that were actually written to it
+          # properties that were actually written to it. Properties backed by
+          # another struct are kept as documents, so that they are not stored as
+          # an encoded string inside this one
           def document(value)
             set = value.instance_variable_get(:@attributes)
-            set.keys.to_h { |name| [name, set[name].value_for_database] }
+            set.keys.to_h do |name|
+              attribute = set[name]
+              type = attribute.type
+
+              next [name, type.document_for(attribute.value)] if type.is_a?(Struct)
+              [name, attribute.value_for_database]
+            end
           end
 
           def blank_document

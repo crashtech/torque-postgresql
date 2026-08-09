@@ -145,12 +145,12 @@ RSpec.describe 'Arel' do
       condition = Video.arel_table[:tag_ids].contains([1,2]).cast(:bigint, :array)
       query = Video.all.where(condition).to_sql
 
-      expect(query).to include('WHERE "videos"."tag_ids" @> ARRAY[1, 2]::bigint[]')
+      expect(query).to include(%{WHERE "videos"."tag_ids" @> '{1,2}'::bigint[]})
 
       condition = QuestionSelect.arel_table[:options].overlaps(%w[a b]).cast(:string, :array)
       query = QuestionSelect.all.where(condition).to_sql
 
-      expect(query).to include('"options" && ARRAY[\'a\', \'b\']::string[]')
+      expect(query).to include(%{"options" && '{a,b}'::string[]})
     end
   end
 end

@@ -34,8 +34,33 @@ module Torque
           def types(stream) # :nodoc:
             super
 
+            composite_types(stream)
+
             versioned_commands(stream, :type)
             versioned_commands(stream, :function)
+          end
+
+          # Dump user defined composite types, sorted by their dependencies
+          def composite_types(stream)
+            return unless PostgreSQL.config.composite.enabled
+
+            list = @connection.composite_types
+            list -= @versioned_commands.versions_of('type').map(&:first) \
+              if with_versioned_commands?
+            return if list.empty?
+
+            stream.puts "  # Custom composite types defined in this database."
+            list.each do |name|
+              stream.puts "  create_composite_type #{name.inspect}, force: :cascade do |t|"
+              @connection.columns(name).each do |column|
+                type, colspec = column_spec(column)
+                stream.print "    t.#{type} #{column.name.inspect}"
+                stream.print ", #{format_colspec(colspec)}" if colspec.present?
+                stream.puts
+              end
+              stream.puts "  end"
+              stream.puts
+            end
           end
 
           def tables(stream) # :nodoc:
@@ -126,6 +151,7 @@ module Torque
           def prepare_column_options(column)
             options = super
             parse_search_vector_options(column, options) if column.type == :tsvector
+            options[:composite_type] = column.sql_type.inspect if column.type == :composite
             options
           end
 

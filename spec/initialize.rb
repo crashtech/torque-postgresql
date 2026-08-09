@@ -4,6 +4,7 @@ require_relative '../lib/torque/postgresql/adapter/schema_overrides'
 
 require_relative '../lib/torque/postgresql/adapter/oid/box'
 require_relative '../lib/torque/postgresql/adapter/oid/circle'
+require_relative '../lib/torque/postgresql/adapter/oid/composite'
 require_relative '../lib/torque/postgresql/adapter/oid/enum'
 require_relative '../lib/torque/postgresql/adapter/oid/enum_set'
 require_relative '../lib/torque/postgresql/adapter/oid/interval'
@@ -13,6 +14,7 @@ require_relative '../lib/torque/postgresql/adapter/oid/struct'
 require_relative '../lib/torque/postgresql/adapter/oid/struct_list'
 require_relative '../lib/torque/postgresql/adapter/oid/struct_set'
 
+require_relative '../lib/torque/postgresql/attributes/composite'
 require_relative '../lib/torque/postgresql/attributes/enum'
 require_relative '../lib/torque/postgresql/attributes/enum_set'
 require_relative '../lib/torque/postgresql/attributes/period'
@@ -45,6 +47,11 @@ module Torque
     ::Object.const_set('TorqueCTE', AuxiliaryStatement)
     ::Object.const_set('TorqueRecursiveCTE', AuxiliaryStatement::Recursive)
 
+    config.composite.namespace = ::Object.const_set('Composite', Module.new)
+    config.composite.namespace.define_singleton_method(:const_missing) do |name|
+      Attributes::Composite.lookup(name)
+    end
+
     config.enum.namespace = ::Object.const_set('Enum', Module.new)
     config.enum.namespace.define_singleton_method(:const_missing) do |name|
       Attributes::Enum.lookup(name)
@@ -55,8 +62,9 @@ module Torque
     end
 
     ar_type = ActiveRecord::Type
-    ar_type.register(:enum,     Adapter::OID::Enum,     adapter: :postgresql)
-    ar_type.register(:enum_set, Adapter::OID::EnumSet,  adapter: :postgresql)
+    ar_type.register(:enum,      Adapter::OID::Enum,      adapter: :postgresql)
+    ar_type.register(:enum_set,  Adapter::OID::EnumSet,   adapter: :postgresql)
+    ar_type.register(:composite, Adapter::OID::Composite, adapter: :postgresql)
 
     ar_type.register(:box,      Adapter::OID::Box,      adapter: :postgresql)
     ar_type.register(:circle,   Adapter::OID::Circle,   adapter: :postgresql)

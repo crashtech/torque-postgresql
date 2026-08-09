@@ -1,13 +1,18 @@
 # frozen_string_literal: true
 
+require_relative 'base'
+
 module Torque
   module PostgreSQL
     module Attributes
-      class Struct
-        include ActiveModel::Model
-        include ActiveModel::Attributes
-        include ActiveModel::Serialization
-        include ActiveModel::Dirty
+      class Struct < Base
+        # ActiveModel keeps a sentinel object as the original value of a
+        # property that was never written to, which leaks into +changes+ and
+        # into anything built on top of it, so it reads as nil instead
+        class Uninitialized < ActiveModel::Attribute.const_get(:Uninitialized)
+          def original_value
+          end
+        end
 
         class << self
           attr_writer :strict
@@ -25,7 +30,7 @@ module Torque
           def _default_attributes
             @_struct_default_attributes ||= super.map do |attribute|
               next attribute if attribute.is_a?(ActiveModel::Attribute::UserProvidedDefault)
-              ActiveModel::Attribute.uninitialized(attribute.name, attribute.type)
+              Uninitialized.new(attribute.name, attribute.type)
             end
           end
 
@@ -90,33 +95,7 @@ module Torque
               model.delegate(*delegations, to: column) if delegations.any?
             end
 
-            model.validate do
-              value = read_attribute(column)
-              next if value.nil? || type.empty?(value)
-
-              invalid = Array.wrap(value).any? do |item|
-                item.respond_to?(:invalid?) && item.invalid?
-              end
-
-              errors.add(column, :invalid) if invalid
-            end
-          end
-
-          # Encrypt individual attributes, so their values are stored encrypted
-          # inside the column's JSON document
-          def encrypts(*names, **options)
-            names.each do |name|
-              name = name.to_s
-              raise ArgumentError, <<~MSG.squish unless attribute_names.include?(name)
-                Unable to encrypt "#{name}" because it is not a declared
-                attribute of #{self.name}.
-              MSG
-
-              scheme = ActiveRecord::Encryption::Scheme.new(**options)
-              attribute(name, ActiveRecord::Encryption::EncryptedAttributeType.new(
-                scheme: scheme, cast_type: attribute_types[name],
-              ))
-            end
+            model.validates(column, nested: true, allow_blank: true)
           end
 
           private
@@ -138,25 +117,6 @@ module Torque
                 write_attribute(column, value)
               end
             end
-        end
-
-        # Plain access to any property, declared or not
-        def [](key)
-          key = key.to_s
-          @attributes.key?(key) ? @attributes.fetch_value(key) : nil
-        end
-
-        def []=(key, value)
-          assign_attributes(key => value)
-        end
-
-        def ==(other)
-          other.class == self.class && other.attributes == attributes
-        end
-        alias eql? ==
-
-        def hash
-          [self.class, attributes].hash
         end
 
         # Properties that are not declared by the class are kept as they are,

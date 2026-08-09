@@ -131,6 +131,27 @@ module Torque
 
     end
 
+    # Configure composite type features
+    config.nested(:composite) do |composite|
+
+      # Enables composite types handler by this gem
+      composite.enabled = true
+
+      # Specify the namespace of each composite type class
+      composite.namespace = nil
+
+      # Set a list of irregular class names when associated with composite
+      # types
+      def composite.irregular_types=(hash)
+        self[:irregular_types] = hash.map do |type, klass|
+          [type.to_s, klass.to_s]
+        end.to_h
+      end
+
+      composite.irregular_types = {}
+
+    end
+
     # Configure geometry data types
     config.nested(:geometry) do |geometry|
 

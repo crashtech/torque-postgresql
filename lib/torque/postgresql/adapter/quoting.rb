@@ -13,7 +13,7 @@ module Torque
 
         # Quotes type names for use in SQL queries.
         def quote_type_name(name, *args)
-          QUOTED_TYPE_NAMES[args] ||= begin
+          QUOTED_TYPE_NAMES[[name.to_s, *args]] ||= begin
             name = name.to_s
             args << 'public' if args.empty? && !name.include?('.')
             quote_identifier_name(name, *args)

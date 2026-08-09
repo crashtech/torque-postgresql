@@ -50,6 +50,7 @@ These are the currently available features:
 
 * [Box](https://github.com/crashtech/torque-postgresql/wiki/Box)
 * [Circle](https://github.com/crashtech/torque-postgresql/wiki/Circle)
+* [Composite](https://github.com/crashtech/torque-postgresql/wiki/Composite)
 * [Date/Time Range](https://github.com/crashtech/torque-postgresql/wiki/Date-Time-Range)
 * [Enum](https://github.com/crashtech/torque-postgresql/wiki/Enum)
 * [EnumSet](https://github.com/crashtech/torque-postgresql/wiki/Enum-Set)

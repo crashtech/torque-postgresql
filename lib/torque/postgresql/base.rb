@@ -20,6 +20,21 @@ module Torque
         delegate :distinct_on, :with, :itself_only, :cast_records, :join_series,
           :buckets, to: :all
 
+        # Composite values are objects that can be invalid on their own, so the
+        # attributes backed by one are validated alongside the record
+        def load_schema!
+          super
+          return unless PostgreSQL.config.composite.enabled &&
+            Adapter::OID.const_defined?(:Composite)
+
+          attribute_types.each do |name, type|
+            next if Adapter::OID::Composite.from(type).nil?
+            next if _validators[name.to_sym].any?(Validations::NestedValidator)
+
+            validates(name, nested: true)
+          end
+        end
+
         # Make sure that table name is an instance of TableName class
         def reset_table_name
           return super unless PostgreSQL.config.schemas.enabled

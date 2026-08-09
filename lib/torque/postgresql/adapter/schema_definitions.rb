@@ -18,6 +18,12 @@ module Torque
           names.each { |name| column(name, :virtual, **options) }
         end
 
+        # Add a composite type column to the table
+        def composite(*names, composite_type:, **options)
+          raise ArgumentError, "Missing column name(s) for composite" if names.empty?
+          names.each { |name| column(name, :composite, composite_type: composite_type, **options) }
+        end
+
       end
 
       module TableDefinition
@@ -47,6 +53,32 @@ module Torque
 
             super(name, type, options)
           end
+      end
+
+      # Composite types are defined with the same DSL as tables, where declaring
+      # a column adds one, plus the operations that +change_table+ provides
+      class CompositeTypeDefinition < ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition
+        attr_reader :changes, :removals, :renames
+
+        def initialize(*args, **xargs)
+          super
+
+          @changes = []
+          @removals = []
+          @renames = []
+        end
+
+        def change(name, type, **options)
+          @changes << new_column_definition(name, type, **options)
+        end
+
+        def remove(*names)
+          @removals.concat(names.map(&:to_s))
+        end
+
+        def rename(name, new_name)
+          @renames << [name.to_s, new_name.to_s]
+        end
       end
 
       # Add exclusive support for versioned commands when importing from schema

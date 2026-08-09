@@ -1,5 +1,6 @@
 require 'i18n'
 require 'ostruct'
+require 'monitor'
 require 'active_model'
 require 'active_record'
 require 'active_support'
@@ -12,6 +13,7 @@ require 'torque/postgresql/config'
 require 'torque/postgresql/version'
 require 'torque/postgresql/collector'
 require 'torque/postgresql/geometry_builder'
+require 'torque/postgresql/predicate_table'
 require 'torque/postgresql/predicate_builder'
 
 require 'torque/postgresql/i18n'
@@ -29,5 +31,6 @@ require 'torque/postgresql/reflection'
 require 'torque/postgresql/schema_cache'
 require 'torque/postgresql/table_name'
 require 'torque/postgresql/function'
+require 'torque/postgresql/validations'
 
 require 'torque/postgresql/railtie' if defined?(Rails)

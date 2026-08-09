@@ -96,6 +96,21 @@ module Torque
               Attributes::Struct.include_on(ActiveRecord::Base)
             end
 
+            ## Composite Enabled Setup
+            if (config = torque_config.composite).enabled
+              require_relative 'adapter/oid/composite'
+              require_relative 'attributes/composite'
+
+              ar_type.register(:composite, Adapter::OID::Composite, adapter: :postgresql)
+
+              config.namespace ||= ::Object.const_set('Composite', Module.new)
+
+              # Define a method to find composite classes based on the namespace
+              config.namespace.define_singleton_method(:const_missing) do |name|
+                Attributes::Composite.lookup(name)
+              end
+            end
+
             ## Geometry Enabled Setup
             if (config = torque_config.geometry).enabled
               require_relative 'adapter/oid/box'
