@@ -1,0 +1,48 @@
+title: Torque PostgreSQL
+description: >-
+  ActiveRecord extension that brings PostgreSQL's advanced data types and query
+  statements into Rails, under the same DSL you already use.
+url: https://torque.dev
+baseurl: /postgresql
+lang: en-US
+
+repository: crashtech/torque-postgresql
+gem_version: 4.0.1
+rails_version: '8.0'
+ruby_version: '3.2'
+
+# Dev server. Binding to every interface makes the preview reachable from other
+# machines at http://<this-host>:4000/postgresql/ — note the baseurl.
+host: 0.0.0.0
+port: 4000
+
+permalink: pretty
+
+sass:
+  sourcemap: never
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    block:
+      line_numbers: false
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-toc
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+
+defaults:
+  - scope:
+      path: ''
+      type: pages
+    values:
+      layout: page
+      toc: true

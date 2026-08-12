@@ -1,0 +1,112 @@
+.eyebrow{
+  margin:0 0 .55rem; font-size:.66rem; font-weight:700;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--fg-muted);
+}
+
+.content h1{
+  margin:0 0 .75rem; font-size:2.15rem; font-weight:800;
+  letter-spacing:-.025em; line-height:1.12; color:var(--fg-strong);
+}
+
+.content h2{
+  margin:3.25rem 0 1rem;
+  font-size:.8rem; font-weight:700; line-height:1.4;
+  letter-spacing:.15em; text-transform:uppercase; color:var(--fg-strong);
+}
+.content h2::before{
+  content:""; display:block; width:2.5rem; height:2px;
+  margin-bottom:1rem; background:var(--accent);
+}
+
+.content h3{
+  margin:2rem 0 .75rem; font-size:.95rem; font-weight:700;
+  letter-spacing:-.005em; color:var(--fg-strong);
+}
+
+.content p{margin:0 0 1rem}
+.content h2 + p,
+.content h3 + p{margin-top:0}
+
+// The opening paragraph, addressed by position rather than by a class, because
+// it comes out of the page's markdown. Several pages lead with a one-line
+// blockquote before it, so this cannot key off the heading — it has to be the
+// first paragraph whatever precedes it. That is also why the eyebrow above is
+// a div: as a <p> it would claim :first-of-type for itself.
+.content > p:first-of-type{
+  font-size:1.05rem; font-weight:300; line-height:1.7;
+  color:var(--fg-muted); margin-bottom:2rem;
+}
+
+.content ul,
+.content ol{margin:0 0 1rem; padding-left:1.35rem}
+.content li{margin-bottom:.35rem}
+
+.content code{
+  font:400 .86em/1.5 var(--font-mono); color:var(--fg-strong);
+  padding:.1em .3em; border-radius:3px;
+  background:var(--bg-sunken); border:1px solid var(--line-soft);
+}
+
+// Most links to a setting are written as `some.config`, and the code span was
+// painting over the link colour — leaving them indistinguishable from ordinary
+// inline code.
+.content a code{color:var(--accent)}
+.content a:hover code{border-color:var(--accent)}
+
+// A heading is already a distinct style; boxing code inside one stacks two
+// treatments on the same words.
+.content h2 code,
+.content h3 code{
+  padding:0; background:none; border:0;
+  font-size:inherit; color:inherit; letter-spacing:inherit;
+}
+
+.content img{max-width:100%; height:auto}
+
+.content hr{margin:2.5rem 0; border:0; border-top:1px solid var(--line)}
+
+// jekyll-toc injects an empty anchor at the start of each heading. Floating it
+// into the gutter keeps the heading text on the same left edge as the prose.
+.content .anchor{
+  float:left; width:1.25rem; margin-left:-1.25rem;
+  color:var(--accent); font-weight:400;
+  opacity:0; transition:opacity .15s;
+}
+.content .anchor .octicon-link::before{content:"#"}
+.content h2:hover .anchor,
+.content h3:hover .anchor,
+.content .anchor:focus-visible{opacity:.7}
+
+// Tables can outgrow the measure, so they scroll inside their own box rather
+// than widening the page.
+.table-wrapper{overflow-x:auto; margin:0 0 1.5rem}
+.content table{border-collapse:collapse; width:100%; font-size:.9rem}
+.content th,
+.content td{padding:.5rem .75rem; text-align:left; border-bottom:1px solid var(--line)}
+.content th{
+  font-size:.66rem; font-weight:700; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--fg-muted);
+}
+
+blockquote{
+  margin:1.5rem 0; padding:.7rem 1rem;
+  background:var(--accent-bg); border-left:3px solid var(--accent);
+  border-radius:0 var(--radius) var(--radius) 0;
+}
+
+// Several pages open with a one-line aside in the author's voice. It sits in
+// the same blockquote as a real note, but it is a tagline, not a caveat, so it
+// is quietened rather than boxed. Only the one directly under the title.
+.content > h1 + blockquote{
+  margin:0 0 1.5rem; padding:0 0 0 1rem;
+  background:none; border-radius:0;
+  border-left:2px solid var(--line);
+  font-size:.95rem; font-style:italic; color:var(--fg-muted);
+}
+.content > h1 + blockquote p{font-size:inherit}
+blockquote p{margin:0; font-size:.93rem}
+blockquote p:first-child > strong:first-child{
+  display:block; margin-bottom:.15rem; font-size:.64rem; font-weight:700;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--accent);
+}
+blockquote.warning{--accent:var(--ruby); --accent-bg:light-dark(#fdeceb, #2c1214)}

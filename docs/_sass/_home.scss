@@ -1,0 +1,146 @@
+.wrap{max-width:72rem; margin:0 auto; padding:0 1.5rem}
+
+// A geometric field behind the hero, masked so it fades before the cards.
+.hexes{
+  position:fixed; inset:var(--header-h) 0 0; z-index:-1; pointer-events:none;
+  background:
+    repeating-linear-gradient(60deg,  var(--hex) 0 1px, transparent 1px 3.4rem),
+    repeating-linear-gradient(-60deg, var(--hex) 0 1px, transparent 1px 3.4rem),
+    repeating-linear-gradient(0deg,   var(--hex) 0 1px, transparent 1px 3.4rem);
+  mask-image:radial-gradient(90% 70% at 50% 20%, #000, transparent 75%);
+  opacity:.85;
+}
+
+.hero{
+  display:grid; align-items:center; gap:2.5rem;
+  grid-template-columns:1.15fr .85fr;
+  padding:5rem 0 4.5rem;
+}
+.hero h1{
+  margin:0 0 1.5rem; font-size:2.35rem; font-weight:800;
+  letter-spacing:-.03em; line-height:1.2; text-wrap:balance;
+  color:var(--fg-strong);
+}
+.hero h1 + h1{margin-bottom:2.25rem}
+.hero .ror{color:var(--ruby)}
+.hero .pg{color:var(--accent)}
+
+.actions{display:flex; flex-wrap:wrap; gap:.75rem}
+.btn{
+  padding:.6rem 1.35rem; font-size:.88rem; font-weight:600;
+  border-radius:999px; border:1px solid transparent;
+}
+.btn:hover{text-decoration:none}
+.btn-primary{
+  color:var(--on-accent); background:var(--accent);
+  box-shadow:0 8px 22px -12px rgb(var(--glow));
+}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-ghost{color:var(--fg-strong); border-color:var(--line); background:var(--bg-raised)}
+.btn-ghost:hover{border-color:var(--accent); color:var(--accent)}
+
+.stack{width:100%; max-width:26rem; margin-inline:auto; height:auto; display:block}
+
+.panels{
+  display:grid; gap:2rem; grid-template-columns:1fr 1fr;
+  padding-bottom:5rem; align-items:start;
+}
+.panel{
+  padding:2.25rem 2.5rem 2.5rem;
+  background:var(--bg-raised); border:1px solid var(--line);
+  border-radius:14px; box-shadow:0 22px 50px -40px rgb(0 0 0 / .5);
+}
+.panel h2{
+  margin:0 0 1.75rem; font-size:1.1rem; font-weight:700; line-height:1.4;
+  letter-spacing:.14em; text-transform:uppercase;
+  text-align:center; color:var(--fg-strong);
+}
+.panel h2::before{
+  content:""; display:block; width:3.5rem; height:3px;
+  margin:0 auto 1.1rem; background:var(--accent);
+}
+.panel p{margin:0 0 1rem}
+.panel p:last-child{margin-bottom:0}
+.panel strong{font-weight:600; color:var(--accent)}
+.panel .lead{font-size:.92rem; color:var(--fg-muted); margin-bottom:.6rem}
+
+.pick{display:flex; gap:.75rem; margin:0 0 1.25rem; align-items:stretch}
+.pill{
+  flex:1; min-width:0; display:flex; align-items:center; gap:.5rem;
+  padding:.6rem .9rem; background:var(--code-bg);
+  border:1px solid var(--line); border-radius:999px;
+}
+.pill code{
+  flex:1; min-width:0; overflow-x:auto; white-space:nowrap;
+  font:400 .8rem/1.5 var(--font-mono); color:var(--fg-strong);
+  background:none; border:0; padding:0;
+}
+.pill .cmd{color:var(--ruby); font-weight:600}
+.pill .str{color:light-dark(#a31515, #98c379)}
+.pill button{
+  flex:none; display:flex; padding:.15rem; cursor:pointer;
+  color:var(--fg-muted); background:none; border:0; border-radius:4px;
+}
+.pill button:hover{color:var(--accent)}
+.pill button svg{width:.95rem; height:.95rem; fill:none; stroke:currentColor; stroke-width:1.8}
+.pill button[data-copied]{color:var(--accent)}
+
+select.rails{
+  flex:none; padding:.6rem 1rem; cursor:pointer;
+  font:600 .8rem/1.5 var(--font-body); color:var(--fg-strong);
+  background:var(--bg-raised); border:1px solid var(--line); border-radius:999px;
+}
+select.rails:hover{border-color:var(--accent)}
+
+.strip{padding:0 0 3.5rem}
+.strip:last-of-type{padding-bottom:5rem}
+.strip h2{
+  margin:0 0 1.5rem; font-size:1.1rem; font-weight:700; line-height:1.4;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--fg-strong);
+}
+.strip h2::before{
+  content:""; display:block; width:3.5rem; height:3px;
+  margin-bottom:1.1rem; background:var(--accent);
+}
+.strip h2 small{
+  display:block; margin-top:.5rem; font-size:.72rem; font-weight:500;
+  letter-spacing:.02em; text-transform:none; color:var(--fg-muted);
+}
+
+.links{display:grid; gap:.6rem; grid-template-columns:repeat(auto-fill,minmax(11rem,1fr))}
+.links a,
+.links .pending{
+  display:flex; align-items:center; gap:.5rem;
+  padding:.65rem .9rem; font-size:.88rem;
+  background:var(--bg-raised); border:1px solid var(--line); border-radius:var(--radius);
+}
+.links a{color:var(--fg)}
+.links a:hover{border-color:var(--accent); color:var(--accent); text-decoration:none}
+.links .pending{color:var(--fg-faint); cursor:default}
+.links a::before,
+.links .pending::before{
+  content:""; flex:none; width:.35rem; height:.35rem; border-radius:50%;
+  background:var(--accent);
+}
+.links .pending::before{background:var(--fg-faint)}
+
+// Experimental pages get the brand red instead: cyan means settled API.
+.strip-experimental .links a::before,
+.strip-experimental .links .pending::before{background:var(--ruby)}
+.strip-experimental .links .pending::before{opacity:.45}
+.strip-experimental .links a:hover{border-color:var(--ruby); color:var(--ruby)}
+
+.site-footer{
+  padding:2rem 0 3rem; font-size:.82rem; color:var(--fg-muted);
+  border-top:1px solid var(--line);
+  display:flex; flex-wrap:wrap; gap:1rem; justify-content:space-between;
+}
+
+@media (max-width: 900px){
+  .hero{grid-template-columns:1fr; padding:3rem 0; gap:2.5rem}
+  .hero h1{font-size:2rem}
+  .panels{grid-template-columns:1fr; gap:1.5rem}
+  .panel{padding:1.75rem 1.5rem 2rem}
+  .pick{flex-direction:column}
+  select.rails{align-self:flex-start}
+}

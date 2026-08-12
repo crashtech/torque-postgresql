@@ -1,0 +1,16 @@
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16181c" media="(prefers-color-scheme: dark)">
+
+  {%- assign weights = 'light,regular,medium,semibold,bold,extrabold' | split: ',' -%}
+  {%- for weight in weights -%}
+    {%- capture font %}/assets/fonts/metropolis-{{ weight }}.woff2{% endcapture -%}
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ font | relative_url }}">
+  {%- endfor %}
+
+  <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}">
+  <link rel="icon" href="{{ '/favicon.ico' | relative_url }}">
+  {%- seo -%}
+</head>

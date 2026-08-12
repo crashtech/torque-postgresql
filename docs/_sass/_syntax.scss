@@ -1,0 +1,20 @@
+// Two Rouge themes in one rule set: Visual Studio for light, One Dark for
+// dark. Each token pairs its own two colours through light-dark(), which is
+// why there is no second stylesheet and no `body.dark` duplication.
+.highlight{
+  .c, .c1, .cm, .cp, .cs, .cd            {color:light-dark(#008000, #7f848e); font-style:italic}
+  .k, .kc, .kd, .kn, .kp, .kr, .kt, .kv  {color:light-dark(#0000ff, #c678dd)}
+  .s, .s1, .s2, .sb, .sc, .sd, .se,
+  .sh, .si, .sx, .sr, .dl                {color:light-dark(#a31515, #98c379)}
+  .ss                                    {color:light-dark(#a31515, #61afef)}
+  .nc, .nn, .no, .nb, .bp                {color:light-dark(#2b91af, #e5c07b)}
+  .nf, .nd, .fm                          {color:light-dark(#22262c, #61afef)}
+  .n, .na, .nl, .nv, .vi, .vg, .vc       {color:light-dark(#22262c, #e06c75)}
+  .o, .ow                                {color:light-dark(#22262c, #56b6c2)}
+  .m, .mi, .mf, .mh, .mo, .il            {color:light-dark(#22262c, #d19a66)}
+  .p, .pi                                {color:light-dark(#22262c, #abb2bf)}
+  .nt                                    {color:light-dark(#800000, #e06c75)}
+  .err                                   {color:light-dark(#a31515, #e06c75)}
+  .gd                                    {color:light-dark(#a31515, #e06c75)}
+  .gi                                    {color:light-dark(#008000, #98c379)}
+}

@@ -1,0 +1,41 @@
+<svg class="stack" viewBox="0 -56 320 312" role="img" aria-label="Stacked database nodes">
+  <defs>
+    <linearGradient id="slab-top" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7fe6fa"/><stop offset="1" stop-color="#22c6e6"/>
+    </linearGradient>
+    <linearGradient id="slab-left" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#123244"/><stop offset="1" stop-color="#0b2231"/>
+    </linearGradient>
+    <linearGradient id="slab-right" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d5f78"/><stop offset="1" stop-color="#123f52"/>
+    </linearGradient>
+  </defs>
+
+  <g>
+    <path d="M160 196 30 130v42l130 66z" fill="url(#slab-left)"/>
+    <path d="M160 196 290 130v42l-130 66z" fill="url(#slab-right)"/>
+    <path d="M160 130 30 130l130 66 130-66z" fill="#0e2b3a"/>
+    <circle cx="60" cy="158" r="4" fill="#22c6e6" opacity=".7"/>
+    <circle cx="74" cy="165" r="4" fill="#22c6e6" opacity=".5"/>
+    <circle cx="88" cy="172" r="4" fill="#22c6e6" opacity=".3"/>
+  </g>
+
+  <g>
+    <path d="M160 140 30 74v42l130 66z" fill="url(#slab-left)"/>
+    <path d="M160 140 290 74v42l-130 66z" fill="url(#slab-right)"/>
+    <path d="M160 8 30 74l130 66 130-66z" fill="#164a61"/>
+    <g stroke="#7fe6fa" stroke-width="2.5" stroke-linecap="round" opacity=".55">
+      <path d="M52 96 92 116M52 106 84 122M52 116 100 140"/>
+    </g>
+    <g stroke="#7fe6fa" stroke-width="2.5" stroke-linecap="round" opacity=".3">
+      <path d="M268 96 228 116M268 106 236 122M268 116 220 140"/>
+    </g>
+  </g>
+
+  <g>
+    <path d="M160 84 30 18v42l130 66z" fill="url(#slab-left)"/>
+    <path d="M160 84 290 18v42l-130 66z" fill="url(#slab-right)"/>
+    <path d="M160 -48 30 18l130 66 130-66z" fill="url(#slab-top)"/>
+    <path d="M160 -20 68 26l92 46 92-46z" fill="#0b2231" opacity=".22"/>
+  </g>
+</svg>

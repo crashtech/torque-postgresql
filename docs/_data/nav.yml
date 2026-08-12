@@ -1,0 +1,76 @@
+# Sections shown in the top bar, the sidebar, and the home page link strips.
+# A page without a `url` has not been migrated from the wiki yet: it renders
+# as a dimmed, non-clickable entry rather than a broken link.
+
+- title: Getting Started
+  id: getting-started
+  pages:
+    - title: Installation
+      url: /getting-started/installation/
+    - title: Configuring
+      url: /getting-started/configuring/
+
+- title: Data Types
+  id: data-types
+  pages:
+    - title: Box
+      url: /data-types/box/
+    - title: Circle
+      url: /data-types/circle/
+    - title: Composite
+      url: /data-types/composite/
+    - title: Date/Time Range
+      url: /data-types/date-time-range/
+    - title: Enum
+      url: /data-types/enum/
+    - title: EnumSet
+      url: /data-types/enum-set/
+    - title: Interval
+      url: /data-types/interval/
+    - title: Line
+      url: /data-types/line/
+    - title: Segment
+      url: /data-types/segment/
+    - title: Struct
+      url: /data-types/struct/
+
+- title: Models
+  id: models
+  pages:
+    - title: Belongs to Many
+      url: /models/belongs-to-many/
+    - title: Dynamic Attributes
+      url: /models/dynamic-attributes/
+    - title: Has Many
+      url: /models/has-many/
+    - title: Inherited Tables
+      url: /models/inherited-tables/
+    - title: Insert All
+      url: /models/insert-all/
+
+- title: Querying
+  id: querying
+  pages:
+    - title: Arel
+      url: /querying/arel/
+    - title: CTEs
+      url: /querying/auxiliary-statements/
+    - title: Buckets
+      url: /querying/buckets/
+    - title: Distinct On
+      url: /querying/distinct-on/
+    - title: Full-Text Search
+      url: /querying/full-text-search/
+    - title: Join Series
+      url: /querying/join-series/
+    - title: Predicate Builder
+      url: /querying/predicate-builder/
+
+- title: Experimental
+  id: experimental
+  note: Newer ground — the API may still move between minor versions.
+  pages:
+    - title: Multiple Schemas
+      url: /experimental/multiple-schemas/
+    - title: Versioned Cmds
+      url: /experimental/versioned-commands/
