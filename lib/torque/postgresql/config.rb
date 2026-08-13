@@ -193,11 +193,6 @@ module Torque
       # the name of the table that actually holds the record
       inheritance.record_class_column_name = :_record_class
 
-      # Determines the name of the column used when identifying that the loaded
-      # records should be casted to its correctly model. This will be TRUE for
-      # the records mentioned on `cast_records`
-      inheritance.auto_cast_column_name = :_auto_cast
-
     end
 
     # Configure struct features

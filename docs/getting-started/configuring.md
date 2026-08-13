@@ -138,9 +138,6 @@ Default value: `true`
 <a name="inheritance.record_class_column_name"></a>`inheritance.record_class_column_name` Determines the name of the column used to collect the table of each record. When the table has inheritance tables, this column will return the name of the table that actually holds the record.
 Default value: `:_record_class`
 
-<a name="inheritance.auto_cast_column_name"></a>`inheritance.auto_cast_column_name` Determines the name of the column used when identifying that the loaded records should be casted to its correctly model. This will be TRUE for the records mentioned on `cast_records`.
-Default value: `:_auto_cast`
-
 ## Struct configurations {#struct}
 
 These are the keys available to configure Struct features:

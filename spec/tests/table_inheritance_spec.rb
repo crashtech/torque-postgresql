@@ -242,6 +242,32 @@ RSpec.describe 'TableInheritance' do
       expect(other.casted_dependents.values.map(&:name)).to eql(%w())
     end
 
+    it 'only considers dependents that add columns as expandable' do
+      expect(base.inheritance_expandable_dependents.keys).to \
+        eql(%w(activity_books activity_posts activity_post_samples))
+      expect(child.inheritance_expandable_dependents).to be_empty
+      expect(child2.inheritance_expandable_dependents).to be_empty
+    end
+
+    it 'recomputes inheritance metadata after resetting column information' do
+      base.casted_dependents
+      base.inheritance_expandable_dependents
+      base.physically_inheritances?
+      base.inheritance_column_prefix
+      base.inheritance_dependent_prefixes
+      child2.inheritance_foreign_attribute_names
+      base.reset_column_information
+
+      expect(base.instance_variable_get(:@casted_dependents)).to be_nil
+      expect(base.instance_variable_get(:@inheritance_expandable_dependents)).to be_nil
+      expect(base.instance_variable_get(:@physically_inheritances)).to be_nil
+      expect(base.instance_variable_get(:@inheritance_column_prefix)).to be_nil
+      expect(base.instance_variable_get(:@inheritance_dependent_prefixes)).to be_nil
+      expect(child2.instance_variable_get(:@inheritance_foreign_attribute_names)).to be_nil
+      expect(base.casted_dependents.values.map(&:name)).to \
+        eql(%w(ActivityBook ActivityPost ActivityPost::Sample))
+    end
+
     it 'correctly generates the tables name' do
       expect(base.table_name).to eql('activities')
       expect(child.table_name).to eql('activity_posts')
@@ -263,6 +289,347 @@ RSpec.describe 'TableInheritance' do
     end
   end
 
+  context 'on partial records' do
+    let(:record) { Activity.create!(title: 'Activity test') }
+
+    it 'is neither partial nor read-only by default' do
+      expect(record.partial_record?).to be_falsey
+      expect(record.readonly?).to be_falsey
+    end
+
+    it 'becomes read-only when marked as partial' do
+      record.send(:mark_as_partial_record!)
+
+      expect(record.partial_record?).to be_truthy
+      expect(record.readonly?).to be_truthy
+      expect { record.update!(title: 'Changed') }.to \
+        raise_error(ActiveRecord::ReadOnlyRecord)
+    end
+
+    it 'clears both flags when marked as full' do
+      record.send(:mark_as_partial_record!)
+      record.send(:mark_as_full_record!)
+
+      expect(record.partial_record?).to be_falsey
+      expect(record.readonly?).to be_falsey
+    end
+
+    it 'clears the partial state on reload' do
+      record.send(:mark_as_partial_record!)
+      record.reload
+
+      expect(record.partial_record?).to be_falsey
+      expect(record.readonly?).to be_falsey
+    end
+
+    it 'keeps an explicit readonly through a reload on a non-inheriting model' do
+      User.create!(name: 'A user')
+      user = User.readonly.first
+
+      expect(user.readonly?).to be_truthy
+      expect(user.reload.readonly?).to be_truthy
+    end
+
+    it 'keeps an explicit readonly through a reload on a non-partial record' do
+      record.readonly!
+      expect(record.reload.readonly?).to be_truthy
+    end
+  end
+
+  context 'on automatic casting' do
+    before :each do
+      Activity.create!(title: 'Plain activity')
+      ActivityBook.create!(title: 'A book', url: 'bookurl1')
+      ActivityPost.create!(title: 'A post', url: 'posturl1')
+      ActivityPost::Sample.create!(title: 'A sample')
+    end
+
+    it 'returns the correct class without any opt-in' do
+      expect(Activity.order(:id).load.map(&:class)).to \
+        eql([Activity, ActivityBook, ActivityPost, ActivityPost::Sample])
+    end
+
+    it 'marks casted records as partial and read-only' do
+      records = Activity.order(:id).load.to_a
+
+      expect(records[0].partial_record?).to be_falsey
+      expect(records[0].readonly?).to be_falsey
+      expect(records[1].partial_record?).to be_truthy
+      expect(records[1].readonly?).to be_truthy
+    end
+
+    it 'raises when reading a column that was not loaded' do
+      book = Activity.order(:id).load.to_a[1]
+      expect { book.url }.to raise_error(ActiveModel::MissingAttributeError)
+    end
+
+    it 'raises when persisting a partial record' do
+      book = Activity.order(:id).load.to_a[1]
+      expect { book.update!(title: 'Changed') }.to \
+        raise_error(ActiveRecord::ReadOnlyRecord)
+    end
+
+    it 'destroys a partial record from both tables' do
+      book = Activity.order(:id).load.to_a[1]
+
+      expect(book.readonly?).to be_truthy
+      expect(book.destroy).to be_truthy
+      expect(Activity.where(id: book.id)).to be_empty
+      expect(ActivityBook.where(id: book.id)).to be_empty
+    end
+
+    it 'keeps a partial record read-only after destroying it' do
+      book = Activity.order(:id).load.to_a[1]
+      book.destroy
+
+      expect(book.readonly?).to be_truthy
+    end
+
+    it 'destroys partial records through a dependent association' do
+      author = Author.create!(name: 'An author name')
+      book = ActivityBook.create!(title: 'Owned book', url: 'ownedurl', author: author)
+      author.destroy
+
+      expect(Activity.where(id: book.id)).to be_empty
+      expect(ActivityBook.where(id: book.id)).to be_empty
+    end
+
+    it 'does not mark a dependent that adds no columns as partial' do
+      sample = ActivityPost.order(:id).load.to_a.last
+
+      expect(sample).to be_instance_of(ActivityPost::Sample)
+      expect(sample.partial_record?).to be_falsey
+      expect(sample.readonly?).to be_falsey
+      expect(sample.update!(title: 'Changed')).to be_truthy
+    end
+
+    it 'loads the full record on reload' do
+      book = Activity.order(:id).load.to_a[1]
+      book.reload
+
+      expect(book.url).to eql('bookurl1')
+      expect(book.partial_record?).to be_falsey
+      expect(book.readonly?).to be_falsey
+      expect(book.changed?).to be_falsey
+    end
+
+    it 'does not expose the internal record class attribute' do
+      book = Activity.order(:id).load.to_a[1]
+
+      expect(book).to be_instance_of(ActivityBook)
+      expect(book).not_to respond_to(:_record_class)
+    end
+
+    it 'does not expose the internal record class attribute on a non-casted record' do
+      plain = Activity.order(:id).load.first
+
+      expect(plain).to be_instance_of(Activity)
+      expect(plain).not_to respond_to(:_record_class)
+      expect(plain.attributes).not_to have_key('_record_class')
+      expect { Activity.new(plain.attributes) }.not_to raise_error
+    end
+
+    it 'does not affect single table inheritance' do
+      AuthorJournalist.create!(name: 'An author name')
+      expect(AuthorJournalist.first).to be_instance_of(AuthorJournalist)
+    end
+
+    it 'does not cast records loaded through an explicit select' do
+      book = ActivityBook.create!(title: 'Selected book', url: 'selurl')
+      record = nil
+
+      expect { record = Activity.select(:id, :title).where(id: book.id).first }.to \
+        output(/Activity .* omits :_regclass/).to_stderr
+
+      expect(record).to be_instance_of(Activity)
+      expect(record.partial_record?).to be_falsey
+      expect(record.readonly?).to be_falsey
+    end
+
+    it 'casts records when the select asks for the record class column' do
+      book = ActivityBook.create!(title: 'Selected book', url: 'selurl')
+      record = Activity.select(:_regclass, :id, :title).where(id: book.id).first
+
+      expect(record).to be_instance_of(ActivityBook)
+      expect(record.partial_record?).to be_truthy
+      expect(record.readonly?).to be_truthy
+    end
+
+    it 'keeps extra selected columns on both casted and non-casted records' do
+      author = Author.create!(name: 'The author')
+      Activity.create!(title: 'Joined activity', author: author)
+      ActivityBook.create!(title: 'Joined book', url: 'jburl', author: author)
+
+      records = Activity.joins(:author).where(author_id: author.id)
+        .select(:_regclass, 'activities.*', 'authors.name as author_name')
+        .order(:id).to_a
+
+      expect(records[0]).to be_instance_of(Activity)
+      expect(records[1]).to be_instance_of(ActivityBook)
+      expect(records[0][:author_name]).to eql('The author')
+      expect(records[1][:author_name]).to eql('The author')
+    end
+
+    it 'keeps a user alias containing a double underscore on both plain and casted records' do
+      author = Author.create!(name: 'Underscore author')
+      Activity.create!(title: 'Underscore activity', author: author)
+      ActivityBook.create!(title: 'Underscore book', url: 'underscoreurl', author: author)
+
+      records = Activity.joins(:author).where(author_id: author.id)
+        .select(:_regclass, 'activities.*', 'authors.name as custom__alias')
+        .order(:id).to_a
+
+      expect(records[0]).to be_instance_of(Activity)
+      expect(records[1]).to be_instance_of(ActivityBook)
+      expect(records[0][:custom__alias]).to eql('Underscore author')
+      expect(records[1][:custom__alias]).to eql('Underscore author')
+    end
+
+    it 'warns when an explicit select fails to cast the loaded records' do
+      expect { Activity.select(:id, :title).to_a }.to \
+        output(/Activity .* omits :_regclass/).to_stderr
+    end
+
+    it 'does not warn when the record class column ends up selected' do
+      expect { Activity.select(:_regclass, :id).to_a }.not_to output.to_stderr
+      expect { Activity.select(:_regclass, :id).select(:title).to_a }.not_to output.to_stderr
+      expect { Activity.select(:id).select(:_regclass).to_a }.not_to output.to_stderr
+      expect { Activity.itself_only.select(:id).to_a }.not_to output.to_stderr
+      expect { AuthorJournalist.select(:id).to_a }.not_to output.to_stderr
+    end
+
+    it 'does not warn when a marker-bearing select returns only parent-table rows' do
+      plain = Activity.order(:id).first
+
+      expect { Activity.select(:_regclass, :id, :title).where(id: plain.id).to_a }.not_to \
+        output.to_stderr
+    end
+
+    it 'does not warn when the record class column is hand-written as raw SQL' do
+      plain = Activity.order(:id).first
+
+      expect {
+        Activity.select('tableoid::regclass AS _record_class', :id, :title).where(id: plain.id).to_a
+      }.not_to output.to_stderr
+    end
+
+    it 'does not warn about a relation only used to build a subquery' do
+      ActivityBook.create!(title: 'Sub author book', url: 'subauthorurl')
+
+      expect { Author.where(id: Activity.all) }.not_to output.to_stderr
+    end
+
+    it 'warns only once when an association scope is built more than once' do
+      Author.has_many :selected_activities, -> { select(:id, :title) },
+        class_name: 'Activity', foreign_key: :author_id
+
+      author = Author.create!(name: 'Repeated author')
+      ActivityBook.create!(title: 'Repeated book', url: 'repeaturl', author: author)
+
+      expect { author.selected_activities.to_a }.to \
+        output(/\A[^\n]*omits :_regclass[^\n]*\n\z/).to_stderr
+    end
+
+    it 'does not warn while building an auxiliary statement over an inheriting model' do
+      expect { Activity.select(:id, :title).arel }.not_to output.to_stderr
+    end
+
+    it 'translates the record class token into the marker' do
+      sql = Activity.select(:_regclass, :id).to_sql
+
+      expect(sql).to include('"activities"."tableoid"::regclass AS _record_class')
+      expect(sql).not_to include('"_regclass"')
+    end
+
+    it 'adds the record class exactly once through repeated chaining' do
+      relation = Activity.all
+      3.times do
+        relation = relation.where(active: nil)
+        relation.to_a
+      end
+
+      expect(relation.to_sql.scan('_record_class').size).to eql(1)
+    end
+
+    it 'does not add the record class to a relation used as a subquery' do
+      author = Author.create!(name: 'Sub author')
+      ActivityBook.create!(title: 'Sub book', url: 'suburl', author: author)
+
+      expect(Author.where(id: Activity.select(:author_id)).to_a).to eql([author])
+    end
+
+    it 'does not add the record class to a grouped selection' do
+      expect(Activity.select(:kind).group(:kind).to_a.size).to eql(1)
+      expect(Activity.group(:kind).exists?).to be_truthy
+    end
+
+    it 'does not add the record class to a distinct selection' do
+      ActivityBook.create!(title: 'Plain activity', url: 'duperurl')
+
+      expect(Activity.distinct.select(:title).map(&:title)).to \
+        match_array(['Plain activity', 'A book', 'A post', 'A sample'])
+    end
+
+    it 'does not add the record class when reading from a subquery' do
+      records = Activity.from(Activity.itself_only, :activities).to_a
+
+      expect(records.size).to eql(1)
+      expect(records.first.title).to eql('Plain activity')
+    end
+
+    it 'does not add the record class to plucked columns' do
+      ActivityBook.create!(title: 'Plucked', url: 'plurl')
+      expect(Activity.pluck(:title)).to all(be_a(String))
+      expect(Activity.pluck(:id, :title).first.size).to eql(2)
+    end
+
+    it 'does not add the record class to calculations' do
+      ActivityBook.create!(title: 'Counted', url: 'cnturl')
+      expect(Activity.count).to be_a(Integer)
+      expect(Activity.sum(:id)).to be_a(Integer)
+    end
+
+    it 'does not break calculations combined with buckets' do
+      ActivityBook.create!(title: 'Bucketed', url: 'bkturl')
+      expect { Activity.buckets(:id, 0..50, count: 5).count }.not_to raise_error
+      expect { User.buckets(:age, 0..50, count: 5).count }.not_to raise_error
+    end
+
+    it 'still casts a relation that was previously used for a calculation' do
+      book = ActivityBook.create!(title: 'Reused', url: 'reurl')
+      relation = Activity.where(id: book.id)
+      relation.count
+
+      expect(relation.to_a.first).to be_instance_of(ActivityBook)
+    end
+
+    it 'does not add the record class when plucking an explicit selection' do
+      ActivityBook.create!(title: 'Selected pluck', url: 'spurl')
+      expect(Activity.select(:id, :title).pluck(:id).first).to be_a(Integer)
+    end
+
+    context 'when a record class cannot be resolved' do
+      after { Activity.reset_column_information }
+
+      it 'raises pointing at the irregular models setting' do
+        Activity.instance_variable_set(:@casted_dependents, {})
+
+        expect { Activity.order(:id).load.to_a }.to \
+          raise_error(Torque::PostgreSQL::InheritanceError, /activity_books/)
+      end
+    end
+
+    context 'using uuid' do
+      it 'returns the correct class' do
+        Question.create!(title: 'Simple question')
+        QuestionSelect.create!(title: 'Select question')
+
+        expect(Question.order(:created_at).load.map(&:class)).to \
+          eql([Question, QuestionSelect])
+      end
+    end
+  end
+
   context 'on relation' do
     let(:base) { Activity }
     let(:child) { ActivityBook }
@@ -270,14 +637,20 @@ RSpec.describe 'TableInheritance' do
 
     it 'has operation methods' do
       expect(base).to respond_to(:itself_only)
-      expect(base).to respond_to(:cast_records)
-      expect(base.new).to respond_to(:cast_record)
+      expect(base).to respond_to(:expand_records)
     end
 
     context 'itself only' do
-      it 'does not mess with original queries' do
-        expect(base.all.to_sql).to \
-          eql('SELECT "activities".* FROM "activities"')
+      it 'adds the record class to queries on a table with dependents' do
+        result = 'SELECT "activities".*'
+        result << ', "activities"."tableoid"::regclass AS _record_class'
+        result << ' FROM "activities"'
+        expect(base.all.to_sql).to eql(result)
+      end
+
+      it 'does not add the record class to a table without dependents' do
+        expect(other.all.to_sql).to \
+          eql("SELECT \"authors\".* FROM \"authors\" WHERE \"authors\".\"type\" = 'AuthorJournalist'")
       end
 
       it 'adds the only condition to the query' do
@@ -295,7 +668,7 @@ RSpec.describe 'TableInheritance' do
       end
     end
 
-    context 'cast records' do
+    context 'expand records' do
       before :each do
         base.create(title: 'Activity test')
         child.create(title: 'Activity book', url: 'bookurl1')
@@ -313,31 +686,28 @@ RSpec.describe 'TableInheritance' do
         result << ', COALESCE("i_0"."url", "i_1"."url", "i_2"."url") AS url, "i_0"."activated" AS activity_books__activated'
         result << ', "i_1"."activated" AS activity_posts__activated, "i_2"."activated" AS activity_post_samples__activated'
         result << ', COALESCE("i_1"."file", "i_2"."file") AS file, COALESCE("i_1"."post_id", "i_2"."post_id") AS post_id'
-        result << ", \"activities\".\"tableoid\"::regclass::varchar IN ('activity_books', 'activity_posts', 'activity_post_samples') AS _auto_cast"
         result << ' FROM "activities"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
         result << ' LEFT OUTER JOIN "activity_posts" "i_1" ON "activities"."id" = "i_1"."id"'
         result << ' LEFT OUTER JOIN "activity_post_samples" "i_2" ON "activities"."id" = "i_2"."id"'
-        expect(base.cast_records.all.to_sql).to eql(result)
+        expect(base.expand_records(eager_load: true).all.to_sql).to eql(result)
       end
 
       it 'can be have simplefied joins' do
         result = 'SELECT "activities".*, "activities"."tableoid"::regclass AS _record_class'
         result << ', "i_0"."description", "i_0"."url", "i_0"."activated"'
-        result << ", \"activities\".\"tableoid\"::regclass::varchar IN ('activity_books') AS _auto_cast"
         result << ' FROM "activities"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
-        expect(base.cast_records(child).all.to_sql).to eql(result)
+        expect(base.expand_records(child, eager_load: true).all.to_sql).to eql(result)
       end
 
       it 'can be filtered by record type' do
         result = 'SELECT "activities".*, "activities"."tableoid"::regclass AS _record_class'
         result << ', "i_0"."description", "i_0"."url", "i_0"."activated"'
-        result << ", \"activities\".\"tableoid\"::regclass::varchar IN ('activity_books') AS _auto_cast"
         result << ' FROM "activities"'
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
         result << " WHERE \"activities\".\"tableoid\"::regclass::varchar IN ('activity_books')"
-        expect(base.cast_records(child, filter: true).all.to_sql).to eql(result)
+        expect(base.expand_records(child, filter: true, eager_load: true).all.to_sql).to eql(result)
       end
 
       it 'works with count and does not add extra columns' do
@@ -346,7 +716,7 @@ RSpec.describe 'TableInheritance' do
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
         result << ' LEFT OUTER JOIN "activity_posts" "i_1" ON "activities"."id" = "i_1"."id"'
         result << ' LEFT OUTER JOIN "activity_post_samples" "i_2" ON "activities"."id" = "i_2"."id"'
-        query = get_last_executed_query{ base.cast_records.all.count }
+        query = get_last_executed_query{ base.expand_records(eager_load: true).all.count }
         expect(query).to eql(result)
       end
 
@@ -356,14 +726,34 @@ RSpec.describe 'TableInheritance' do
         result << ' LEFT OUTER JOIN "activity_books" "i_0" ON "activities"."id" = "i_0"."id"'
         result << ' LEFT OUTER JOIN "activity_posts" "i_1" ON "activities"."id" = "i_1"."id"'
         result << ' LEFT OUTER JOIN "activity_post_samples" "i_2" ON "activities"."id" = "i_2"."id"'
-        query = get_last_executed_query{ base.cast_records.all.sum(:id) }
+        query = get_last_executed_query{ base.expand_records(eager_load: true).all.sum(:id) }
         expect(query).to eql(result)
+      end
+
+      it 'does not accumulate the extra columns through repeated chaining' do
+        relation = base.expand_records(eager_load: true)
+        3.times do
+          relation = relation.where(active: nil)
+          relation.to_a
+        end
+
+        sql = relation.to_sql
+        expect(sql.scan('_record_class').size).to eql(1)
+        expect(sql.scan('"i_0"."description"').size).to eql(1)
+      end
+
+      it 'filters by every expandable dependent when no type is given' do
+        ActivityPost.create(title: 'Activity post', url: 'posturl1')
+        records = base.expand_records(filter: true).order(:id).to_a
+
+        expect(records.map(&:class)).to eql([ActivityBook, ActivityPost])
+        expect(records.map(&:url)).to eql(['bookurl1', 'posturl1'])
       end
 
       it 'returns the correct model object' do
         ActivityPost.create(title: 'Activity post')
         ActivityPost::Sample.create(title: 'Activity post')
-        records = base.cast_records.order(:id).load.to_a
+        records = base.expand_records(eager_load: true).order(:id).load.to_a
 
         expect(records[0]).to be_instance_of(Activity)
         expect(records[1]).to be_instance_of(ActivityBook)
@@ -371,81 +761,403 @@ RSpec.describe 'TableInheritance' do
         expect(records[3]).to be_instance_of(ActivityPost::Sample)
       end
 
-      it 'does not cast unnecessary records' do
+      it 'only fully loads the requested records' do
         ActivityPost.create(title: 'Activity post')
-        records = base.cast_records(ActivityBook).order(:id).load.to_a
+        records = base.expand_records(ActivityBook, eager_load: true).order(:id).load.to_a
 
-        expect(records[0]).to be_instance_of(Activity)
         expect(records[1]).to be_instance_of(ActivityBook)
-        expect(records[2]).to be_instance_of(Activity)
+        expect(records[1].partial_record?).to be_falsey
+        expect(records[2]).to be_instance_of(ActivityPost)
+        expect(records[2].partial_record?).to be_truthy
       end
 
       it 'correctly identifies same name attributes' do
         ActivityPost.create(title: 'Activity post', url: 'posturl1')
-        records = base.cast_records.order(:id).load.to_a
+        records = base.expand_records(eager_load: true).order(:id).load.to_a
 
         expect(records[1].url).to eql('bookurl1')
         expect(records[2].url).to eql('posturl1')
       end
 
-      # TODO: Maybe in the future
-      xit 'does not make internal inheritance attributes accessible' do
-        record = base.cast_records.order(:id).load.last
+      it 'does not make internal inheritance attributes accessible' do
+        record = base.expand_records(eager_load: true).order(:id).load.last
 
         expect(record).to be_instance_of(ActivityBook)
         expect(record).not_to respond_to(:_record_class)
-        expect(record).not_to respond_to(:_auto_cast)
+      end
+
+      it 'drops sibling dependent columns from a casted record' do
+        ActivityPost.create(title: 'Activity post', url: 'posturl1')
+        record = base.expand_records(eager_load: true).order(:id).load[1]
+
+        expect(record).to be_instance_of(ActivityBook)
+        expect(record.url).to eql('bookurl1')
+        expect(record.attributes).not_to have_key('file')
+        expect(record.attributes).not_to have_key('post_id')
+        expect { ActivityBook.new(record.attributes) }.not_to raise_error
+      end
+
+      it 'drops a genuine dependent-prefixed column from a casted record' do
+        ActivityPost.create(title: 'Activity post', url: 'posturl1')
+        record = base.expand_records(eager_load: true).order(:id).load[1]
+
+        expect(record).to be_instance_of(ActivityBook)
+        expect(record.attributes).not_to have_key('activity_posts__activated')
+      end
+
+      it 'drops sibling dependent columns from a non-casted parent record' do
+        record = base.expand_records(eager_load: true).order(:id).load[0]
+
+        expect(record).to be_instance_of(Activity)
+        expect(record.attributes).not_to have_key('description')
+        expect(record.attributes).not_to have_key('url')
+        expect { Activity.new(record.attributes) }.not_to raise_error
+      end
+
+      it 'defaults to every dependent that adds columns' do
+        relation = base.expand_records
+        expect(relation.expand_records_values).to \
+          eql(base.inheritance_expandable_dependents.values)
+      end
+
+      it 'limits the expansion to the given models' do
+        relation = base.expand_records(child)
+        expect(relation.expand_records_values).to eql([child])
+      end
+
+      it 'does not add joins without eager loading' do
+        result = 'SELECT "activities".*'
+        result << ', "activities"."tableoid"::regclass AS _record_class'
+        result << ' FROM "activities"'
+        expect(base.expand_records.all.to_sql).to eql(result)
+      end
+
+      it 'cannot be combined with itself only' do
+        expect { base.itself_only.expand_records }.to \
+          raise_error(Torque::PostgreSQL::InheritanceError, /itself_only/)
+        expect { base.expand_records.itself_only }.to \
+          raise_error(Torque::PostgreSQL::InheritanceError, /itself_only/)
+      end
+
+      it 'cannot be merged with itself only' do
+        expect { base.expand_records.merge(base.itself_only) }.to \
+          raise_error(Torque::PostgreSQL::InheritanceError, /itself_only/)
+        expect { base.itself_only.merge(base.expand_records) }.to \
+          raise_error(Torque::PostgreSQL::InheritanceError, /itself_only/)
+      end
+
+      it 'loads the missing columns with one query per table' do
+        ActivityPost.create(title: 'Activity post', url: 'posturl1')
+        records = nil
+
+        queries = capture_executed_queries do
+          records = base.expand_records.order(:id).load.to_a
+        end
+
+        expect(queries.size).to eql(3)
+        expect(records[1]).to be_instance_of(ActivityBook)
+        expect(records[1].url).to eql('bookurl1')
+        expect(records[2]).to be_instance_of(ActivityPost)
+        expect(records[2].url).to eql('posturl1')
+      end
+
+      it 'produces complete and writable records' do
+        record = base.expand_records.order(:id).load.to_a[1]
+
+        expect(record.partial_record?).to be_falsey
+        expect(record.readonly?).to be_falsey
+        expect(record.update!(title: 'Changed')).to be_truthy
+      end
+
+      it 'does not leave expanded records dirty' do
+        record = base.expand_records.order(:id).load.to_a[1]
+
+        expect(record.changed?).to be_falsey
+        expect(record.changes).to be_empty
+      end
+
+      it 'only selects the primary key and the extra columns' do
+        queries = capture_executed_queries do
+          base.expand_records(child).order(:id).load.to_a
+        end
+
+        expansion = queries.find { |sql| sql.include?('activity_books') }
+        expect(expansion).to match(/SELECT "activity_books"\."id"/)
+        expect(expansion).to include('"description"')
+        expect(expansion).to include('"url"')
+        expect(expansion).not_to include('"title"')
+      end
+
+      it 'reads the expansion from only the target table' do
+        ActivityPost.create(title: 'Activity post', url: 'posturl1')
+
+        queries = capture_executed_queries do
+          base.expand_records(ActivityPost).order(:id).load.to_a
+        end
+
+        expansion = queries.find { |sql| sql.include?('activity_posts') }
+        expect(expansion).to include('FROM ONLY "activity_posts"')
+        expect(expansion).not_to include('_record_class')
+      end
+
+      it 'leaves records partial when the inherited row is gone' do
+        vanished = child.create(title: 'Vanished book', url: 'bookurl2')
+        covered = child.order(:id).first
+        row = { 'description' => nil, 'url' => covered.url, 'activated' => nil }
+        only_covered = ->(*) { { covered.id => row } }
+
+        allow_any_instance_of(Torque::PostgreSQL::Inheritance::Expander).to \
+          receive(:fetch, &only_covered)
+
+        records = base.expand_records.order(:id).load.to_a.last(2)
+
+        expect(records.first.id).to eql(covered.id)
+        expect(records.first.partial_record?).to be_falsey
+        expect(records.first.url).to eql('bookurl1')
+
+        expect(records.last.id).to eql(vanished.id)
+        expect(records.last.partial_record?).to be_truthy
+        expect { records.last.url }.to raise_error(ActiveModel::MissingAttributeError)
+      end
+
+      it 'preserves an explicit readonly through expansion' do
+        record = base.readonly.expand_records.order(:id).load.to_a[1]
+
+        expect(record.url).to eql('bookurl1')
+        expect(record.readonly?).to be_truthy
+        expect { record.update!(title: 'Changed') }.to \
+          raise_error(ActiveRecord::ReadOnlyRecord)
       end
     end
+  end
 
-    context 'cast record' do
-      before :each do
-        base.create(title: 'Activity test')
-        child.create(title: 'Activity book')
-        other.create(name: 'An author name')
-        base.instance_variable_set(:@casted_dependents, nil)
+  context 'on associations' do
+    let(:author) { Author.create!(name: 'An author name') }
+
+    before :each do
+      Activity.create!(title: 'Plain activity', author: author)
+      ActivityBook.create!(title: 'A book', url: 'bookurl1', author: author)
+      ActivityPost.create!(title: 'A post', url: 'posturl1', author: author)
+    end
+
+    it 'returns the correct classes through a preloaded association' do
+      activities = Author.includes(:activities).first.activities.sort_by(&:id)
+
+      expect(activities.map(&:class)).to \
+        eql([Activity, ActivityBook, ActivityPost])
+    end
+
+    it 'leaves preloaded records partial without expanding' do
+      activities = Author.includes(:activities).first.activities.sort_by(&:id)
+
+      expect(activities[1].partial_record?).to be_truthy
+      expect { activities[1].url }.to raise_error(ActiveModel::MissingAttributeError)
+    end
+
+    it 'expands preloaded records when merged' do
+      relation = Author.includes(:activities).merge(Activity.expand_records)
+      activities = relation.first.activities.sort_by(&:id)
+
+      expect(activities[1]).to be_instance_of(ActivityBook)
+      expect(activities[1].url).to eql('bookurl1')
+      expect(activities[1].partial_record?).to be_falsey
+      expect(activities[1].changed?).to be_falsey
+      expect(activities[2].url).to eql('posturl1')
+    end
+
+    it 'uses one query per table when expanding through an association' do
+      other_author = Author.create!(name: 'Another author name')
+      Activity.create!(title: 'Other activity', author: other_author)
+      ActivityBook.create!(title: 'Other book', url: 'bookurl2', author: other_author)
+      ActivityPost.create!(title: 'Other post', url: 'posturl2', author: other_author)
+
+      queries = capture_executed_queries do
+        Author.includes(:activities).merge(Activity.expand_records).load.to_a
       end
 
-      it 'does not affect normal records' do
-        expect(base.first.cast_record).to be_a(base)
-        expect(child.first.cast_record).to be_a(child)
-        expect(other.first.cast_record).to be_a(other)
+      expect(queries.size).to eql(4)
+    end
+
+    it 'accumulates targets across repeated cross-model merges' do
+      relation = Author.includes(:activities)
+        .merge(Activity.expand_records(ActivityBook))
+        .merge(Activity.expand_records(ActivityPost))
+
+      expect(relation.expand_records_scoped_value[Activity]).to \
+        contain_exactly(ActivityBook, ActivityPost)
+    end
+
+    it 'refuses to merge an eager loaded expansion from another model' do
+      expect { Author.includes(:activities).merge(Activity.expand_records(eager_load: true)) }.to \
+        raise_error(Torque::PostgreSQL::InheritanceError, /eager load/)
+    end
+
+    it 'does not raise when a polymorphic association is mixed into the includes' do
+      user = User.create!(name: 'A user')
+      Comment.create!(user: user, content: 'A comment')
+
+      expect do
+        Comment.includes(:commentable).merge(Activity.expand_records).load.to_a
+      end.not_to raise_error
+    end
+  end
+
+  context 'on eager loading' do
+    let(:author) { Author.create!(name: 'An author name') }
+
+    let(:post_record) { Post.create!(title: 'A post record', author: author) }
+
+    before :each do
+      Activity.create!(title: 'Plain activity', author: author)
+      ActivityBook.create!(title: 'A book', url: 'bookurl1', author: author)
+      ActivityPost.create!(title: 'A post', url: 'posturl1', author: author, post: post_record)
+      ActivityPost::Sample.create!(title: 'A sample', url: 'sampleurl1', author: author)
+    end
+
+    it 'casts records the same way includes does' do
+      eager = Activity.eager_load(:author).order(:id).to_a
+      included = Activity.includes(:author).order(:id).to_a
+
+      expect(eager.map(&:class)).to eql(included.map(&:class))
+      expect(eager.map(&:class)).to \
+        eql([Activity, ActivityBook, ActivityPost, ActivityPost::Sample])
+    end
+
+    it 'leaves eager loaded records partial' do
+      record = Activity.eager_load(:author).order(:id).to_a[1]
+
+      expect(record).to be_instance_of(ActivityBook)
+      expect(record.partial_record?).to be_truthy
+      expect(record.readonly?).to be_truthy
+      expect { record.url }.to raise_error(ActiveModel::MissingAttributeError)
+    end
+
+    it 'still loads the association without an extra query' do
+      record = Activity.eager_load(:author).order(:id).first
+
+      queries = capture_executed_queries { record.author }
+      expect(queries).to be_empty
+      expect(record.author).to eql(author)
+    end
+
+    it 'loads a nested eager load without disturbing the aliasing' do
+      queries = capture_executed_queries do
+        record = Activity.eager_load(author: :posts).order(:id).load.first
+
+        expect(record).to be_instance_of(Activity)
+        expect(record.author).to eql(author)
+        expect(record.author.posts.map(&:title)).to eql(['A post record'])
       end
 
-      it 'rises an error when the casted model cannot be defined' do
-        base.instance_variable_set(:@casted_dependents, {})
-        expect{ base.second.cast_record }.to raise_error(ArgumentError, /to type 'activity_books'/)
+      expect(queries.size).to eql(1)
+    end
+
+    it 'loads multiple eager loads without disturbing the aliasing' do
+      queries = capture_executed_queries do
+        record = ActivityPost.eager_load(:author, :post).order(:id).first
+
+        expect(record).to be_instance_of(ActivityPost)
+        expect(record.author).to eql(author)
+        expect(record.post.title).to eql('A post record')
       end
 
-      it 'can return the record class even when the auxiliary statement is not mentioned' do
-        expect(base.first._record_class).to eql('activities')
-        expect(base.second._record_class).to eql('activity_books')
-        expect(other.first._record_class).to eql('authors')
+      expect(queries.size).to eql(1)
+    end
+
+    it 'does not add the marker when the user provides an explicit select' do
+      sql = Activity.eager_load(:author).select(:id, :title).to_sql
+      expect(sql).not_to include('tableoid')
+    end
+
+    it 'does not add the marker when restricted to itself_only' do
+      sql = Activity.itself_only.eager_load(:author).to_sql
+      expect(sql).not_to include('tableoid')
+    end
+
+    it 'does not add the root marker when the root model does not physically inherit' do
+      sql = Author.eager_load(:activities).to_sql
+      expect(sql).not_to include('_record_class')
+    end
+
+    it 'casts an inheriting model loaded as a joined part' do
+      records = Author.eager_load(:activities).first.activities.sort_by(&:id)
+
+      expect(records.map(&:class)).to \
+        eql([Activity, ActivityBook, ActivityPost, ActivityPost::Sample])
+    end
+
+    it 'casts a joined part the same way includes does' do
+      eager = Author.eager_load(:activities).first.activities.sort_by(&:id)
+      included = Author.includes(:activities).first.activities.sort_by(&:id)
+
+      expect(eager.map(&:class)).to eql(included.map(&:class))
+    end
+
+    it 'casts a joined part without any extra query' do
+      queries = capture_executed_queries do
+        records = Author.eager_load(:activities).to_a.first.activities
+
+        expect(records.map(&:class)).to include(ActivityBook)
       end
 
-      it 'does trigger record casting when accessed through inheritance' do
-        expect(base.second.cast_record).to eql(child.first)
-      end
+      expect(queries.size).to eql(1)
+    end
 
-      context 'using uuid' do
-        let(:base) { Question }
-        let(:child) { QuestionSelect }
+    it 'leaves a casted joined part partial and read-only' do
+      record = Author.eager_load(:activities).first.activities.sort_by(&:id)[1]
 
-        before :each do
-          base.create(title: 'Simple question')
-          child.create(title: 'Select question')
-          base.instance_variable_set(:@casted_dependents, nil)
-        end
+      expect(record).to be_instance_of(ActivityBook)
+      expect(record.partial_record?).to be_truthy
+      expect(record.readonly?).to be_truthy
+      expect { record.url }.to raise_error(ActiveModel::MissingAttributeError)
+    end
 
-        it 'does not affect normal records' do
-          expect(base.first.cast_record).to be_a(base)
-          expect(child.first.cast_record).to be_a(child)
-        end
+    it 'aliases the joined marker using the pattern of the other columns' do
+      sql = Author.eager_load(:activities).to_sql
 
-        it 'does trigger record casting when accessed through inheritance' do
-          expect(base.second.cast_record).to eql(child.first)
-        end
-      end
+      expect(sql).to match(/"activities"\."tableoid"::regclass AS t1_r\d+/)
+      expect(sql.scan('tableoid').size).to eql(1)
+    end
+
+    it 'casts both ends when the root inherits as well' do
+      record = Activity.eager_load(author: :activities).order(:id).to_a[1]
+
+      expect(record).to be_instance_of(ActivityBook)
+      expect(record.author.activities.sort_by(&:id).map(&:class)).to \
+        eql([Activity, ActivityBook, ActivityPost, ActivityPost::Sample])
+    end
+
+    it 'keeps the joined marker stable when the relation is built twice' do
+      relation = Author.eager_load(:activities)
+      relation.to_sql
+
+      expect(relation.to_sql.scan('tableoid').size).to eql(1)
+      expect(relation.first.activities.map(&:class)).to include(ActivityBook)
+    end
+
+    it 'does not add the marker when the relation has an explicit from clause' do
+      sql = Activity.from(Activity.itself_only, :activities).eager_load(:author).to_sql
+      expect(sql).not_to include('tableoid')
+    end
+
+    it 'adds the marker exactly once to the generated sql' do
+      sql = Activity.eager_load(:author).to_sql
+
+      expect(sql.scan('_record_class').size).to eql(1)
+      expect(sql.scan('tableoid').size).to eql(1)
+    end
+
+    it 'casts and fully expands when merged with expand_records, with no extra author query' do
+      relation = Activity.eager_load(:author).merge(Activity.expand_records)
+      records = relation.order(:id).to_a
+
+      expect(records.map(&:class)).to \
+        eql([Activity, ActivityBook, ActivityPost, ActivityPost::Sample])
+      expect(records.map(&:partial_record?)).to eql([false, false, false, false])
+      expect(records[1].url).to eql('bookurl1')
+
+      queries = capture_executed_queries { records.each(&:author) }
+      expect(queries).to be_empty
     end
   end
 end

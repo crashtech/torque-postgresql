@@ -46,16 +46,32 @@ module Torque
             end
           end
 
-          # Merge settings related to inheritance tables
+          # Merge settings related to inheritance tables, going through the
+          # public operations so that their conflicts are still detected
           def merge_inheritance
             return unless relation.is_a?(Relation::Inheritance)
 
-            relation.itself_only_value = true if other.itself_only_value.present?
+            relation.itself_only! if other.itself_only_value.present?
 
-            if other.cast_records_values.present?
-              relation.cast_records_values += other.cast_records_values
-              relation.cast_records_values.uniq!
+            return if other.expand_records_values.blank?
+
+            if relation.model == other.model
+              types = (relation.expand_records_values + other.expand_records_values).uniq
+              relation.expand_records!(*types, eager_load: other.expand_records_eager_load_value)
+            else
+              raise_eager_load_conflict! if other.expand_records_eager_load_value
+
+              relation.expand_records_scoped_value = relation.expand_records_scoped_value
+                .merge(other.model => other.expand_records_values) { |_, a, b| (a + b).uniq }
             end
+          end
+
+          def raise_eager_load_conflict!
+            raise InheritanceError.new(<<~MSG.squish)
+              Expanding the records of a different model happens through a
+              preload, which has no query to eager load the inherited tables
+              into, so the two cannot be merged.
+            MSG
           end
 
           # Merge settings related to buckets

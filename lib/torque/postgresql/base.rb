@@ -17,7 +17,7 @@ module Torque
       end
 
       class_methods do
-        delegate :distinct_on, :with, :itself_only, :cast_records, :join_series,
+        delegate :distinct_on, :with, :itself_only, :expand_records, :join_series,
           :buckets, to: :all
 
         # Composite values are objects that can be invalid on their own, so the
@@ -42,24 +42,12 @@ module Torque
         end
 
         # Whenever the base model is inherited, add a list of auxiliary
-        # statements like the one that loads inherited records' relname
+        # statements
         def inherited(subclass)
           super
 
           subclass.class_attribute(:auxiliary_statements_list)
           subclass.auxiliary_statements_list = {}
-
-          record_class = ActiveRecord::Relation._record_class_attribute
-
-          # Define the dynamic attribute that returns the same information as
-          # the one provided by the auxiliary statement
-          subclass.dynamic_attribute(record_class) do
-            klass = self.class
-            next klass.table_name unless klass.physically_inheritances?
-
-            query = klass.unscoped.where(subclass.primary_key => id)
-            query.pluck(klass.arel_table['tableoid'].pg_cast('regclass')).first
-          end
         end
 
         # Specifies a one-to-many association. The following methods for
