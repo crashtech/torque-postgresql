@@ -26,3 +26,4 @@ gemfiles/*.lock
 docs/_site/
 docs/.jekyll-cache/
 docs/.jekyll-metadata
+docs/superpowers

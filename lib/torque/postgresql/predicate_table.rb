@@ -38,9 +38,12 @@ module Torque
         nil
       end
 
-      def associated_with?(*)
+      # Rails 8.1 renamed this, so both names answer for the supported versions
+      def associated_with(*)
         false
       end
+
+      alias associated_with? associated_with
 
       def aggregated_with?(*)
         false

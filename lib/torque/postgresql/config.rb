@@ -2,19 +2,29 @@
 
 module Torque
   module PostgreSQL
-    include ActiveSupport::Configurable
+    # Stores a version check for compatibility purposes
+    AR810 = (ActiveRecord.gem_version >= Gem::Version.new('8.1.0'))
 
-    # Use the same logger as the Active Record one
-    def self.logger
-      ActiveRecord::Base.logger
+    class << self
+      def config
+        @config ||= ActiveSupport::InheritableOptions.new
+      end
+
+      def configure
+        yield config
+      end
+
+      # Use the same logger as the Active Record one
+      def logger
+        ActiveRecord::Base.logger
+      end
     end
 
     # Allow nested configurations
-    # :TODO: Rely on +inheritable_copy+ to make nested configurations
     config.define_singleton_method(:nested) do |name, &block|
-      klass = Class.new(ActiveSupport::Configurable::Configuration).new
-      block.call(klass) if block
-      send("#{name}=", klass)
+      nested = ActiveSupport::InheritableOptions.new
+      block&.call(nested)
+      self[name] = nested
     end
 
     # Set if any information that requires querying and searching or collecting
@@ -31,7 +41,7 @@ module Torque
     # Set a list of irregular model name when associated with table names
     config.irregular_models = {}
     def config.irregular_models=(hash)
-      PostgreSQL.config[:irregular_models] = hash.map do |(table, model)|
+      self[:irregular_models] = hash.map do |(table, model)|
         [table.to_s, model.to_s]
       end.to_h
     end
@@ -297,7 +307,7 @@ module Torque
 
       # When provided, the initializer will expose the Arel function helper on
       # the given module
-      config.expose_function_helper_on = nil
+      arel.expose_function_helper_on = nil
 
       # List of Arel INFIX operators that will be made available for using as
       # methods on Arel::Nodes::Node and Arel::Attribute

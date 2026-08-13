@@ -7,6 +7,8 @@ module Torque
         class Composite < ActiveModel::Type::Value
           ARRAY = ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Array
           DATA = ARRAY::Data
+          ENCODER = PG::TextEncoder::Record.new
+          DECODER = PG::TextDecoder::Record.new
 
           attr_reader :name
 
@@ -27,9 +29,11 @@ module Torque
             @name = name.to_s.freeze
           end
 
-          # The class that represents the composite type, loaded in a lazy way
+          # The class that represents the composite type, loaded in a lazy way.
+          # It cannot be memoized here because Rails freezes the types it
+          # resolves through the type map, so the lookup owns the cache
           def klass
-            @klass ||= Attributes::Composite.lookup(name)
+            Attributes::Composite.lookup(name)
           end
 
           # The ordered list of columns of the composite type, as a hash of
@@ -58,7 +62,7 @@ module Torque
           def deserialize(value)
             return if value.nil?
 
-            fields = value.is_a?(DATA) ? value.values : decoder.decode(value)
+            fields = value.is_a?(DATA) ? value.values : DECODER.decode(value)
             instance = klass.new
             set = attributes_of(instance)
 
@@ -80,7 +84,7 @@ module Torque
             set = attributes_of(cast(value))
             values = columns.each_key.map { |attr_name| set[attr_name].value_for_database }
 
-            DATA.new(encoder, values)
+            DATA.new(ENCODER, values)
           end
 
           def changed_in_place?(raw_old_value, new_value)
@@ -104,14 +108,6 @@ module Torque
 
             def attributes_of(record)
               record.instance_variable_get(:@attributes)
-            end
-
-            def encoder
-              @encoder ||= PG::TextEncoder::Record.new
-            end
-
-            def decoder
-              @decoder ||= PG::TextDecoder::Record.new
             end
         end
       end

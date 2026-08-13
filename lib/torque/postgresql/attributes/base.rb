@@ -19,7 +19,9 @@ module Torque
 
         include SimpleEnum
         include ActiveRecord::Store
-        include ActiveRecord::Normalization if defined?(ActiveRecord::Normalization)
+        # Rails 8.1 moved normalization to Active Model, which is where these
+        # classes belong anyway
+        include(AR810 ? ActiveModel::Attributes::Normalization : ActiveRecord::Normalization)
         include ActiveRecord::Encryption::EncryptableRecord
 
         class << self

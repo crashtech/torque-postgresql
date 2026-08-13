@@ -771,22 +771,20 @@ RSpec.describe 'Struct' do
     end
   end
 
-  if defined?(ActiveRecord::Normalization)
-    context 'on normalization' do
-      let(:normalized_klass) do
-        Class.new(Torque::PostgreSQL::Attributes::Struct) do
-          attribute :email, :string
-          normalizes :email, with: ->(value) { value.strip.downcase }
-        end
+  context 'on normalization' do
+    let(:normalized_klass) do
+      Class.new(Torque::PostgreSQL::Attributes::Struct) do
+        attribute :email, :string
+        normalizes :email, with: ->(value) { value.strip.downcase }
       end
+    end
 
-      it 'normalizes on assignment' do
-        expect(normalized_klass.new(email: '  A@B.C ').email).to be_eql('a@b.c')
-      end
+    it 'normalizes on assignment' do
+      expect(normalized_klass.new(email: '  A@B.C ').email).to be_eql('a@b.c')
+    end
 
-      it 'leaves nil alone' do
-        expect(normalized_klass.new.email).to be_nil
-      end
+    it 'leaves nil alone' do
+      expect(normalized_klass.new.email).to be_nil
     end
   end
 

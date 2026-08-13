@@ -76,7 +76,8 @@ module Torque
         return unless relation
 
         table = predicate_builder.send(:table)
-        if table.associated_with?(relation.to_s)
+        associated = AR810 ? table.associated_with(relation.to_s) : table.associated_with?(relation.to_s)
+        if associated
           table.associated_table(relation.to_s).send(:klass)
         else
           raise ArgumentError, "Relation for #{relation} not found on #{klass}"
@@ -87,7 +88,7 @@ module Torque
       # the given column
       def cast_for_condition(column, value)
         column = columns_hash[column.to_s] unless column.is_a?(ARColumn)
-        caster = connection.lookup_cast_type_from_column(column)
+        caster = connection.lookup_cast_type_for_column(column)
         connection.type_cast(caster.serialize(value))
       end
 

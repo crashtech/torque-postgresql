@@ -509,18 +509,16 @@ RSpec.describe 'Composite' do
     end
   end
 
-  if defined?(ActiveRecord::Normalization)
-    context 'on normalization' do
-      let(:extended_klass) do
-        klass = Class.new(Torque::PostgreSQL::Attributes::Composite)
-        klass.type_name = 'address'
-        klass.normalizes(:street, with: ->(value) { value.strip.upcase })
-        klass
-      end
+  context 'on normalization' do
+    let(:extended_klass) do
+      klass = Class.new(Torque::PostgreSQL::Attributes::Composite)
+      klass.type_name = 'address'
+      klass.normalizes(:street, with: ->(value) { value.strip.upcase })
+      klass
+    end
 
-      it 'normalizes a column on assignment' do
-        expect(extended_klass.new(street: '  main ').street).to be_eql('MAIN')
-      end
+    it 'normalizes a column on assignment' do
+      expect(extended_klass.new(street: '  main ').street).to be_eql('MAIN')
     end
   end
 

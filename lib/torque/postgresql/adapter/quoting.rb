@@ -36,10 +36,19 @@ module Torque
               lookup_cast_type(column.sql_type)
             elsif column.is_a?(Column) && column.array?
               # When using +change_column_default+
-              lookup_cast_type_from_column(column)
+              lookup_cast_type_for_column(column)
             end
 
           type.nil? ? super : quote(type.serialize(value.to_a))
+        end
+
+        # Rails 8.1 dropped +lookup_cast_type_from_column+, and the sql_type of
+        # an array column does not carry the array part, so only the oid can
+        # resolve the real type
+        def lookup_cast_type_for_column(column)
+          return lookup_cast_type_from_column(column) unless AR810
+
+          type_map.lookup(column.oid, column.fmod, column.sql_type)
         end
       end
     end

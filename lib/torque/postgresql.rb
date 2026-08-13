@@ -5,6 +5,7 @@ require 'active_model'
 require 'active_record'
 require 'active_support'
 
+require 'active_support/ordered_options'
 require 'active_support/core_ext/date/acts_like'
 require 'active_support/core_ext/time/zones'
 require 'active_record/connection_adapters/postgresql_adapter'
