@@ -342,8 +342,11 @@ RSpec.describe 'TableInheritance' do
       before { connection.sync_inheritance_features(parent) }
 
       it 'describes an inherited primary key through the sync option' do
-        parts = "\"#{child}\", id: false, inherits: \"#{parent}\", sync: \\{primary_key: true\\}"
-        expect(dump_result).to match(/create_table #{parts}/)
+        line = dump_result.lines.find { |item| item.include?("create_table \"#{child}\"") }
+
+        expect(line).to include('id: false')
+        expect(line).to include(%[inherits: "#{parent}"])
+        expect(line).to match(/sync: \{:?primary_key(?:: | => |=>)true\}/)
       end
 
       it 'never describes the inherited column all over again' do
