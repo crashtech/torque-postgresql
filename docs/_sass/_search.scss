@@ -1,0 +1,46 @@
+// Title search over _data/nav.yml. It carries no index and no library: the
+// whole corpus is 26 page names, which the masthead already knows.
+.search{position:relative}
+
+.search-input{
+  width:8.5rem; padding:.3rem .8rem .3rem 1.9rem;
+  font:400 .78rem/1.4 var(--font-body); color:var(--fg);
+  background:var(--bg-sunken) no-repeat .65rem center;
+  background-size:.8rem;
+  border:1px solid var(--line); border-radius:999px;
+  transition:width .18s ease;
+}
+.search-input::placeholder{color:var(--fg-muted)}
+.search-input:focus{width:14rem; outline-offset:0}
+
+.search svg{
+  position:absolute; left:.65rem; top:50%; transform:translateY(-50%);
+  width:.8rem; height:.8rem; pointer-events:none;
+  fill:none; stroke:var(--fg-muted); stroke-width:2;
+}
+
+.search-results{
+  position:absolute; top:calc(100% + .5rem); right:0; z-index:30;
+  width:19rem; max-height:60vh; overflow-y:auto;
+  padding:.35rem; margin:0; list-style:none;
+  background:var(--bg-raised); border:1px solid var(--line);
+  border-radius:var(--radius); box-shadow:0 18px 40px -22px rgb(0 0 0 / .55);
+}
+.search-results:empty{display:none}
+.search-results a,
+.search-results span{
+  display:flex; justify-content:space-between; gap:.75rem; align-items:baseline;
+  padding:.4rem .6rem; font-size:.85rem; color:var(--fg); border-radius:4px;
+}
+.search-results a:hover,
+.search-results a:focus-visible{background:var(--accent-bg); color:var(--accent); text-decoration:none}
+.search-results span{color:var(--fg-faint)}
+.search-results small{
+  flex:none; font-size:.64rem; font-weight:700;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--fg-faint);
+}
+.search-empty{padding:.6rem; font-size:.85rem; color:var(--fg-muted)}
+
+@media (max-width: 640px){
+  .search{display:none}
+}

@@ -85,6 +85,32 @@ module Torque
               end
             end
 
+            ## Struct Enabled Setup
+            if (config = torque_config.struct).enabled
+              require_relative 'adapter/oid/struct'
+              require_relative 'adapter/oid/struct_list'
+              require_relative 'adapter/oid/struct_set'
+
+              require_relative 'attributes/struct'
+
+              Attributes::Struct.include_on(ActiveRecord::Base)
+            end
+
+            ## Composite Enabled Setup
+            if (config = torque_config.composite).enabled
+              require_relative 'adapter/oid/composite'
+              require_relative 'attributes/composite'
+
+              ar_type.register(:composite, Adapter::OID::Composite, adapter: :postgresql)
+
+              config.namespace ||= ::Object.const_set('Composite', Module.new)
+
+              # Define a method to find composite classes based on the namespace
+              config.namespace.define_singleton_method(:const_missing) do |name|
+                Attributes::Composite.lookup(name)
+              end
+            end
+
             ## Geometry Enabled Setup
             if (config = torque_config.geometry).enabled
               require_relative 'adapter/oid/box'
@@ -108,6 +134,15 @@ module Torque
             if (config = torque_config.interval).enabled
               require_relative 'adapter/oid/interval'
               ar_type.register(:interval, Adapter::OID::Interval, adapter: :postgresql)
+            end
+
+            ## LTree Enabled Setup
+            if (config = torque_config.ltree).enabled
+              require_relative 'adapter/oid/ltree'
+              require_relative 'adapter/oid/lquery'
+
+              ar_type.register(:ltree,  Adapter::OID::Ltree,  adapter: :postgresql)
+              ar_type.register(:lquery, Adapter::OID::Lquery, adapter: :postgresql)
             end
 
             ## Full Text Search Enabled Setup

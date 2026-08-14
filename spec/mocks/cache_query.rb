@@ -15,6 +15,18 @@ module Mocks
       result
     end
 
+    def capture_executed_queries
+      queries = []
+      subscriber = ActiveSupport::Notifications.subscribe('sql.active_record') do |*, payload|
+        queries << payload[:sql] unless payload[:name] == 'SCHEMA' || payload[:cached]
+      end
+
+      yield
+      queries
+    ensure
+      ActiveSupport::Notifications.unsubscribe(subscriber)
+    end
+
     def get_query_with_binds(&block)
       result = nil
 

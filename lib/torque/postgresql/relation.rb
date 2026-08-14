@@ -13,9 +13,9 @@ module Torque
       include DistinctOn
       include Inheritance
 
-      SINGLE_VALUE_METHODS = %i[itself_only buckets]
+      SINGLE_VALUE_METHODS = %i[itself_only buckets expand_records_eager_load expand_records_scoped]
       MULTI_VALUE_METHODS = %i[
-        select_extra distinct_on auxiliary_statements cast_records
+        select_extra distinct_on auxiliary_statements expand_records
       ]
 
       VALUE_METHODS = SINGLE_VALUE_METHODS + MULTI_VALUE_METHODS
@@ -76,7 +76,8 @@ module Torque
         return unless relation
 
         table = predicate_builder.send(:table)
-        if table.associated_with?(relation.to_s)
+        associated = AR810 ? table.associated_with(relation.to_s) : table.associated_with?(relation.to_s)
+        if associated
           table.associated_table(relation.to_s).send(:klass)
         else
           raise ArgumentError, "Relation for #{relation} not found on #{klass}"
@@ -87,7 +88,7 @@ module Torque
       # the given column
       def cast_for_condition(column, value)
         column = columns_hash[column.to_s] unless column.is_a?(ARColumn)
-        caster = connection.lookup_cast_type_from_column(column)
+        caster = connection.lookup_cast_type_for_column(column)
         connection.type_cast(caster.serialize(value))
       end
 
@@ -107,11 +108,10 @@ module Torque
             .inheritance.record_class_column_name.to_sym
         end
 
-        # Easy and storable way to access the name used to get the indicate of
-        # auto casting inherited records
-        def _auto_cast_attribute
-          @@auto_cast ||= Torque::PostgreSQL.config
-            .inheritance.auto_cast_column_name.to_sym
+        # The same name as a string, which is how it arrives on every single
+        # row that has to be discriminated
+        def _record_class_column_name
+          @@record_class_column_name ||= _record_class_attribute.to_s.freeze
         end
       end
 
@@ -138,12 +138,13 @@ module Torque
     # the operation of ActiveRecord Relation
     ActiveRecord::Relation.include Relation
     ActiveRecord::Relation.prepend Relation::Initializer
+    ActiveRecord::Relation.prepend Relation::Inheritance::Expansion
 
     ActiveRecord::Relation::SINGLE_VALUE_METHODS.concat(Relation::SINGLE_VALUE_METHODS)
     ActiveRecord::Relation::MULTI_VALUE_METHODS.concat(Relation::MULTI_VALUE_METHODS)
     ActiveRecord::Relation::VALUE_METHODS.concat(Relation::VALUE_METHODS)
-    ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES.merge(%i[cast_records itself_only
-      distinct_on auxiliary_statements buckets])
+    ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES.merge(%i[expand_records itself_only
+      expand_records_eager_load expand_records_scoped distinct_on auxiliary_statements buckets])
 
   end
 end

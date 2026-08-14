@@ -2,7 +2,7 @@
 
 module Torque
   module PostgreSQL
-    class Line < Struct.new(:slope, :intercept)
+    class Line < ::Struct.new(:slope, :intercept)
       alias c intercept
       alias c= intercept=
 

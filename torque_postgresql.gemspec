@@ -33,6 +33,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'rails', '~> 8.0'
   s.add_dependency 'pg', '>= 1.2'
+  s.add_dependency 'ostruct', '>= 0.6'
 
   s.add_development_dependency 'rake', '~> 13.0'
   s.add_development_dependency 'database_cleaner', '~> 2.0'

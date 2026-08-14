@@ -10,13 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-version = 7
-
-return if ActiveRecord::Migrator.current_version == version
-ActiveRecord::Schema.define(version: version) do
+ActiveRecord::Schema.define do
   self.verbose = false
 
   # These are extensions that must be enabled in order to support this database
+  enable_extension "ltree"
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
 
@@ -30,6 +28,27 @@ ActiveRecord::Schema.define(version: version) do
   create_enum "roles", ["visitor", "assistant", "manager", "admin"]
   create_enum "conflicts", ["valid", "invalid", "untrusted"]
   create_enum "types", ["A", "B", "C", "D"]
+
+  create_composite_type "address", force: :cascade do |t|
+    t.string  "street"
+    t.string  "city"
+    t.integer "number"
+    t.enum    "category", enum_type: :types
+  end
+
+  create_composite_type "full_address", force: :cascade do |t|
+    t.composite "base", composite_type: :address
+    t.string    "country"
+    t.date      "since"
+    t.decimal   "rate", precision: 8, scale: 2
+  end
+
+  create_table "places", force: :cascade do |t|
+    t.string    "name"
+    t.composite "home", composite_type: :address
+    t.composite "offices", composite_type: :address, array: true
+    t.composite "location", composite_type: :full_address
+  end
 
   create_table "geometries", force: :cascade do |t|
     t.point   "point"
@@ -65,6 +84,14 @@ ActiveRecord::Schema.define(version: version) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "profiles", force: :cascade do |t|
+    t.string "name"
+    t.jsonb  "settings"
+    t.json   "bio"
+    t.jsonb  "previews"
+    t.jsonb  "snippets", array: true
+  end
+
   create_table "authors", force: :cascade do |t|
     t.string   "name"
     t.string   "type"
@@ -74,6 +101,7 @@ ActiveRecord::Schema.define(version: version) do
   create_table "categories", force: :cascade do |t|
     t.integer  "parent_id"
     t.string   "title"
+    t.ltree    "path", index: { using: :gist }
   end
 
   create_table "texts", force: :cascade do |t|
@@ -128,6 +156,7 @@ ActiveRecord::Schema.define(version: version) do
   create_table "users", force: :cascade do |t|
     t.string   "name", null: false
     t.enum     "role", enum_type: :roles, default: :visitor
+    t.ltree    "permissions", array: true
     t.integer  "age"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

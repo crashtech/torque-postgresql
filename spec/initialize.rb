@@ -4,15 +4,23 @@ require_relative '../lib/torque/postgresql/adapter/schema_overrides'
 
 require_relative '../lib/torque/postgresql/adapter/oid/box'
 require_relative '../lib/torque/postgresql/adapter/oid/circle'
+require_relative '../lib/torque/postgresql/adapter/oid/composite'
 require_relative '../lib/torque/postgresql/adapter/oid/enum'
 require_relative '../lib/torque/postgresql/adapter/oid/enum_set'
 require_relative '../lib/torque/postgresql/adapter/oid/interval'
 require_relative '../lib/torque/postgresql/adapter/oid/line'
+require_relative '../lib/torque/postgresql/adapter/oid/lquery'
+require_relative '../lib/torque/postgresql/adapter/oid/ltree'
 require_relative '../lib/torque/postgresql/adapter/oid/segment'
+require_relative '../lib/torque/postgresql/adapter/oid/struct'
+require_relative '../lib/torque/postgresql/adapter/oid/struct_list'
+require_relative '../lib/torque/postgresql/adapter/oid/struct_set'
 
+require_relative '../lib/torque/postgresql/attributes/composite'
 require_relative '../lib/torque/postgresql/attributes/enum'
 require_relative '../lib/torque/postgresql/attributes/enum_set'
 require_relative '../lib/torque/postgresql/attributes/period'
+require_relative '../lib/torque/postgresql/attributes/struct'
 require_relative '../lib/torque/postgresql/attributes/full_text_search'
 
 require_relative '../lib/torque/postgresql/relation/auxiliary_statement'
@@ -28,6 +36,7 @@ module Torque
     Attributes::Enum.include_on(ActiveRecord::Base)
     Attributes::EnumSet.include_on(ActiveRecord::Base)
     Attributes::Period.include_on(ActiveRecord::Base)
+    Attributes::Struct.include_on(ActiveRecord::Base)
     Attributes::FullTextSearch.include_on(ActiveRecord::Base)
 
     Relation.include(Relation::AuxiliaryStatement)
@@ -40,6 +49,11 @@ module Torque
     ::Object.const_set('TorqueCTE', AuxiliaryStatement)
     ::Object.const_set('TorqueRecursiveCTE', AuxiliaryStatement::Recursive)
 
+    config.composite.namespace = ::Object.const_set('Composite', Module.new)
+    config.composite.namespace.define_singleton_method(:const_missing) do |name|
+      Attributes::Composite.lookup(name)
+    end
+
     config.enum.namespace = ::Object.const_set('Enum', Module.new)
     config.enum.namespace.define_singleton_method(:const_missing) do |name|
       Attributes::Enum.lookup(name)
@@ -50,8 +64,9 @@ module Torque
     end
 
     ar_type = ActiveRecord::Type
-    ar_type.register(:enum,     Adapter::OID::Enum,     adapter: :postgresql)
-    ar_type.register(:enum_set, Adapter::OID::EnumSet,  adapter: :postgresql)
+    ar_type.register(:enum,      Adapter::OID::Enum,      adapter: :postgresql)
+    ar_type.register(:enum_set,  Adapter::OID::EnumSet,   adapter: :postgresql)
+    ar_type.register(:composite, Adapter::OID::Composite, adapter: :postgresql)
 
     ar_type.register(:box,      Adapter::OID::Box,      adapter: :postgresql)
     ar_type.register(:circle,   Adapter::OID::Circle,   adapter: :postgresql)
@@ -59,6 +74,9 @@ module Torque
     ar_type.register(:segment,  Adapter::OID::Segment,  adapter: :postgresql)
 
     ar_type.register(:interval, Adapter::OID::Interval, adapter: :postgresql)
+
+    ar_type.register(:ltree,    Adapter::OID::Ltree,    adapter: :postgresql)
+    ar_type.register(:lquery,   Adapter::OID::Lquery,   adapter: :postgresql)
 
     Arel.build_operations(config.arel.infix_operators)
 

@@ -39,11 +39,22 @@ module Torque
             super
           end
 
+          def inherited(subclass)
+            super
+            subclass.instance_variable_set(:@load_values_monitor, ::Monitor.new)
+          end
+
           # Load the list of values in a lazy way
           def values
-            @values ||= self == Enum ? nil : begin
-              connection.enum_values(type_name).freeze
+            return if self == Enum
+            return @values if defined?(@values)
+
+            @load_values_monitor.synchronize do
+              next if defined?(@values)
+              @values = connection.enum_values(type_name).freeze
             end
+
+            @values
           end
 
           # List of values as symbols

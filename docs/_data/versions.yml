@@ -1,0 +1,16 @@
+# The compatibility matrix from the README, newest first. The home page turns
+# this into the Rails selector that rewrites the gem line.
+- rails: '8.1'
+  gem: '~> 4.1'
+- rails: '8.0'
+  gem: '~> 4.0'
+- rails: '7.2'
+  gem: '~> 3.4'
+- rails: '7.1'
+  gem: '~> 3.3'
+- rails: '7.0'
+  gem: '~> 3.0'
+- rails: '6.1'
+  gem: '~> 2.0.4'
+- rails: '6.0'
+  gem: '~> 2.0'

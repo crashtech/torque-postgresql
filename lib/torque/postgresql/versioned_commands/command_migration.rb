@@ -62,7 +62,7 @@ module Torque
         end
       end
 
-      CommandMigration = Struct.new(*%i[filename version op type object_name op_version scope]) do
+      CommandMigration = ::Struct.new(*%i[filename version op type object_name op_version scope]) do
         delegate :execute, to: '@migration'
 
         def initialize(filename, *args)

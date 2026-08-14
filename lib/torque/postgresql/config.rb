@@ -2,19 +2,29 @@
 
 module Torque
   module PostgreSQL
-    include ActiveSupport::Configurable
+    # Stores a version check for compatibility purposes
+    AR810 = (ActiveRecord.gem_version >= Gem::Version.new('8.1.0'))
 
-    # Use the same logger as the Active Record one
-    def self.logger
-      ActiveRecord::Base.logger
+    class << self
+      def config
+        @config ||= ActiveSupport::InheritableOptions.new
+      end
+
+      def configure
+        yield config
+      end
+
+      # Use the same logger as the Active Record one
+      def logger
+        ActiveRecord::Base.logger
+      end
     end
 
     # Allow nested configurations
-    # :TODO: Rely on +inheritable_copy+ to make nested configurations
     config.define_singleton_method(:nested) do |name, &block|
-      klass = Class.new(ActiveSupport::Configurable::Configuration).new
-      block.call(klass) if block
-      send("#{name}=", klass)
+      nested = ActiveSupport::InheritableOptions.new
+      block&.call(nested)
+      self[name] = nested
     end
 
     # Set if any information that requires querying and searching or collecting
@@ -31,7 +41,7 @@ module Torque
     # Set a list of irregular model name when associated with table names
     config.irregular_models = {}
     def config.irregular_models=(hash)
-      PostgreSQL.config[:irregular_models] = hash.map do |(table, model)|
+      self[:irregular_models] = hash.map do |(table, model)|
         [table.to_s, model.to_s]
       end.to_h
     end
@@ -131,6 +141,27 @@ module Torque
 
     end
 
+    # Configure composite type features
+    config.nested(:composite) do |composite|
+
+      # Enables composite types handler by this gem
+      composite.enabled = true
+
+      # Specify the namespace of each composite type class
+      composite.namespace = nil
+
+      # Set a list of irregular class names when associated with composite
+      # types
+      def composite.irregular_types=(hash)
+        self[:irregular_types] = hash.map do |type, klass|
+          [type.to_s, klass.to_s]
+        end.to_h
+      end
+
+      composite.irregular_types = {}
+
+    end
+
     # Configure geometry data types
     config.nested(:geometry) do |geometry|
 
@@ -172,10 +203,21 @@ module Torque
       # the name of the table that actually holds the record
       inheritance.record_class_column_name = :_record_class
 
-      # Determines the name of the column used when identifying that the loaded
-      # records should be casted to its correctly model. This will be TRUE for
-      # the records mentioned on `cast_records`
-      inheritance.auto_cast_column_name = :_auto_cast
+    end
+
+    # Configure struct features
+    config.nested(:struct) do |struct|
+
+      # Enables the JSON(B) columns backed by ActiveModel classes handler
+      struct.enabled = true
+
+      # The name of the method to be used on any ActiveRecord::Base to
+      # initialize model-based struct features
+      struct.base_method = :struct_for
+
+      # Whether struct classes reject properties that they don't declare
+      # by default
+      struct.default_strict = true
 
     end
 
@@ -260,12 +302,35 @@ module Torque
 
     end
 
+    # Configure label tree features
+    config.nested(:ltree) do |ltree|
+
+      # Enables the ltree and lquery data types handler by this gem
+      ltree.enabled = true
+
+      # A hash of replacements applied to every label provided by the
+      # application before it gets validated, so that a source that does not
+      # satisfy PostgreSQL's rules on its own can still be used. Dashes, for
+      # example, are only accepted as of PostgreSQL 16
+      #   { '-' => '_' } turns dashes into underscores
+      #   { '-' => '' }  drops dashes
+      # It never applies to values read from the database
+      ltree.sanitize = nil
+
+      # The name of a method that, whenever the given object responds to it, is
+      # used to translate that object into a path or a pattern. It is what lets
+      # any class be used wherever one is expected, on assignment, on a
+      # condition, and while comparing one path to another
+      ltree.compatible_method = :to_tree_path
+
+    end
+
     # Configure arel additional features
     config.nested(:arel) do |arel|
 
       # When provided, the initializer will expose the Arel function helper on
       # the given module
-      config.expose_function_helper_on = nil
+      arel.expose_function_helper_on = nil
 
       # List of Arel INFIX operators that will be made available for using as
       # methods on Arel::Nodes::Node and Arel::Attribute
@@ -279,6 +344,8 @@ module Torque
         'doesnt_right_extend' => '&<',
         'doesnt_left_extend'  => '&>',
         'adjacent_to'         => '-|-',
+        'matches_lquery'      => '~',
+        'matches_any_lquery'  => '?',
       }
 
     end

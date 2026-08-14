@@ -4,7 +4,10 @@ require_relative 'associations/foreign_association'
 
 require_relative 'associations/builder'
 require_relative 'associations/preloader'
+require_relative 'associations/join_dependency'
 
 association_mod = Torque::PostgreSQL::Associations::ForeignAssociation
 ::ActiveRecord::Associations::HasManyAssociation.prepend(association_mod)
 ::ActiveRecord::Associations::BelongsToManyAssociation.prepend(association_mod)
+
+::ActiveRecord::Associations::JoinDependency.prepend(Torque::PostgreSQL::Associations::JoinDependency)

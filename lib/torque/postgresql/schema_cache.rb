@@ -74,6 +74,7 @@ module Torque
         @data_sources_model_names.delete name
         @inheritance_dependencies.delete name
         @inheritance_associations.delete name
+        @inheritance_loaded = false
       end
 
       def marshal_dump # :nodoc:

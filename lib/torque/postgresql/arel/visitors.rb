@@ -16,17 +16,28 @@ module Torque
           quote_array(o.expr, collector)
         end
 
-        # Allow quoted arrays to get here
-        def visit_Arel_Nodes_Casted(o, collector)
-          value = o.value_for_database
-          klass = ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Array::Data
-          return super unless value.is_a?(klass)
-          quote_array(value.values, collector)
-        end
-
         ## TORQUE VISITORS
         def visit_Torque_PostgreSQL_Arel_Nodes_Ref(o, collector)
           collector << quote_table_name(o.expr)
+        end
+
+        # Access a single column of a composite value
+        def visit_Torque_PostgreSQL_Arel_Nodes_Column(o, collector)
+          collector << '('
+          visit(o.left, collector)
+          collector << ').' << quote_column_name(o.right)
+        end
+
+        # Access a single property of a document, as text, so that it can then
+        # be casted to whatever the property is supposed to be
+        def visit_Torque_PostgreSQL_Arel_Nodes_Property(o, collector)
+          collector << '('
+          visit(o.left, collector)
+          collector << ' #>> '
+          visit(::Arel.array(o.path), collector)
+          collector << ')'
+          collector << '::' << o.cast if o.cast
+          collector
         end
 
         # Allow casting any node

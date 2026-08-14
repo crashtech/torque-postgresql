@@ -56,7 +56,9 @@ RSpec.describe 'Arel' do
     it 'does not break the change column default value method' do
       connection.add_column(:authors, :enabled, :boolean)
       expect { connection.change_column_default(:authors, :enabled, { from: nil, to: true }) }.not_to raise_error
-      expect(Author.columns_hash['enabled'].default).to eq('true')
+      # Rails 8.1 type casts column defaults, so it is no longer a string
+      expected = Torque::PostgreSQL::AR810 ? true : 'true'
+      expect(Author.columns_hash['enabled'].default).to eq(expected)
     end
 
     it 'does not break jsonb' do
@@ -145,12 +147,12 @@ RSpec.describe 'Arel' do
       condition = Video.arel_table[:tag_ids].contains([1,2]).cast(:bigint, :array)
       query = Video.all.where(condition).to_sql
 
-      expect(query).to include('WHERE "videos"."tag_ids" @> ARRAY[1, 2]::bigint[]')
+      expect(query).to include(%{WHERE "videos"."tag_ids" @> '{1,2}'::bigint[]})
 
       condition = QuestionSelect.arel_table[:options].overlaps(%w[a b]).cast(:string, :array)
       query = QuestionSelect.all.where(condition).to_sql
 
-      expect(query).to include('"options" && ARRAY[\'a\', \'b\']::string[]')
+      expect(query).to include(%{"options" && '{a,b}'::string[]})
     end
   end
 end

@@ -2,11 +2,10 @@
   <img src="./docs/assets/images/github.png" alt="Torque PostgreSQL - Advanced PG features in a seamlessly RoR interface" />
 </a>
 
-[![CircleCI](https://circleci.com/gh/crashtech/torque-postgresql/tree/master.svg?style=svg)](https://circleci.com/gh/crashtech/torque-postgresql/tree/master)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/crashtech/torque-postgresql/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/crashtech/torque-postgresql/tree/master)
 [![Code Climate](https://codeclimate.com/github/crashtech/torque-postgresql/badges/gpa.svg)](https://codeclimate.com/github/crashtech/torque-postgresql)
 [![Gem Version](https://badge.fury.io/rb/torque-postgresql.svg)](https://badge.fury.io/rb/torque-postgresql)
 <!--([![Test Coverage](https://codeclimate.com/github/crashtech/torque-postgresql/badges/coverage.svg)](https://codeclimate.com/github/crashtech/torque-postgresql/coverage))-->
-<!--([![Dependency Status](https://gemnasium.com/badges/github.com/crashtech/torque-postgresql.svg)](https://gemnasium.com/github.com/crashtech/torque-postgresql))-->
 
 * [Wiki](https://github.com/crashtech/torque-postgresql/wiki)
 * [Bugs](https://github.com/crashtech/torque-postgresql/issues)
@@ -50,12 +49,15 @@ These are the currently available features:
 
 * [Box](https://github.com/crashtech/torque-postgresql/wiki/Box)
 * [Circle](https://github.com/crashtech/torque-postgresql/wiki/Circle)
+* [Composite](https://github.com/crashtech/torque-postgresql/wiki/Composite)
 * [Date/Time Range](https://github.com/crashtech/torque-postgresql/wiki/Date-Time-Range)
 * [Enum](https://github.com/crashtech/torque-postgresql/wiki/Enum)
 * [EnumSet](https://github.com/crashtech/torque-postgresql/wiki/Enum-Set)
 * [Interval](https://github.com/crashtech/torque-postgresql/wiki/Interval)
 * [Line](https://github.com/crashtech/torque-postgresql/wiki/Line)
+* [LTree](https://github.com/crashtech/torque-postgresql/wiki/LTree)
 * [Segment](https://github.com/crashtech/torque-postgresql/wiki/Segment)
+* [Struct](https://github.com/crashtech/torque-postgresql/wiki/Struct)
 
 ## Querying
 
@@ -67,11 +69,14 @@ These are the currently available features:
 * [Has Many](https://github.com/crashtech/torque-postgresql/wiki/Has-Many)
 * [Inherited Tables](https://github.com/crashtech/torque-postgresql/wiki/Inherited-Tables)
 * [Insert All](https://github.com/crashtech/torque-postgresql/wiki/Insert-All)
-* [Multiple Schemas](https://github.com/crashtech/torque-postgresql/wiki/Multiple-Schemas)
 * [Predicate Builder](https://github.com/crashtech/torque-postgresql/wiki/Predicate-Builder)
 * [Full‐Text Search](https://github.com/crashtech/torque-postgresql/wiki/Full‐Text-Search)
 * [Join Series](https://github.com/crashtech/torque-postgresql/wiki/Join-Series)
 * [Buckets](https://github.com/crashtech/torque-postgresql/wiki/Buckets)
+
+## Experimental
+
+* [Multiple Schemas](https://github.com/crashtech/torque-postgresql/wiki/Multiple-Schemas)
 * [Versioned Commands (Views, Functions, Types)](https://github.com/crashtech/torque-postgresql/wiki/Versioned-Commands)
 
 # How to Contribute
