@@ -37,7 +37,7 @@ At first, this may seem unnecessary. However, when working with joins, this can 
 Video.joins(:tags).where(language: Tag.arel_table['language'])    # WHERE "videos"."language" = "tags"."language"
 ```
 
-Another great advantage of this is the proper handling of array columns, which completely facilitated the operations of [Belongs to Many]({{ site.baseurl }}/models/belongs-to-many/) features.
+Another great advantage of this is the proper handling of array columns, which completely facilitated the operations of [Belongs to Many]({{ site.baseurl }}/modeling/belongs-to-many/) features.
 
 ```ruby
 Video.where(tag_ids: Tag.arel_table['id'])          # WHERE "tags"."id" = ANY("videos"."tag_ids")
@@ -57,7 +57,9 @@ Video.where(tag_ids: 1)          # WHERE 1 = ANY("videos"."tag_ids")
 Video.where(tag_ids: [])         # WHERE CARDINALITY("videos"."tag_ids") = 0
 ```
 
-## `Hash` on a composite column
+## Features combined
+
+### `Hash` on a composite column
 
 A `Hash` given to a [composite]({{ site.baseurl }}/data-types/composite/) column is broken down
 into one condition per column of the type, and every pair is sent back through the predicate
@@ -100,7 +102,7 @@ Place.where(offices: { street: 'Main' })
 > silently ignored. See [composite]({{ site.baseurl }}/data-types/composite/#querying) for the
 > full behavior.
 
-## `Hash` on a struct column
+### `Hash` on a struct column
 
 A [struct]({{ site.baseurl }}/data-types/struct/) column works the same way, over the properties
 of the document rather than the columns of a type. Each value is cast to the type its class
@@ -123,3 +125,43 @@ Profile.where(settings: { address: { city: 'SP' } })
 > **Note** Only `jsonb` columns can be queried by their properties, because `json` has no
 > operators for it, and a `json` column raises an `ArgumentError`. See
 > [struct]({{ site.baseurl }}/data-types/struct/#querying) for the full behavior.
+
+### Path or pattern on an ltree column
+
+A condition over an [ltree]({{ site.baseurl }}/data-types/ltree/) column is rarely a plain
+equality, so the value decides which operator to use. A plain path is compared with `=`, which
+keeps `find_by`, uniqueness validations and associations behaving as usual. As soon as the value
+carries one of the lquery features, the condition becomes a `~` match instead.
+
+```ruby
+Category.where(path: 'Top.Science')
+# WHERE "categories"."path" = 'Top.Science'
+
+Category.where(path: ['Top', :any])
+# WHERE "categories"."path" ~ 'Top.*'::lquery
+
+Category.where(path: ['Top', 1..])
+# WHERE "categories"."path" ~ 'Top.*{1,}'::lquery
+
+Category.where(path: ['Top', %w[a b]])
+# WHERE "categories"."path" ~ 'Top.a|b'::lquery
+```
+
+A star also matches zero labels, so `Top.*` covers `Top` itself and is the same as `<@ 'Top'`,
+which a GiST index serves just as well. That is why the whole subtree query needs no operator of
+its own.
+
+Records and objects that describe their own path are accepted anywhere a label is, the first by
+its primary key and the second by whatever `to_tree_path` returns.
+
+```ruby
+Category.where(path: [parent, child])
+# WHERE "categories"."path" = '1.2'
+
+Category.where(path: [parent, :any])
+# WHERE "categories"."path" ~ '1.*'::lquery
+```
+
+> **Note** An `Array` here is never a list of values, so this is **not** an `IN`. At the top level
+> it is the sequence of items of a single path, and nested it is a group of alternatives. Testing a
+> path against several whole patterns is the `?` operator, reached through Arel.

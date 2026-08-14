@@ -82,10 +82,10 @@ Composite::Address.columns.keys             # ['street', 'city', 'number', 'cate
 Composite::Address.attribute_names          # ['street', 'city', 'number', 'category']
 ```
 
-Write the class yourself when you want to add behavior to it. It inherits from `Torque::PostgreSQL::Attributes::Composite`, and validations are available as any other ActiveModel class.
+Write the class yourself when you want to add behavior to it. It inherits from `Torque::PostgreSQL::Composite`, and validations are available as any other ActiveModel class.
 ```ruby
 # models/composite/address.rb
-class Composite::Address < Torque::PostgreSQL::Attributes::Composite
+class Composite::Address < Torque::PostgreSQL::Composite
   validates :street, presence: true
 
   def to_s
@@ -96,7 +96,7 @@ end
 
 Columns that the class declares on its own are respected, and only the ones it does not declare are loaded from the type.
 ```ruby
-class Composite::Address < Torque::PostgreSQL::Attributes::Composite
+class Composite::Address < Torque::PostgreSQL::Composite
   attribute :number, :string    # Kept as a String, even though the type says integer
 end
 ```
@@ -208,7 +208,7 @@ validates :settings, nested: true, allow_blank: true
 
 Individual columns can be encrypted, so that their values are stored encrypted inside the record, while the rest of it remains readable. This is Active Record's own `encrypts`, so all of its options are available.
 ```ruby
-class Composite::Address < Torque::PostgreSQL::Attributes::Composite
+class Composite::Address < Torque::PostgreSQL::Composite
   encrypts :street
   encrypts :city, deterministic: true           # Same content produces the same ciphertext
 end
@@ -226,7 +226,7 @@ Composite classes are ActiveModel classes with the parts of Active Record that m
 
 `enum` works as it does on a model, on top of the type that came from the database, except that everything which needs a relation or a persisted record is left out. Only the predicates are generated, so there are no `alpha!` bang methods and no scopes.
 ```ruby
-class Composite::Address < Torque::PostgreSQL::Attributes::Composite
+class Composite::Address < Torque::PostgreSQL::Composite
   enum :category, { residential: 'A', commercial: 'B' }
 end
 

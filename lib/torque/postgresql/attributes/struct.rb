@@ -131,5 +131,7 @@ module Torque
         end
       end
     end
+
+    Struct = Attributes::Struct
   end
 end

@@ -5,7 +5,7 @@ description: Add smooth support to managing and utilizing multiple schemas in yo
   application.
 ---
 
-Add smooth support to managing and utilizing multiple schemas in your application. It works incredibly nicely with [Inherited Tables]({{ site.baseurl }}/models/inherited-tables/) and it's part of a larger feature for a better multi-tenancy application. [PostgreSQL Docs](https://www.postgresql.org/docs/current/ddl-schemas.html)
+Add smooth support to managing and utilizing multiple schemas in your application. It works incredibly nicely with [Inherited Tables]({{ site.baseurl }}/modeling/inherited-tables/) and it's part of a larger feature for a better multi-tenancy application. [PostgreSQL Docs](https://www.postgresql.org/docs/current/ddl-schemas.html)
 
 ## Configuration
 

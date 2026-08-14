@@ -1,6 +1,6 @@
 ---
 title: Dynamic Attributes
-section: models
+section: modeling
 description: This method allows defining a conditional value that, if present in the
   result set, don't do anything.
 ---

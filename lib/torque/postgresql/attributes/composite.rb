@@ -96,5 +96,7 @@ module Torque
         end
       end
     end
+
+    Composite = Attributes::Composite
   end
 end

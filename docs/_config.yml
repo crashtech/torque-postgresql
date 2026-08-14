@@ -7,7 +7,7 @@ baseurl: /postgresql
 lang: en-US
 
 repository: crashtech/torque-postgresql
-gem_version: 4.0.1
+gem_version: 4.1.0
 rails_version: '8.0'
 ruby_version: '3.2'
 

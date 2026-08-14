@@ -1,6 +1,6 @@
 ---
 title: Belongs to Many
-section: models
+section: modeling
 description: Belongs to an array of records, storing those locally.
 ---
 

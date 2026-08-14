@@ -215,7 +215,7 @@ module Torque
               list.flat_map { |entry| entry.is_a?(Hash) ? entry.keys : entry }
             end
 
-            # Warn once per query that actually failed to cast, instead of
+            # Warn once per query that actually lost the real class, instead of
             # once per explicit select that merely omits the marker
             def warn_about_missing_record_class(records)
               return unless model.physically_inheritances?
@@ -227,7 +227,8 @@ module Torque
 
               warn(<<~MSG.squish)
                 #{model.name} was queried with an explicit select that omits
-                :_regclass, so its records will not be casted to their real class.
+                :_regclass, so its records will not be instantiated as their
+                real class.
               MSG
             end
 

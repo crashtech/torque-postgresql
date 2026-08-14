@@ -136,6 +136,15 @@ module Torque
               ar_type.register(:interval, Adapter::OID::Interval, adapter: :postgresql)
             end
 
+            ## LTree Enabled Setup
+            if (config = torque_config.ltree).enabled
+              require_relative 'adapter/oid/ltree'
+              require_relative 'adapter/oid/lquery'
+
+              ar_type.register(:ltree,  Adapter::OID::Ltree,  adapter: :postgresql)
+              ar_type.register(:lquery, Adapter::OID::Lquery, adapter: :postgresql)
+            end
+
             ## Full Text Search Enabled Setup
             if (config = torque_config.full_text_search).enabled
               require_relative 'attributes/full_text_search'

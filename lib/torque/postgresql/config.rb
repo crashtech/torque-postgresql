@@ -302,6 +302,29 @@ module Torque
 
     end
 
+    # Configure label tree features
+    config.nested(:ltree) do |ltree|
+
+      # Enables the ltree and lquery data types handler by this gem
+      ltree.enabled = true
+
+      # A hash of replacements applied to every label provided by the
+      # application before it gets validated, so that a source that does not
+      # satisfy PostgreSQL's rules on its own can still be used. Dashes, for
+      # example, are only accepted as of PostgreSQL 16
+      #   { '-' => '_' } turns dashes into underscores
+      #   { '-' => '' }  drops dashes
+      # It never applies to values read from the database
+      ltree.sanitize = nil
+
+      # The name of a method that, whenever the given object responds to it, is
+      # used to translate that object into a path or a pattern. It is what lets
+      # any class be used wherever one is expected, on assignment, on a
+      # condition, and while comparing one path to another
+      ltree.compatible_method = :to_tree_path
+
+    end
+
     # Configure arel additional features
     config.nested(:arel) do |arel|
 
@@ -321,6 +344,8 @@ module Torque
         'doesnt_right_extend' => '&<',
         'doesnt_left_extend'  => '&>',
         'adjacent_to'         => '-|-',
+        'matches_lquery'      => '~',
+        'matches_any_lquery'  => '?',
       }
 
     end

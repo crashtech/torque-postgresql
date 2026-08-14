@@ -5,7 +5,7 @@ module Torque
     module Adapter
       module DatabaseStatements
 
-        EXTENDED_DATABASE_TYPES = %i[enum enum_set interval composite]
+        EXTENDED_DATABASE_TYPES = %i[enum enum_set interval composite ltree lquery]
 
         # Switch between dump mode or not
         def dump_mode!
@@ -72,6 +72,11 @@ module Torque
 
           if PostgreSQL.config.interval.enabled
             m.register_type 'interval', OID::Interval.new
+          end
+
+          if PostgreSQL.config.ltree.enabled
+            m.register_type 'ltree',    OID::Ltree.new
+            m.register_type 'lquery',   OID::Lquery.new
           end
         end
 

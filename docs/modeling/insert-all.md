@@ -1,6 +1,6 @@
 ---
 title: Insert All
-section: models
+section: modeling
 description: Small extension to the upsert_all method to support the WHERE filtering
   which records will be updated.
 ---

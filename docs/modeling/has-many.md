@@ -1,6 +1,6 @@
 ---
 title: Has Many
-section: models
+section: modeling
 description: Has many connected through an array.
 ---
 

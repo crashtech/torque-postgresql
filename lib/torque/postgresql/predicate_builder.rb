@@ -3,6 +3,7 @@
 require_relative 'predicate_builder/array_handler'
 
 require_relative 'predicate_builder/composite_handler'
+require_relative 'predicate_builder/ltree_handler'
 require_relative 'predicate_builder/struct_handler'
 require_relative 'predicate_builder/regexp_handler'
 require_relative 'predicate_builder/arel_attribute_handler'
@@ -49,6 +50,8 @@ module Torque
             CompositeHandler
           elsif PostgreSQL.config.struct.enabled && StructHandler.candidate?(value, type)
             StructHandler
+          elsif PostgreSQL.config.ltree.enabled && LtreeHandler.candidate?(value, type)
+            LtreeHandler
           end
         end
     end

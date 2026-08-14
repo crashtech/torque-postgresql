@@ -24,6 +24,20 @@ module Torque
           names.each { |name| column(name, :composite, composite_type: composite_type, **options) }
         end
 
+        # Add a label tree column to the table. Tree operators are only indexed
+        # by GiST, as in +index: { using: :gist }+, whose default operator class
+        # is already the right one for both a path and an array of paths
+        def ltree(*names, **options)
+          raise ArgumentError, "Missing column name(s) for ltree" if names.empty?
+          names.each { |name| column(name, :ltree, **options) }
+        end
+
+        # Add a label tree pattern column to the table
+        def lquery(*names, **options)
+          raise ArgumentError, "Missing column name(s) for lquery" if names.empty?
+          names.each { |name| column(name, :lquery, **options) }
+        end
+
       end
 
       module TableDefinition

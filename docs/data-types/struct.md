@@ -27,10 +27,10 @@ end
 
 ## The struct Class
 
-Struct classes inherit from `Torque::PostgreSQL::Attributes::Struct`, and they use the very same `attribute` method as any other ActiveModel class. Validations are available as well.
+Struct classes inherit from `Torque::PostgreSQL::Struct`, and they use the very same `attribute` method as any other ActiveModel class. Validations are available as well.
 ```ruby
 # models/profile/settings.rb
-class Profile::Settings < Torque::PostgreSQL::Attributes::Struct
+class Profile::Settings < Torque::PostgreSQL::Struct
   attribute :theme, :string, default: 'light'
   attribute :notifications, :boolean, default: true
   attribute :tags
@@ -110,7 +110,7 @@ profile.save!
 
 A document that has nothing to store is stored as `NULL`, which means classes without any default keep their column `NULL` until something is written to them.
 ```ruby
-class Profile::Bio < Torque::PostgreSQL::Attributes::Struct
+class Profile::Bio < Torque::PostgreSQL::Struct
   attribute :headline, :string
 end
 
@@ -178,12 +178,12 @@ profile.save!
 
 A property can be backed by another struct class, and the document it holds is stored as a document of its own, not as an encoded string.
 ```ruby
-class Profile::Address < Torque::PostgreSQL::Attributes::Struct
+class Profile::Address < Torque::PostgreSQL::Struct
   attribute :city, :string
   attribute :zip, :integer
 end
 
-class Profile::Settings < Torque::PostgreSQL::Attributes::Struct
+class Profile::Settings < Torque::PostgreSQL::Struct
   attribute :address, Torque::PostgreSQL::Adapter::OID::Struct.new(Profile::Address)
 end
 
@@ -247,7 +247,7 @@ Writing a property that the class does not declare is only allowed when the clas
 ```ruby
 profile.settings[:other] = 'x'   # ActiveModel::UnknownAttributeError
 
-class Profile::Settings < Torque::PostgreSQL::Attributes::Struct
+class Profile::Settings < Torque::PostgreSQL::Struct
   self.strict = false
 end
 
@@ -272,7 +272,7 @@ profile.errors.added?(:settings, :invalid) # true
 
 Individual properties can be encrypted, so that their values are stored encrypted inside the document, while the rest of it remains readable. This is Active Record's own `encrypts`, so all of its options are available.
 ```ruby
-class Profile::Credentials < Torque::PostgreSQL::Attributes::Struct
+class Profile::Credentials < Torque::PostgreSQL::Struct
   attribute :label, :string
   attribute :token, :string
 
@@ -294,7 +294,7 @@ Struct classes are ActiveModel classes with the parts of Active Record that make
 
 `enum` works as it does on a model, except that everything which needs a relation or a persisted record is left out. Only the predicates are generated, so there are no `active!` bang methods and no scopes.
 ```ruby
-class Profile::Settings < Torque::PostgreSQL::Attributes::Struct
+class Profile::Settings < Torque::PostgreSQL::Struct
   attribute :status, :string
   enum :status, { active: 'a', off: 'o' }
 end
@@ -311,7 +311,7 @@ normalizes :email, with: -> email { email.strip.downcase }
 
 `store_accessor` expands the keys of a property that holds a document of its own.
 ```ruby
-class Profile::Settings < Torque::PostgreSQL::Attributes::Struct
+class Profile::Settings < Torque::PostgreSQL::Struct
   attribute :extras, ActiveRecord::Type::Json.new
   store_accessor :extras, :locale
 end

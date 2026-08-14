@@ -9,6 +9,8 @@ require_relative '../lib/torque/postgresql/adapter/oid/enum'
 require_relative '../lib/torque/postgresql/adapter/oid/enum_set'
 require_relative '../lib/torque/postgresql/adapter/oid/interval'
 require_relative '../lib/torque/postgresql/adapter/oid/line'
+require_relative '../lib/torque/postgresql/adapter/oid/lquery'
+require_relative '../lib/torque/postgresql/adapter/oid/ltree'
 require_relative '../lib/torque/postgresql/adapter/oid/segment'
 require_relative '../lib/torque/postgresql/adapter/oid/struct'
 require_relative '../lib/torque/postgresql/adapter/oid/struct_list'
@@ -72,6 +74,9 @@ module Torque
     ar_type.register(:segment,  Adapter::OID::Segment,  adapter: :postgresql)
 
     ar_type.register(:interval, Adapter::OID::Interval, adapter: :postgresql)
+
+    ar_type.register(:ltree,    Adapter::OID::Ltree,    adapter: :postgresql)
+    ar_type.register(:lquery,   Adapter::OID::Lquery,   adapter: :postgresql)
 
     Arel.build_operations(config.arel.infix_operators)
 

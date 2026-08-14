@@ -1,6 +1,6 @@
 ---
 title: Inherited Tables
-section: models
+section: modeling
 description: This is one great feature from PostgreSQL, the ability to have a table
   with the most generic data, and then many other tables with the information necessar
 ---
@@ -69,7 +69,7 @@ Torque::PostgreSQL.configure do |c|
 end
 ```
 
-### Casting records
+### Records as their real class
 
 Querying a model whose table has inherited tables returns every record already as its real class. There is nothing to opt into.
 
@@ -97,7 +97,7 @@ If the table name cannot be translated into a model, the query raises a `Torque:
 
 ### Partial and read-only records
 
-A casted record was read from the base table, so it only carries the base table's columns. Such a record is **partial** and therefore **read-only**.
+A record instantiated this way was read from the base table, so it only carries the base table's columns. Such a record is **partial** and therefore **read-only**.
 
 ```ruby
 book = Activity.order(:id).third
@@ -161,10 +161,10 @@ An explicit `select` owns the projection, which means the `_record_class` marker
 ```ruby
 Activity.select(:id, :title).to_a
 # Activity was queried with an explicit select that omits :_regclass,
-# so its records will not be casted to their real class.
+# so its records will not be instantiated as their real class.
 ```
 
-Add the `:_regclass` token to the selection to keep the casting:
+Add the `:_regclass` token to the selection to keep it:
 
 ```ruby
 Activity.select(:_regclass, :id, :title).to_a
@@ -199,13 +199,13 @@ list.third.class.table_name                # "activity_books"
 
 `itself_only` and `expand_records` describe opposite intentions, so combining them raises a `Torque::PostgreSQL::InheritanceError`. Reading from `ONLY` a table never returns the inherited records that `expand_records` exists to complete.
 
-A relation that replaces its source through `from` does not add the marker itself, since the `tableoid` system column belongs to the real table. Casting then survives only when the source you provide already carries the marker, and it is silently lost when it does not.
+A relation that replaces its source through `from` does not add the marker itself, since the `tableoid` system column belongs to the real table. The real class then survives only when the source you provide already carries the marker, and it is silently lost when it does not.
 
 ```ruby
-# Casts, because the inner relation projects the marker
+# Real classes, because the inner relation projects the marker
 Activity.from(Activity.all, :activities).to_a
 
-# Does not cast, and does not warn
+# Everything comes back as Activity, and nothing warns
 Activity.from('activities').to_a
 Activity.from(Activity.all.select(:id, :title), :activities).to_a
 ```

@@ -158,11 +158,11 @@ module Torque
           physically_inherited? ? decorated_table_name : super
         end
 
-        # Raises an error message saying that the giver record class was not
-        # able to be casted since the model was not identified
+        # Raises an error message saying that the given record class could not
+        # be instantiated since the model was not identified
         def raise_unable_to_cast(record_class_value)
           raise InheritanceError.new(<<~MSG.squish)
-            An record was not able to be casted to type '#{record_class_value}'.
+            A record could not be instantiated as '#{record_class_value}'.
             If this table name doesn't represent a guessable model,
             please use 'Torque::PostgreSQL.conf.irregular_models =
             { '#{record_class_value}' => 'ModelName' }'.
