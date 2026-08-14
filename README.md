@@ -56,7 +56,7 @@ These are the currently available features:
 * [EnumSet](https://github.com/crashtech/torque-postgresql/wiki/Enum-Set)
 * [Interval](https://github.com/crashtech/torque-postgresql/wiki/Interval)
 * [Line](https://github.com/crashtech/torque-postgresql/wiki/Line)
-* [LTree](https://torque.dev/postgresql/data-types/ltree/)
+* [LTree](https://github.com/crashtech/torque-postgresql/wiki/LTree)
 * [Segment](https://github.com/crashtech/torque-postgresql/wiki/Segment)
 * [Struct](https://github.com/crashtech/torque-postgresql/wiki/Struct)
 
