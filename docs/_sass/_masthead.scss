@@ -8,10 +8,7 @@
 
 .brand{display:flex; align-items:center; gap:.45rem; color:inherit}
 .brand:hover{text-decoration:none}
-.brand svg{
-  width:.6rem; height:1.5rem; fill:none; stroke:var(--ruby);
-  stroke-width:3; stroke-linecap:round; stroke-linejoin:round;
-}
+.brand svg{height:2rem}
 .brand-text{display:flex; flex-direction:column; line-height:1}
 .brand-text strong{font-size:.92rem; font-weight:800; letter-spacing:.1em; color:var(--fg-strong)}
 .brand-text em{
@@ -24,7 +21,7 @@
 .sections a:hover{color:var(--fg-strong); text-decoration:none}
 .sections a[aria-current]{color:var(--accent); font-weight:600}
 .sections a[aria-current]::after{
-  content:""; position:absolute; left:0; right:0; bottom:-1.15rem; height:2px;
+  content:""; position:absolute; left:0; right:0; bottom:-14px; height:2px;
   background:var(--accent); box-shadow:0 0 12px rgb(var(--glow) / .8);
 }
 

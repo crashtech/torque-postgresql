@@ -58,7 +58,8 @@
   pages:
     - title: Arel
       url: /querying/arel/
-    - title: CTEs
+    - title: Auxiliary Statements
+      short: CTEs
       url: /querying/auxiliary-statements/
     - title: Buckets
       url: /querying/buckets/
@@ -77,5 +78,6 @@
   pages:
     - title: Multiple Schemas
       url: /experimental/multiple-schemas/
-    - title: Versioned Cmds
+    - title: Versioned Commands
+      short: Versioned Cmds
       url: /experimental/versioned-commands/

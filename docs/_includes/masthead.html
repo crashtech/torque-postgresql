@@ -1,8 +1,6 @@
 <header class="masthead">
   <a class="brand" href="{{ '/' | relative_url }}">
-    <svg viewBox="0 0 10 24" aria-hidden="true"><path d="M8.5 2 2 12l6.5 10"/></svg>
-    <span class="brand-text"><strong>TORQUE</strong><em>PostgreSQL</em></span>
-    <svg viewBox="0 0 10 24" aria-hidden="true"><path d="M1.5 2 8 12l-6.5 10"/></svg>
+    {% include logo.html %}
   </a>
 
   <nav class="sections">
@@ -15,7 +13,7 @@
         <a href="{{ '/#' | append: section.id | relative_url }}">{{ section.title }}</a>
       {%- endif -%}
     {%- endfor -%}
-    <a href="https://github.com/{{ site.repository }}/issues">Open Issues</a>
+    <a href="https://github.com/{{ site.repository }}/issues" target="_blank">Open Issues</a>
   </nav>
 
   <span class="spacer"></span>

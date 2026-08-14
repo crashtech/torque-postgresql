@@ -11,10 +11,8 @@ gem_version: 4.1.0
 rails_version: '8.0'
 ruby_version: '3.2'
 
-# Dev server. Binding to every interface makes the preview reachable from other
-# machines at http://<this-host>:4000/postgresql/ — note the baseurl.
 host: 0.0.0.0
-port: 4000
+port: 4001
 
 permalink: pretty
 

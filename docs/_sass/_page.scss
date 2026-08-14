@@ -44,6 +44,7 @@
 // jekyll-toc nests an <ul> per level; the pages only use h2, so anything
 // deeper is folded away rather than styled.
 .toc ul ul{display:none}
+.toc ul#toc{margin: 0.5rem 0 0 0;padding: 0 0 0 0.8rem}
 
 .pager{
   display:flex; justify-content:space-between; gap:1rem;

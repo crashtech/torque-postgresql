@@ -10,6 +10,13 @@ body{
   background:var(--bg);
   color:var(--fg);
   font:400 15px/1.65 var(--font-body);
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(RGB(from var(--bg) r g b / 0.9)),
+    url('/postgresql/assets/images/bg.jpg');
+  background-position: center center;
+  background-repeat: repeat;
+  background-size: contain;
   -webkit-font-smoothing:antialiased;
 }
 

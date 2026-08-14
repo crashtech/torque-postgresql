@@ -21,18 +21,18 @@
   --font-body: Metropolis, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "SFMono-Regular", Menlo, Consolas, monospace;
 
-  --ruby:      light-dark(#bd1416, #f2565c);
+  --ruby:      light-dark(#fa1416, #dc1416);
 
-  --bg:        light-dark(#ffffff, #16181c);
-  --bg-sunken: light-dark(#f6f7f8, #1b1e23);
-  --bg-raised: light-dark(#ffffff, #1f2229);
+  --bg:        light-dark(#ffffff, #000000);
+  --bg-sunken: light-dark(#f6f7f8, #16181c);
+  --bg-raised: light-dark(#ffffff, #1b1e23);
   --fg:        light-dark(#22262c, #c8cdd6);
   --fg-strong: light-dark(#0d1013, #eef1f5);
   --fg-muted:  light-dark(#61697a, #838d9e);
   --fg-faint:  light-dark(#9aa2b0, #5c6472);
   --line:      light-dark(#e3e6ea, #2b2f37);
   --line-soft: light-dark(#eef0f3, #23262d);
-  --accent:    light-dark(#007f96, #22c6e6);
+  --accent:    light-dark(#00adcc, #00adcc);
   --accent-bg: light-dark(#e8f7fb, #0d2b33);
   --on-accent: light-dark(#ffffff, #0b1418);
   --code-bg:   light-dark(#f7f8f9, #1b1e23);

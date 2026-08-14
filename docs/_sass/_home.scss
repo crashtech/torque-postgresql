@@ -1,16 +1,5 @@
 .wrap{max-width:72rem; margin:0 auto; padding:0 1.5rem}
 
-// A geometric field behind the hero, masked so it fades before the cards.
-.hexes{
-  position:fixed; inset:var(--header-h) 0 0; z-index:-1; pointer-events:none;
-  background:
-    repeating-linear-gradient(60deg,  var(--hex) 0 1px, transparent 1px 3.4rem),
-    repeating-linear-gradient(-60deg, var(--hex) 0 1px, transparent 1px 3.4rem),
-    repeating-linear-gradient(0deg,   var(--hex) 0 1px, transparent 1px 3.4rem);
-  mask-image:radial-gradient(90% 70% at 50% 20%, #000, transparent 75%);
-  opacity:.85;
-}
-
 .hero{
   display:grid; align-items:center; gap:2.5rem;
   grid-template-columns:1.15fr .85fr;
@@ -24,6 +13,11 @@
 .hero h1 + h1{margin-bottom:2.25rem}
 .hero .ror{color:var(--ruby)}
 .hero .pg{color:var(--accent)}
+.hero img{
+  max-height: 70svh;
+  place-self: center;
+  margin-top: -15svh;
+}
 
 .actions{display:flex; flex-wrap:wrap; gap:.75rem}
 .btn{
@@ -134,6 +128,17 @@ select.rails:hover{border-color:var(--accent)}
   padding:2rem 0 3rem; font-size:.82rem; color:var(--fg-muted);
   border-top:1px solid var(--line);
   display:flex; flex-wrap:wrap; gap:1rem; justify-content:space-between;
+
+  a{
+    font-family: SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--ruby);
+    transition: color 0.2s ease;
+
+    &:hover, &:focus {
+      color: oklch(from var(--ruby) calc(l + 0.05) c h);
+      text-decoration: none;
+    }
+  }
 }
 
 @media (max-width: 900px){

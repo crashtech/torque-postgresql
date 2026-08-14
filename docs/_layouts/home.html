@@ -1,8 +1,6 @@
 ---
 layout: default
 ---
-<div class="hexes" aria-hidden="true"></div>
-
 <main class="wrap" id="main">
   <section class="hero">
     <div>
@@ -13,7 +11,7 @@ layout: default
         <a class="btn btn-ghost" href="#install">Install</a>
       </div>
     </div>
-    {%- include stack.svg -%}
+    <img src="{{ '/postgresql/assets/images/pg.svg' | relative_path }}" alt="TORQUE POSTGRESQL" />
   </section>
 
   <section class="panels" id="install">
@@ -65,7 +63,7 @@ layout: default
       <div class="links">
         {%- for item in section.pages -%}
           {%- if item.url -%}
-            <a href="{{ item.url | relative_url }}">{{ item.title }}</a>
+            <a href="{{ item.url | relative_url }}">{{ item.short | default: item.title }}</a>
           {%- else -%}
             <span class="pending" title="Not written yet">{{ item.title }}</span>
           {%- endif -%}
@@ -75,7 +73,7 @@ layout: default
   {%- endfor %}
 
   <footer class="site-footer">
-    <span>Created by <a href="https://github.com/crashtech">crashtech</a> — MIT licensed</span>
-    <span>Requires Ruby {{ site.ruby_version }}+ and Rails {{ site.rails_version }}</span>
+    <span>Created by <a href="https://github.com/crashtech">crashtech</a> - Torque PostgreSQL is MIT licensed</span>
+    <span>Requires Ruby {{ site.ruby_version }}+ and Rails {{ site.rails_version }}+</span>
   </footer>
 </main>
