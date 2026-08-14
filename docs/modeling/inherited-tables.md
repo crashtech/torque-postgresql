@@ -13,7 +13,7 @@ This will allow you to work with inherited models, as they are separated tables 
 
 > **Feature rich** Table inheritance is now a stable and complete part of this gem. Records come back as their real class without any opt-in, they carry the guarantees you would expect from a regular record, and the rough edges of the previous opt-in approach are gone. What you will find below is the behavior you should be able to assume, not a preview.
 
-**CAUTION** PostgreSQL has some [**caveats**](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html#DDL-INHERIT-CAVEATS) while using this resource. They will be addressed in later versions of this gem.
+**CAUTION** PostgreSQL has some [**caveats**](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html#DDL-INHERIT-CAVEATS) while using this resource. Most of them come down to what a child table does **not** get from its parent, which is what [Syncing features](#syncing-features) exists to solve.
 
 ## Migration
 
@@ -34,6 +34,102 @@ create_table "activity_posts", inherits: :activities do |t|
   t.datetime   "published_at"
 end
 ```
+
+## Syncing features {#syncing-features}
+
+PostgreSQL only carries part of a parent's schema down to its children. Columns come across, and so do their `NOT NULL` and `DEFAULT`, and any `CHECK` constraint. Everything else stops at the parent:
+
+| Feature | Inherited by PostgreSQL |
+| --- | --- |
+| Columns, `NOT NULL`, `DEFAULT` | Yes |
+| `CHECK` constraints | Yes |
+| Primary key | **No** |
+| Indexes | **No** |
+| `UNIQUE` constraints | **No** |
+| `EXCLUDE` constraints | **No** |
+| Foreign keys | **No** |
+
+Indexes are the one that hurts most. A query against `activities` reads every child table, and each of those can only use the indexes it owns, so an index that exists only on the parent does nothing for the rows stored below it.
+
+Pass `sync` when creating a table to bring all of it across at once.
+
+```ruby
+create_table "activity_books", inherits: :activities, sync: true do |t|
+  t.string "isbn"
+end
+```
+
+Or spread from the parent at any later point, which reaches every descendant.
+
+```ruby
+sync_inheritance_features :activities
+```
+
+The second argument narrows it to specific tables. Those are the only ones written to, so list the intermediate tables as well when you want a whole branch.
+
+```ruby
+sync_inheritance_features :activities, %i[activity_books activity_posts]
+```
+
+### Picking features
+
+The features are `primary_key`, `indexes`, `unique_constraints`, `exclusion_constraints` and `foreign_keys`. Passing one as `false` leaves it out, and passing any of them as `true` instead makes that the whole selection.
+
+```ruby
+# Everything but the foreign keys
+sync_inheritance_features :activities, foreign_keys: false
+
+# Only the indexes
+sync_inheritance_features :activities, indexes: true
+
+# The same two forms work on create_table
+create_table "activity_books", inherits: :activities, sync: { indexes: true }
+```
+
+Running it again changes nothing, so it is safe to leave in place and safe to run against a hierarchy that is already partly set up.
+
+### How copies are named
+
+Everything a sync creates is named `sync_inh_` followed by a short digest of where it came from and where it went, such as `sync_inh_e68e522cea`. The name is the same in every database, it can never run past the identifier limit, and it is what marks the object as a copy.
+
+That marker is written into `schema.rb` along with the object, so it survives `db:schema:load`.
+
+The primary key is the exception. PostgreSQL names it after the table, and there is no way to describe that name in a dump, so it carries no marker. It shows up in the dump as an option on the table instead:
+
+```ruby
+create_table "activity_books", id: false, inherits: "activities", sync: { primary_key: true }, force: :cascade do |t|
+  t.string "isbn"
+end
+```
+
+Everything else needs no special treatment, since Rails already dumps indexes and constraints for each table on its own.
+
+### Removing what the parent dropped
+
+A sync only ever adds. Pass `prune` to also drop copies whose source is gone from the parent.
+
+```ruby
+sync_inheritance_features :activities, prune: true
+```
+
+Only objects carrying the marker are ever considered, so anything you wrote by hand on a child is left alone, even an index on a column that came from the parent. Primary keys are never dropped.
+
+This is also what a rollback does. `sync_inheritance_features` inverts into the same call with `prune` on, bringing the children back in line with the parent.
+
+The pruning is held back until the very end of the rollback, after everything else the migration did has been undone. So this migration needs no `up` and `down` of its own: on the way down the index is removed from the parent first, and the children are then compared against the parent as it ends up rather than as it started.
+
+```ruby
+def change
+  add_index :activities, :title
+  sync_inheritance_features :activities
+end
+```
+
+### Things a sync cannot fix
+
+A primary key or a unique constraint on a child is enforced within that child, not across the whole hierarchy. Children do share the parent's sequence, so generated ids stay unique in practice, but nothing guarantees it for values you set yourself.
+
+A foreign key pointing **at** the parent does not see rows stored in the children, and there is no way around it. Only the parent's own outgoing foreign keys can be copied down.
 
 ## Models
 

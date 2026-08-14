@@ -186,6 +186,28 @@ module Torque
         end
 
 
+        # Spread the features of the parent tables into the one being created,
+        # since PostgreSQL only propagates columns and their check constraints
+        def create_table(table_name, **options, &block)
+          sync = options.delete(:sync)
+          result = super
+          return result if sync.blank?
+
+          parents = Array.wrap(options[:inherits]).flatten.compact.map(&:to_s)
+          return result if parents.empty?
+
+          sync_inheritance_into(table_name.to_s, parents, sync_inheritance_selection(sync), false)
+          result
+        end
+
+        # A primary key that came from a parent table is described by the +sync+
+        # option while dumping, otherwise the dumper would describe the inherited
+        # column all over again and the load would break on the duplicate
+        def primary_key(table_name)
+          return super unless @_dump_mode
+          sync_inheritance_parent_primary_key?(table_name) ? nil : super
+        end
+
         # Add the schema option when extracting table options
         def table_options(table_name)
           options = super
@@ -202,6 +224,7 @@ module Torque
 
             tables = inherited_table_names(table_name)
             options[:inherits] = tables.one? ? tables.first : tables
+            options[:sync] = { primary_key: true } if sync_inheritance_parent_primary_key?(table_name)
           end
 
           options

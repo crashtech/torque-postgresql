@@ -104,6 +104,262 @@ RSpec.describe 'TableInheritance' do
     end
   end
 
+  context 'on syncing features' do
+    let(:parent) { 'sync_parents' }
+    let(:child) { 'sync_children' }
+    let(:migration) { ActiveRecord::Migration::Current.new('Testing') }
+
+    before do
+      allow_any_instance_of(ActiveRecord::Migration).to receive(:puts)
+
+      connection.create_table(:sync_targets) { |t| t.string :name }
+      connection.create_table(parent) do |t|
+        t.string :title
+        t.string :code
+        t.integer :author_id
+        t.tsrange :during
+      end
+
+      connection.add_index parent, :title
+      connection.add_unique_constraint parent, [:code]
+      connection.add_exclusion_constraint parent, 'during WITH &&', using: :gist
+      connection.add_foreign_key parent, :sync_targets, column: :author_id
+
+      connection.create_table(child, inherits: parent) { |t| t.string :extra }
+    end
+
+    it 'copies the primary key, which postgresql does not inherit' do
+      expect(connection.primary_keys(child)).to be_empty
+      connection.sync_inheritance_features(parent)
+      expect(connection.primary_keys(child)).to eql(%w[id])
+    end
+
+    it 'copies the indexes of the parent' do
+      connection.sync_inheritance_features(parent)
+      expect(connection.indexes(child).map(&:columns)).to include(%w[title])
+    end
+
+    it 'copies the unique constraints of the parent' do
+      connection.sync_inheritance_features(parent)
+      expect(connection.unique_constraints(child).map(&:column)).to eql([%w[code]])
+    end
+
+    it 'copies the exclusion constraints of the parent' do
+      connection.sync_inheritance_features(parent)
+      expect(connection.exclusion_constraints(child).map(&:expression)).to eql(['during WITH &&'])
+    end
+
+    it 'copies the outgoing foreign keys of the parent' do
+      connection.sync_inheritance_features(parent)
+      expect(connection.foreign_keys(child).map(&:to_table)).to eql(%w[sync_targets])
+    end
+
+    it 'excludes a feature that was asked for as false' do
+      connection.sync_inheritance_features(parent, primary_key: false)
+
+      expect(connection.primary_keys(child)).to be_empty
+      expect(connection.indexes(child).map(&:columns)).to include(%w[title])
+    end
+
+    it 'takes any feature asked for as true as the whole selection' do
+      connection.sync_inheritance_features(parent, indexes: true)
+
+      expect(connection.indexes(child).map(&:columns)).to include(%w[title])
+      expect(connection.primary_keys(child)).to be_empty
+      expect(connection.unique_constraints(child)).to be_empty
+      expect(connection.foreign_keys(child)).to be_empty
+    end
+
+    it 'refuses a feature it does not know about' do
+      expect do
+        connection.sync_inheritance_features(parent, comments: true)
+      end.to raise_error(ArgumentError, /comments/)
+    end
+
+    it 'names every copy after the marker' do
+      connection.sync_inheritance_features(parent)
+      names = connection.indexes(child).map(&:name) + connection.foreign_keys(child).map(&:name)
+
+      expect(names).to all(match(/\Async_inh_[0-9a-f]{10}\z/))
+      expect(names.map(&:size)).to all(be(19))
+    end
+
+    it 'gives a copy the same name every single time' do
+      connection.sync_inheritance_features(parent, indexes: true)
+      names = connection.indexes(child).map(&:name).sort
+
+      connection.indexes(child).each { |item| connection.remove_index(child, name: item.name) }
+      connection.sync_inheritance_features(parent, indexes: true)
+
+      expect(connection.indexes(child).map(&:name).sort).to eql(names)
+    end
+
+    it 'does not issue any statement on a second run' do
+      connection.sync_inheritance_features(parent)
+
+      statements = []
+      subscriber = ActiveSupport::Notifications.subscribe('sql.active_record') do |*, payload|
+        statements << payload[:sql] if payload[:sql].match?(/\A(CREATE|ALTER|DROP)/i)
+      end
+
+      connection.sync_inheritance_features(parent)
+      ActiveSupport::Notifications.unsubscribe(subscriber)
+
+      expect(statements).to be_empty
+    end
+
+    it 'leaves an equivalent index the child already has alone' do
+      connection.add_index child, :title, name: 'written_by_hand'
+      connection.sync_inheritance_features(parent)
+
+      titles = connection.indexes(child).select { |item| item.columns == %w[title] }
+      expect(titles.map(&:name)).to eql(%w[written_by_hand])
+    end
+
+    it 'copies the index that backs a constraint only through the constraint' do
+      connection.sync_inheritance_features(parent)
+
+      codes = connection.indexes(child).select { |item| item.columns == %w[code] }
+      expect(codes.size).to be(1)
+      expect(codes.first.name).to eql(connection.unique_constraints(child).first.name)
+    end
+
+    it 'cascades, carrying what each level added of its own' do
+      connection.add_index child, :extra
+      connection.create_table(:sync_grandchildren, inherits: child)
+
+      connection.sync_inheritance_features(parent)
+
+      columns = connection.indexes('sync_grandchildren').map(&:columns)
+      expect(columns).to include(%w[title])
+      expect(columns).to include(%w[extra])
+    end
+
+    it 'writes only to the children it was given' do
+      connection.create_table(:sync_grandchildren, inherits: child)
+      connection.sync_inheritance_features(parent, [child])
+
+      expect(connection.indexes(child).map(&:columns)).to include(%w[title])
+      expect(connection.indexes('sync_grandchildren')).to be_empty
+    end
+
+    it 'pulls only from the parents that are inside the requested tree' do
+      connection.create_table(:sync_others, id: false) { |t| t.string :label }
+      connection.add_index :sync_others, :label
+      connection.create_table(:sync_mixed, inherits: [parent, :sync_others])
+
+      connection.sync_inheritance_features(parent)
+
+      columns = connection.indexes('sync_mixed').map(&:columns)
+      expect(columns).to include(%w[title])
+      expect(columns).not_to include(%w[label])
+    end
+
+    it 'refuses a table that does not inherit from the parent' do
+      expect do
+        connection.sync_inheritance_features(parent, %w[authors])
+      end.to raise_error(ArgumentError, /authors/)
+    end
+
+    it 'drops a copy whose source is gone when pruning' do
+      connection.sync_inheritance_features(parent)
+      connection.remove_index(parent, :title)
+      connection.sync_inheritance_features(parent, prune: true)
+
+      expect(connection.indexes(child).map(&:columns)).not_to include(%w[title])
+    end
+
+    it 'keeps an index written by hand when pruning, even on an inherited column' do
+      connection.add_index child, :title, name: 'written_by_hand'
+      connection.remove_index(parent, :title)
+      connection.sync_inheritance_features(parent, prune: true)
+
+      expect(connection.indexes(child).map(&:name)).to include('written_by_hand')
+    end
+
+    it 'never drops the primary key when pruning' do
+      connection.sync_inheritance_features(parent)
+      connection.execute("ALTER TABLE #{parent} DROP CONSTRAINT #{parent}_pkey")
+      connection.sync_inheritance_features(parent, prune: true)
+
+      expect(connection.primary_keys(child)).to eql(%w[id])
+    end
+
+    it 'syncs everything when the table is created with sync' do
+      connection.create_table(:sync_others, inherits: parent, sync: true) { |t| t.string :note }
+
+      expect(connection.primary_keys('sync_others')).to eql(%w[id])
+      expect(connection.indexes('sync_others').map(&:columns)).to include(%w[title])
+      expect(connection.foreign_keys('sync_others').map(&:to_table)).to eql(%w[sync_targets])
+    end
+
+    it 'syncs from every parent named by a multiple inheritance' do
+      connection.create_table(:sync_others, id: false) { |t| t.string :label }
+      connection.add_index :sync_others, :label
+      connection.create_table(:sync_mixed, inherits: [parent, :sync_others], sync: true)
+
+      columns = connection.indexes('sync_mixed').map(&:columns)
+      expect(columns).to include(%w[title])
+      expect(columns).to include(%w[label])
+    end
+
+    it 'syncs only what the sync option picks' do
+      connection.create_table(:sync_others, inherits: parent, sync: { indexes: true })
+
+      expect(connection.indexes('sync_others').map(&:columns)).to include(%w[title])
+      expect(connection.primary_keys('sync_others')).to be_empty
+      expect(connection.foreign_keys('sync_others')).to be_empty
+    end
+
+    it 'reverts into a sync that prunes' do
+      connection.sync_inheritance_features(parent)
+      connection.remove_index(parent, :title)
+
+      migration.revert { migration.connection.sync_inheritance_features(parent) }
+
+      expect(connection.indexes(child).map(&:columns)).not_to include(%w[title])
+    end
+
+    it 'prunes only once the parent is back to what it was' do
+      connection.sync_inheritance_features(parent)
+      expect(connection.indexes(child).map(&:columns)).to include(%w[title])
+
+      migration.revert do
+        migration.connection.add_index parent, :title
+        migration.connection.sync_inheritance_features(parent)
+      end
+
+      expect(connection.indexes(parent).map(&:columns)).not_to include(%w[title])
+      expect(connection.indexes(child).map(&:columns)).not_to include(%w[title])
+    end
+
+    context 'on schema' do
+      let(:dump_result) do
+        ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection_pool, (io = StringIO.new))
+        io.string
+      end
+
+      before { connection.sync_inheritance_features(parent) }
+
+      it 'describes an inherited primary key through the sync option' do
+        parts = "\"#{child}\", id: false, inherits: \"#{parent}\", sync: \\{primary_key: true\\}"
+        expect(dump_result).to match(/create_table #{parts}/)
+      end
+
+      it 'never describes the inherited column all over again' do
+        line = dump_result.lines.find { |item| item.include?("create_table \"#{child}\"") }
+
+        expect(line).to include('id: false')
+        expect(line).not_to match(/id: :\w+/)
+        expect(line).not_to match(/, primary_key: /)
+      end
+
+      it 'carries the marker of every copy, so pruning still works after a load' do
+        expect(dump_result).to match(/t\.index \["title"\], name: "sync_inh_[0-9a-f]{10}"/)
+      end
+    end
+  end
+
   context 'on schema cache' do
     let(:schema_cache) { ActiveRecord::Base.connection.schema_cache }
     let(:schema_cache_reflection) { schema_cache.instance_variable_get(:@schema_reflection) }

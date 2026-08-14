@@ -73,6 +73,24 @@ module Torque
           [:rename_composite_column, [args.first, args.third, args.second, *args[3..]]]
         end
 
+        # Records the spread of features into inherited tables. While reverting,
+        # the pruning form goes to the front of the list, which is played back
+        # reversed, so the children are only pruned once everything else the
+        # migration did to their parents has been undone
+        def sync_inheritance_features(*args, &block)
+          return record(:sync_inheritance_features, args, &block) unless reverting
+
+          commands.unshift(inverse_of(:sync_inheritance_features, args, &block))
+        end
+        ruby2_keywords(:sync_inheritance_features)
+
+        # Inverts the spread of features by running it again while pruning, so
+        # the children converge back to whatever the parent looks like
+        def invert_sync_inheritance_features(args)
+          options = args.extract_options!.merge(prune: true)
+          [:sync_inheritance_features, [*args, Hash.ruby2_keywords_hash(options)]]
+        end
+
         # Records the creation of a schema
         def create_schema(*args, &block)
           record(:create_schema, args, &block)
