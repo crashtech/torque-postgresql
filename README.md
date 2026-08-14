@@ -25,7 +25,8 @@ gem 'torque-postgresql', '~> 2.0.4' # For Rails >= 6.1
 gem 'torque-postgresql', '~> 3.0'   # For Rails >= 7.0 < 7.1
 gem 'torque-postgresql', '~> 3.3'   # For Rails >= 7.1 < 7.2
 gem 'torque-postgresql', '~> 3.4'   # For Rails >= 7.2 < 8.0
-gem 'torque-postgresql', '~> 4.0'   # For Rails >= 8.0
+gem 'torque-postgresql', '~> 4.0'   # For Rails >= 8.0 < 8.1
+gem 'torque-postgresql', '~> 4.1'   # For Rails >= 8.1
 ```
 
 Also, run:
