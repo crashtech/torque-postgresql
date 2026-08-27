@@ -12,7 +12,9 @@ module Torque
         end
 
         def call_for_array(attribute, value)
-          if !value.is_a?(::Array)
+          if value.nil?
+            attribute.eq(nil)
+          elsif !value.is_a?(::Array)
             call_with_value(attribute, value)
           elsif value.any?
             call_with_array(attribute, value)

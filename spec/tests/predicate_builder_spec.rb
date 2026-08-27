@@ -88,6 +88,14 @@ RSpec.describe 'PredicateBuilder' do
       expect(sql).to include("WHERE CARDINALITY(\"items\".\"tag_ids\") = 0")
     end
 
+    it 'keeps nil as a null check' do
+      sql = subject.where(tag_ids: nil).to_sql
+      expect(sql).to include("WHERE \"items\".\"tag_ids\" IS NULL")
+
+      sql = subject.where.not(tag_ids: nil).to_sql
+      expect(sql).to include("WHERE \"items\".\"tag_ids\" IS NOT NULL")
+    end
+
     it 'properly binds the provided values' do
       sql, binds = get_query_with_binds { subject.where(tag_ids: 1).load }
       expect(sql).to include("WHERE $1 = ANY(\"items\".\"tag_ids\")")
