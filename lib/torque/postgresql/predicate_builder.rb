@@ -45,12 +45,17 @@ module Torque
 
       private
 
+        # Only the ltree handler is picked by the attribute alone. Composite
+        # could follow, since whole values already bind through the type and
+        # would only need the same nil guard, but struct cannot: a Hash means
+        # the properties of the document and any other value means the whole
+        # document, and nothing on the attribute tells those two apart
         def handler_for_document(type, value)
           if PostgreSQL.config.composite.enabled && CompositeHandler.candidate?(value, type)
             CompositeHandler
           elsif PostgreSQL.config.struct.enabled && StructHandler.candidate?(value, type)
             StructHandler
-          elsif PostgreSQL.config.ltree.enabled && LtreeHandler.candidate?(value, type)
+          elsif PostgreSQL.config.ltree.enabled && LtreeHandler.candidate?(type)
             LtreeHandler
           end
         end

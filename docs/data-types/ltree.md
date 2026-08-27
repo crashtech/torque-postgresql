@@ -1,10 +1,10 @@
 ---
 title: LTree
 section: data-types
-description: Reads PostgreSQL's ltree data type as an Array of labels and picks the right tree operator when querying it.
+description: Reads PostgreSQL's ltree data type as a path of labels and picks the right tree operator when querying it.
 ---
 
-Reads PostgreSQL's `ltree` data type as an Array of labels and picks the right tree
+Reads PostgreSQL's `ltree` data type as a path of labels and picks the right tree
 operator when querying it. A label path is how you store a hierarchy in a single
 column, which makes it a natural fit for categories, taxonomies and permissions.
 [PostgreSQL Docs](https://www.postgresql.org/docs/current/ltree.html)
@@ -14,10 +14,13 @@ column, which makes it a natural fit for categories, taxonomies and permissions.
 
 ## How it works
 
-A path is an Array of labels, so it flows through Ruby like any other list, and an
-`ltree[]` column simply becomes an Array of Arrays. The value class adds the cheap
-path operations on top, so comparing two loaded records never needs a round trip to
-the database.
+A path holds its labels as a plain list, so it enumerates like any other Array and
+compares equal to one, and an `ltree[]` column simply becomes an Array of paths. The
+value class adds the cheap path operations on top, so comparing two loaded records
+never needs a round trip to the database.
+
+Patterns work the same way: an `lquery` holds its items in the form you write them
+in Ruby, and reads back from the database in that same form.
 
 Conditions are not a plain `=`. The value decides: a plain path is compared with
 `=`, and anything carrying an lquery feature is matched with `~`.
@@ -51,15 +54,22 @@ add_column :rules, :pattern, :lquery
 The column is automatically identified and its value turned into a path.
 
 ```ruby
-category.path            # => ["Top", "Science"]
+category.path.items      # => ["Top", "Science"]
 category.path.to_s       # => "Top.Science"
 category.path.depth      # => 2
-category.path.root       # => ["Top"]
+category.path.root       # => The path "Top"
 category.path.root?      # => false
-category.path.parent     # => ["Top"]
-category.path / 'Astro'  # => ["Top", "Science", "Astro"]
+category.path.parent     # => The path "Top"
+category.path / 'Astro'  # => The path "Top.Science.Astro"
 category.path.lca(other) # The longest common ancestor
 category.path.index_of('Science')
+```
+
+It is Enumerable over its labels and compares equal to a plain Array of them.
+
+```ruby
+category.path.map(&:downcase)      # => ["top", "science"]
+category.path == %w[Top Science]   # => true
 ```
 
 Two paths can be compared without touching the database. Both checks include the
@@ -78,9 +88,9 @@ category.path = %w[Top Science]
 category.path = [:Top, :Science]
 ```
 
-Labels are limited to letters, numbers, underscores and dashes, and anything else
-raises an `ArgumentError` rather than reaching the database as a syntax error.
-Dashes are only accepted as of PostgreSQL 16, which is what
+Nothing is validated on the Ruby side. Whatever cannot be a label reaches PostgreSQL
+as it is and fails there, as a syntax error. Dashes are only accepted as of
+PostgreSQL 16, which is what
 [`ltree.sanitize`]({{ site.baseurl }}/getting-started/configuring/#ltree.sanitize)
 is for.
 
@@ -178,9 +188,16 @@ appears in SQL. The example from the PostgreSQL manual:
 # => Top.*{0,2}.sport*@.!football|tennis{1,}.Russ*|Spain
 ```
 
-> **Note** Patterns are only ever built, never parsed back. A pattern read from an
-> `lquery` column keeps its text form untouched, and there is no Ruby object model
-> describing its parts.
+A pattern holds those items exactly as written, and a pattern read from an `lquery`
+column comes back in the same form, so a stored `users.*` is `['users', :any]`
+again. A negated group and a quantified item have no Ruby form of their own, so they
+stay Strings both ways.
+
+```ruby
+rule.pattern = ['users', :any]
+rule.reload.pattern.items   # => ["users", :any]
+rule.pattern.to_s           # => "users.*"
+```
 
 ## Querying
 
@@ -202,10 +219,50 @@ A star matches zero labels too, which means `Top.*` matches `Top` itself and is
 exactly the same as `<@ 'Top'`. GiST indexes both, so the whole subtree query is
 just a pattern. Use `*{1,}` when the path itself should be left out.
 
-> **Note** On a path column `where(path: [a, b])` is **not** an `IN`. An Array is
-> always a single value here: at the top level it is the sequence of items, and
-> nested it is a group of alternatives. To test a path against several whole
-> patterns, use the `?` operator below.
+### Lists of values
+
+An Array is one path or one pattern, unless its first entry is itself an Array, a
+path or a pattern. Then it is a list of values, and the condition asks whether any of
+them matches: paths become an `IN`, patterns go through the `?` operator.
+
+```ruby
+Category.where(path: [%w[Top a], %w[Top b]])            # path IN ('Top.a', 'Top.b')
+Category.where(path: [['Top', :any], ['Other', 1..]])    # path ? '{Top.*,Other.*{1,}}'::lquery[]
+Category.where(path: [LTree['Top'], 'Other'])            # path IN ('Top', 'Other')
+```
+
+> **Note** A group of alternatives as the very first item of a pattern has to be
+> written as a string, `['a|b', :any]`, since a leading Array turns the value into a
+> list.
+
+### Array columns
+
+On an `ltree[]` column a single value asks whether any entry matches it, and a list
+whether any entry matches any of them.
+
+```ruby
+User.where(permissions: 'app.users')                      # 'app.users' = ANY(permissions)
+User.where(permissions: ['app', :any])                    # permissions ~ 'app.*'
+User.where(permissions: [%w[app a], %w[app b]])           # permissions && '{app.a,app.b}'
+User.where(permissions: [['app', :any], ['x', :any]])     # permissions ? '{app.*,x.*}'::lquery[]
+User.where(permissions: [])                               # CARDINALITY(permissions) = 0
+```
+
+### Pattern columns
+
+An `lquery` column mirrors the path column: a pattern is the equality and a path is
+the match, meaning which of the stored patterns match that path. PostgreSQL defines
+no equality operator for `lquery`, so the equality happens over the text form.
+
+```ruby
+Rule.where(pattern: ['users', :any])                      # pattern::text = 'users.*'
+Rule.where(pattern: 'users.admin')                        # pattern ~ 'users.admin'::ltree
+Rule.where(pattern: [%w[users admin], %w[posts new]])     # pattern ~ ANY('{users.admin,posts.new}'::ltree[])
+Rule.where(patterns: 'users.admin')                       # 'users.admin'::ltree ~ ANY(patterns)
+```
+
+Every value given to one of these columns goes through this handler. `nil` is still
+`IS NULL`, but a Relation or an Arel attribute is not accepted as a value here.
 
 ### Operators
 
@@ -227,7 +284,7 @@ path.matches_any_lquery(value)  # path ?  ?  Does it match any of the patterns
 Labels that come from somewhere else rarely satisfy PostgreSQL's rules on their own,
 and a slug with dashes only works as of PostgreSQL 16. Set
 [`ltree.sanitize`]({{ site.baseurl }}/getting-started/configuring/#ltree.sanitize)
-to normalize them before they are validated:
+to normalize them before they are sent:
 
 ```ruby
 Torque::PostgreSQL.configure do |config|

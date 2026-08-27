@@ -14,8 +14,6 @@ require 'torque/postgresql/config'
 require 'torque/postgresql/version'
 require 'torque/postgresql/collector'
 require 'torque/postgresql/geometry_builder'
-require 'torque/postgresql/attributes/ltree'
-require 'torque/postgresql/attributes/lquery'
 require 'torque/postgresql/predicate_table'
 require 'torque/postgresql/predicate_builder'
 

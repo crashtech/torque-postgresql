@@ -7,6 +7,8 @@ RSpec.describe 'LTree' do
 
   let(:ltree) { Torque::PostgreSQL::LTree }
   let(:lquery) { Torque::PostgreSQL::LQuery }
+  let(:ltree_type) { Torque::PostgreSQL::Adapter::OID::Ltree.new }
+  let(:lquery_type) { Torque::PostgreSQL::Adapter::OID::Lquery.new }
 
   context 'on table definition' do
     subject { table_definition.new(connection, 'articles') }
@@ -50,6 +52,13 @@ RSpec.describe 'LTree' do
       expect(dump_io.string).to match(/t\.ltree +"path"/)
     end
 
+    it 'dumps the column as an lquery' do
+      dump_io = StringIO.new
+      ActiveRecord::SchemaDumper.dump(source, dump_io)
+      expect(dump_io.string).to match(/t\.lquery +"pattern"/)
+      expect(dump_io.string).to match(/t\.lquery +"patterns", array: true/)
+    end
+
     it 'dumps an array of paths' do
       dump_io = StringIO.new
       ActiveRecord::SchemaDumper.dump(source, dump_io)
@@ -63,15 +72,29 @@ RSpec.describe 'LTree' do
   end
 
   context 'on the path' do
-    it 'is an array of labels' do
-      expect(ltree.new('Top.Science')).to be_a(Array)
+    it 'enumerates its labels' do
+      subject = ltree.new('Top.Science')
+      expect(subject).to be_a(Enumerable)
+      expect(subject.items).to be_eql(%w[Top Science])
+      expect(subject.to_a).to be_eql(%w[Top Science])
+      expect(subject.map(&:downcase)).to be_eql(%w[top science])
+    end
+
+    it 'compares with a plain array' do
       expect(ltree.new('Top.Science')).to be_eql(%w[Top Science])
+      expect(ltree.new('Top.Science')).to be_eql(ltree[:Top, :Science])
+      expect(ltree.new('Top.Science')).not_to be_eql(%w[Top])
+      expect(ltree.new('Top.Science').hash).to be_eql(ltree[:Top, :Science].hash)
     end
 
     it 'accepts a string, an array or symbols' do
       expect(ltree.new('Top.Science').to_s).to be_eql('Top.Science')
       expect(ltree.new(%w[Top Science]).to_s).to be_eql('Top.Science')
       expect(ltree[:Top, :Science].to_s).to be_eql('Top.Science')
+    end
+
+    it 'flattens nested arrays into labels' do
+      expect(ltree.new(['Top', %w[Science Astro]]).to_s).to be_eql('Top.Science.Astro')
     end
 
     it 'knows its depth' do
@@ -123,13 +146,6 @@ RSpec.describe 'LTree' do
       expect(subject.index_of('5.6', -4)).to be_eql(9)
       expect(subject.index_of('9.9')).to be_eql(-1)
     end
-
-    it 'rejects anything that is not a plain sequence of labels' do
-      expect { ltree.new('a.*') }.to raise_error(ArgumentError, /not a valid ltree label/)
-      expect { ltree.new('a b') }.to raise_error(ArgumentError, /not a valid ltree label/)
-      expect { ltree.new(['a', %w[b c]]) }.to raise_error(ArgumentError, /only make sense on an lquery/)
-      expect { ltree.new(['a', 1..2]) }.to raise_error(ArgumentError, /only make sense on an lquery/)
-    end
   end
 
   context 'on the pattern' do
@@ -162,29 +178,32 @@ RSpec.describe 'LTree' do
       expect(subject.to_s).to be_eql('Top.*{0,2}.sport*@.!football|tennis{1,}.Russ*|Spain')
     end
 
+    it 'holds the pure items' do
+      expect(lquery['Top', :any].items).to be_eql(['Top', :any])
+      expect(lquery.new('Top.*{1,2}.a|b').items).to be_eql(['Top', 1..2, %w[a b]])
+      expect(lquery.new('Top.*').to_a).to be_eql(['Top', :any])
+    end
+
+    it 'enumerates its items' do
+      expect(lquery['Top', :any]).to be_a(Enumerable)
+      expect(lquery['Top', :any].map(&:to_s)).to be_eql(%w[Top any])
+    end
+
     it 'accepts its own text form' do
+      expect(lquery.new('Top.*.sport*@').items).to be_eql(['Top', :any, 'sport*@'])
       expect(lquery.new('Top.*.sport*@').to_s).to be_eql('Top.*.sport*@')
     end
 
-    it 'compares by its text form' do
+    it 'compares by its items' do
       expect(lquery['Top', :any]).to be_eql(lquery.new('Top.*'))
+      expect(lquery['Top', :any]).to be_eql(['Top', :any])
       expect(lquery['Top', :any].hash).to be_eql(lquery.new('Top.*').hash)
     end
 
-    it 'rejects items that are not valid' do
-      expect { lquery['a.b'] }.to raise_error(ArgumentError, /not a valid lquery item/)
-      expect { lquery['foo{'] }.to raise_error(ArgumentError, /not a valid lquery item/)
-      expect { lquery['a b'] }.to raise_error(ArgumentError, /not a valid lquery item/)
-      expect { lquery[{ a: 1 }] }.to raise_error(ArgumentError, /Unable to use/)
-    end
-
-    it 'rejects quantifiers that make no sense' do
-      expect { lquery[2..0] }.to raise_error(ArgumentError, /not a valid quantifier/)
-      expect { lquery[-1..2] }.to raise_error(ArgumentError, /not a valid quantifier/)
-    end
-
-    it 'rejects an empty alternation' do
-      expect { lquery[[]] }.to raise_error(ArgumentError, /at least one label/)
+    it 'leaves the validation to the database' do
+      expect(lquery['a b'].to_s).to be_eql('a b')
+      expect(lquery[2..0].to_s).to be_eql('*{2,0}')
+      expect { Category.where(path: ['a b']).count }.to raise_error(ActiveRecord::StatementInvalid)
     end
   end
 
@@ -291,8 +310,9 @@ RSpec.describe 'LTree' do
       expect((ltree.new('top') / path_like.new('app.users')).to_s).to be_eql('top.app.users')
     end
 
-    it 'contributes every label of a pattern' do
+    it 'contributes every item of a pattern' do
       expect(lquery[path_like.new('app.users'), :any].to_s).to be_eql('app.users.*')
+      expect(lquery[path_like.new(['app', :any])].items).to be_eql(['app', :any])
     end
 
     it 'turns the condition into a match when it describes a pattern' do
@@ -317,25 +337,24 @@ RSpec.describe 'LTree' do
 
     it 'is ignored when the config has no method' do
       Torque::PostgreSQL.config.ltree.compatible_method = nil
-      expect { ltree.new(path_like.new('app.users')) }
-        .to raise_error(ArgumentError, /only make sense on an lquery/)
+      expect(ltree.new(path_like.new('app.users'))).not_to be_eql(%w[app users])
     end
   end
 
   context 'on markers' do
     it 'treats a plain path as a path' do
-      expect(lquery.marker?('Top.Science')).to be_falsey
-      expect(lquery.marker?(%w[Top Science])).to be_falsey
-      expect(lquery.marker?(%i[Top Science])).to be_falsey
+      expect(lquery.new('Top.Science')).not_to be_pattern
+      expect(lquery.new(%w[Top Science])).not_to be_pattern
+      expect(lquery.new(%i[Top Science])).not_to be_pattern
     end
 
     it 'treats anything with a query feature as a pattern' do
-      expect(lquery.marker?(['Top', :any])).to be_truthy
-      expect(lquery.marker?(['Top', 1..])).to be_truthy
-      expect(lquery.marker?(['Top', %w[a b]])).to be_truthy
-      expect(lquery.marker?('Top.*')).to be_truthy
-      expect(lquery.marker?('!Top')).to be_truthy
-      expect(lquery.marker?('Top@')).to be_truthy
+      expect(lquery.new(['Top', :any])).to be_pattern
+      expect(lquery.new(['Top', 1..])).to be_pattern
+      expect(lquery.new(['Top', %w[a b]])).to be_pattern
+      expect(lquery.new('Top.*')).to be_pattern
+      expect(lquery.new('!Top')).to be_pattern
+      expect(lquery.new('Top@')).to be_pattern
     end
   end
 
@@ -361,39 +380,59 @@ RSpec.describe 'LTree' do
       expect(lquery['a-b*', %w[c-d e]].to_s).to be_eql('a_b*.c_d|e')
     end
 
-    it 'never rewrites a quantifier' do
-      Torque::PostgreSQL.config.ltree.sanitize = { '1' => '9' }
-      expect(lquery['foo{1,2}'].to_s).to be_eql('foo{1,2}')
-    end
-
     it 'does not apply to values read from the database' do
       Torque::PostgreSQL.config.ltree.sanitize = { 'a' => 'z' }
-      expect(ltree.load('a.b').to_s).to be_eql('a.b')
+      expect(ltree_type.deserialize('a.b').to_s).to be_eql('a.b')
+      expect(lquery_type.deserialize('a.*').to_s).to be_eql('a.*')
     end
   end
 
   context 'on OID' do
-    subject { Torque::PostgreSQL::Adapter::OID::Ltree.new }
-
-    it 'has the right type' do
-      expect(subject.type).to be_eql(:ltree)
+    it 'has the right types' do
+      expect(ltree_type.type).to be_eql(:ltree)
+      expect(lquery_type.type).to be_eql(:lquery)
     end
 
     it 'deserializes into a path' do
-      expect(subject.deserialize('Top.Science')).to be_a(Torque::PostgreSQL::LTree)
-      expect(subject.deserialize('Top.Science')).to be_eql(%w[Top Science])
-      expect(subject.deserialize(nil)).to be_nil
+      expect(ltree_type.deserialize('Top.Science')).to be_a(ltree)
+      expect(ltree_type.deserialize('Top.Science')).to be_eql(%w[Top Science])
+      expect(ltree_type.deserialize(nil)).to be_nil
     end
 
-    it 'serializes back into text' do
-      expect(subject.serialize(%w[Top Science])).to be_eql('Top.Science')
-      expect(subject.serialize('Top.Science')).to be_eql('Top.Science')
-      expect(subject.serialize(nil)).to be_nil
-      expect(subject.serialize('')).to be_nil
+    it 'serializes a path back into text' do
+      expect(ltree_type.serialize(%w[Top Science])).to be_eql('Top.Science')
+      expect(ltree_type.serialize('Top.Science')).to be_eql('Top.Science')
+      expect(ltree_type.serialize(nil)).to be_nil
+      expect(ltree_type.serialize('')).to be_nil
     end
 
-    it 'validates on the way in' do
-      expect { subject.serialize('Top.*') }.to raise_error(ArgumentError)
+    it 'deserializes a pattern into its items' do
+      expect(lquery_type.deserialize('users.*')).to be_a(lquery)
+      expect(lquery_type.deserialize('users.*')).to be_eql(['users', :any])
+      expect(lquery_type.deserialize('a.*{2}')).to be_eql(['a', 2..2])
+      expect(lquery_type.deserialize('a.*{1,}')).to be_eql(['a', 1..])
+      expect(lquery_type.deserialize('a.*{,3}')).to be_eql(['a', ..3])
+      expect(lquery_type.deserialize('a.*{0,2}')).to be_eql(['a', 0..2])
+      expect(lquery_type.deserialize('a|b.c')).to be_eql([%w[a b], 'c'])
+      expect(lquery_type.deserialize(nil)).to be_nil
+    end
+
+    it 'keeps negated and quantified groups as text' do
+      expect(lquery_type.deserialize('!a|b.c{1,}')).to be_eql(['!a|b', 'c{1,}'])
+    end
+
+    it 'round trips the example from the PostgreSQL manual' do
+      text = 'Top.*{0,2}.sport*@.!football|tennis{1,}.Russ*|Spain'
+      items = ['Top', 0..2, 'sport*@', '!football|tennis{1,}', %w[Russ* Spain]]
+
+      expect(lquery_type.deserialize(text)).to be_eql(items)
+      expect(lquery_type.serialize(lquery_type.deserialize(text))).to be_eql(text)
+    end
+
+    it 'serializes a pattern back into text' do
+      expect(lquery_type.serialize(['Top', :any])).to be_eql('Top.*')
+      expect(lquery_type.serialize(lquery['Top', 1..])).to be_eql('Top.*{1,}')
+      expect(lquery_type.serialize(nil)).to be_nil
     end
   end
 
@@ -402,7 +441,7 @@ RSpec.describe 'LTree' do
 
     it 'reads and writes a path' do
       subject.path = 'Top.Science'
-      expect(subject.path).to be_a(Torque::PostgreSQL::LTree)
+      expect(subject.path).to be_a(ltree)
       expect(subject.path).to be_eql(%w[Top Science])
     end
 
@@ -416,17 +455,47 @@ RSpec.describe 'LTree' do
       expect(Category.find(subject.id).path).to be_eql(%w[Top Science])
     end
 
-    it 'round trips an array of paths as an array of arrays' do
+    it 'round trips an array of paths' do
       user = User.create!(name: 'Rick', permissions: ['app.users.write', %w[app posts]])
       reloaded = User.find(user.id)
 
       expect(reloaded.permissions).to be_eql([%w[app users write], %w[app posts]])
-      expect(reloaded.permissions.first).to be_a(Torque::PostgreSQL::LTree)
+      expect(reloaded.permissions.first).to be_a(ltree)
     end
 
-    it 'refuses a pattern where a path is expected' do
+    it 'reads and writes a pattern' do
+      subject.pattern = ['users', :any]
+      expect(subject.pattern).to be_a(lquery)
+      expect(subject.pattern.items).to be_eql(['users', :any])
+    end
+
+    it 'round trips a pattern as its items' do
+      subject.update!(title: 'Rule', pattern: ['users', :any, 1..2])
+      expect(Category.find(subject.id).pattern.items).to be_eql(['users', :any, 1..2])
+    end
+
+    it 'round trips an array of patterns' do
+      subject.update!(title: 'Rule', patterns: [['users', :any], 'posts.*{1,}'])
+      reloaded = Category.find(subject.id)
+
+      expect(reloaded.patterns).to be_eql([['users', :any], ['posts', 1..]])
+      expect(reloaded.patterns.first).to be_a(lquery)
+    end
+
+    it 'tracks changes by the compiled form' do
+      subject.update!(title: 'Rule', path: 'Top.Science', pattern: ['Top', :any])
+      subject.path = %w[Top Science]
+      subject.pattern = 'Top.*'
+      expect(subject).not_to be_changed
+
+      subject.pattern = ['Top', 1..]
+      expect(subject).to be_changed
+    end
+
+    it 'leaves the validation to the database' do
       subject.path = 'Top.*'
-      expect { subject.path }.to raise_error(ArgumentError, /not a valid ltree label/)
+      expect(subject.path).to be_eql(['Top', '*'])
+      expect { subject.save! }.to raise_error(ActiveRecord::StatementInvalid)
     end
   end
 
@@ -468,6 +537,27 @@ RSpec.describe 'LTree' do
         .to include(%[WHERE "categories"."path" ~ 'Top.*'::lquery])
     end
 
+    it 'takes a plain array as one path' do
+      expect(subject.where(path: %w[Top Science]).to_sql).not_to include('IN')
+    end
+
+    it 'lists paths when the first entry is a whole one' do
+      expect(subject.where(path: [%w[Top a], %w[Top b]]).to_sql)
+        .to include(%[WHERE "categories"."path" IN ('Top.a', 'Top.b')])
+      expect(subject.where(path: [ltree['Top'], 'Other']).to_sql)
+        .to include(%[WHERE "categories"."path" IN ('Top', 'Other')])
+    end
+
+    it 'tests a list of patterns at once' do
+      expect(subject.where(path: [['Top', :any], lquery['Other', 1..]]).to_sql)
+        .to include(%[WHERE "categories"."path" ? '{Top.*,"Other.*{1,}"}'::lquery[]])
+    end
+
+    it 'handles nil and an empty list' do
+      expect(subject.where(path: nil).to_sql).to include(%[WHERE "categories"."path" IS NULL])
+      expect(subject.where(path: []).to_sql).to include('WHERE 1=0')
+    end
+
     it 'finds the records that match' do
       Category.create!(title: 'Science', path: 'Top.Science')
       Category.create!(title: 'Astronomy', path: 'Top.Science.Astronomy')
@@ -476,15 +566,113 @@ RSpec.describe 'LTree' do
       expect(Category.where(path: ['Top', :any]).count).to be_eql(3)
       expect(Category.where(path: %w[Top Science]).count).to be_eql(1)
       expect(Category.where(path: ['Top', 'Science', :any]).count).to be_eql(2)
+      expect(Category.where(path: [%w[Top Science], %w[Top Hobbies]]).count).to be_eql(2)
+      expect(Category.where(path: [['Top', 'Sci*'], ['Nope', :any]]).count).to be_eql(1)
     end
 
-    it 'leaves an array column to the default behavior' do
-      expect(User.where(permissions: ['app.users']).to_sql)
-        .to include(%[WHERE "users"."permissions" = ])
+    context 'on an array of paths' do
+      subject { User.all }
+
+      it 'asks whether any entry is the path' do
+        expect(subject.where(permissions: 'app.users').to_sql)
+          .to include(%[WHERE 'app.users' = ANY("users"."permissions")])
+      end
+
+      it 'matches the entries against a pattern' do
+        expect(subject.where(permissions: ['app', :any]).to_sql)
+          .to include(%[WHERE "users"."permissions" ~ 'app.*'::lquery])
+      end
+
+      it 'overlaps with a list of paths' do
+        expect(subject.where(permissions: [%w[app users], %w[app posts]]).to_sql)
+          .to include(%[WHERE "users"."permissions" && '{app.users,app.posts}'])
+      end
+
+      it 'tests the entries against a list of patterns' do
+        expect(subject.where(permissions: [['app', :any], ['other', :any]]).to_sql)
+          .to include(%[WHERE "users"."permissions" ? '{app.*,other.*}'::lquery[]])
+      end
+
+      it 'handles nil and an empty list' do
+        expect(subject.where(permissions: nil).to_sql)
+          .to include(%[WHERE "users"."permissions" IS NULL])
+        expect(subject.where(permissions: []).to_sql)
+          .to include(%[WHERE CARDINALITY("users"."permissions") = 0])
+      end
+
+      it 'finds the records that match' do
+        User.create!(name: 'Editor', permissions: ['app.posts', 'app.users'])
+        User.create!(name: 'Guest', permissions: ['app.posts'])
+
+        expect(User.where(permissions: 'app.users').pluck(:name)).to be_eql(%w[Editor])
+        expect(User.where(permissions: ['app', 'u*']).pluck(:name)).to be_eql(%w[Editor])
+        expect(User.where(permissions: [%w[app users], %w[nope]]).pluck(:name)).to be_eql(%w[Editor])
+        expect(User.where(permissions: [['app', :any]]).count).to be_eql(2)
+      end
     end
 
-    it 'never takes an array as a list of values' do
-      expect(subject.where(path: %w[Top Science]).to_sql).not_to include('IN')
+    context 'on a pattern column' do
+      it 'compares a pattern by its text' do
+        expect(subject.where(pattern: ['users', :any]).to_sql)
+          .to include(%[WHERE "categories"."pattern"::text = 'users.*'])
+      end
+
+      it 'matches a path against the stored pattern' do
+        expect(subject.where(pattern: 'users.admin').to_sql)
+          .to include(%[WHERE "categories"."pattern" ~ 'users.admin'::ltree])
+      end
+
+      it 'lists patterns by their text' do
+        expect(subject.where(pattern: [['users', :any], ['posts', :any]]).to_sql)
+          .to include(%[WHERE "categories"."pattern"::text IN ('users.*', 'posts.*')])
+      end
+
+      it 'matches any of the paths' do
+        expect(subject.where(pattern: [%w[users admin], %w[posts new]]).to_sql)
+          .to include(%[WHERE "categories"."pattern" ~ ANY('{users.admin,posts.new}'::ltree[])])
+      end
+
+      it 'finds the patterns that match' do
+        Category.create!(title: 'Users', pattern: ['users', :any])
+        Category.create!(title: 'Posts', pattern: ['posts', 1..])
+
+        expect(Category.where(pattern: 'users.admin').pluck(:title)).to be_eql(%w[Users])
+        expect(Category.where(pattern: ['users', :any]).pluck(:title)).to be_eql(%w[Users])
+        expect(Category.where(pattern: [%w[users admin], %w[posts new]]).pluck(:title))
+          .to match_array(%w[Users Posts])
+      end
+    end
+
+    context 'on an array of patterns' do
+      it 'asks whether any entry is the pattern' do
+        expect(subject.where(patterns: ['users', :any]).to_sql)
+          .to include(%[WHERE 'users.*' = ANY("categories"."patterns"::text[])])
+      end
+
+      it 'matches a path against any entry' do
+        expect(subject.where(patterns: 'users.admin').to_sql)
+          .to include(%[WHERE 'users.admin'::ltree ~ ANY("categories"."patterns")])
+      end
+
+      it 'overlaps with a list of patterns by their text' do
+        expect(subject.where(patterns: [['users', :any], ['posts', :any]]).to_sql)
+          .to include(%[WHERE "categories"."patterns"::text[] && '{users.*,posts.*}'])
+      end
+
+      it 'tests the entries against a list of paths' do
+        expect(subject.where(patterns: [%w[users admin], %w[posts new]]).to_sql)
+          .to include(%[WHERE "categories"."patterns" ? '{users.admin,posts.new}'::ltree[]])
+      end
+
+      it 'finds the records whose patterns match' do
+        Category.create!(title: 'Rule', patterns: [['users', :any], ['posts', 1..]])
+
+        expect(Category.where(patterns: 'users.admin').count).to be_eql(1)
+        expect(Category.where(patterns: 'nope.x').count).to be_eql(0)
+        expect(Category.where(patterns: ['users', :any]).count).to be_eql(1)
+        expect(Category.where(patterns: [%w[posts new], %w[nope]]).count).to be_eql(1)
+        expect(Category.where(patterns: [['users', :any], ['x', :any]]).count).to be_eql(1)
+      end
     end
   end
 
@@ -545,8 +733,7 @@ RSpec.describe 'LTree' do
     end
 
     it 'matches grants against a pattern' do
-      condition = grants.matches_lquery(::Arel.sql("'app.users.*'").pg_cast('lquery'))
-      expect(User.where(condition).pluck(:name)).to match_array(%w[Editor])
+      expect(User.where(permissions: ['app', 'users', :any]).pluck(:name)).to match_array(%w[Editor])
     end
   end
 end

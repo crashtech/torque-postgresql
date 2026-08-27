@@ -309,8 +309,8 @@ module Torque
       ltree.enabled = true
 
       # A hash of replacements applied to every label provided by the
-      # application before it gets validated, so that a source that does not
-      # satisfy PostgreSQL's rules on its own can still be used. Dashes, for
+      # application before it is sent to the database, so that a source that
+      # does not satisfy PostgreSQL's rules on its own can still be used. Dashes, for
       # example, are only accepted as of PostgreSQL 16
       #   { '-' => '_' } turns dashes into underscores
       #   { '-' => '' }  drops dashes

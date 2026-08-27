@@ -126,12 +126,13 @@ Profile.where(settings: { address: { city: 'SP' } })
 > operators for it, and a `json` column raises an `ArgumentError`. See
 > [struct]({{ site.baseurl }}/data-types/struct/#querying) for the full behavior.
 
-### Path or pattern on an ltree column
+### Paths and patterns on ltree columns
 
-A condition over an [ltree]({{ site.baseurl }}/data-types/ltree/) column is rarely a plain
-equality, so the value decides which operator to use. A plain path is compared with `=`, which
-keeps `find_by`, uniqueness validations and associations behaving as usual. As soon as the value
-carries one of the lquery features, the condition becomes a `~` match instead.
+Every column of the [ltree]({{ site.baseurl }}/data-types/ltree/) extension goes through the
+same handler, so the value never decides whether it applies, only which operator to use. On an
+`ltree` column a plain path is compared with `=`, which keeps `find_by`, uniqueness validations
+and associations behaving as usual, and a value carrying one of the lquery features becomes a
+`~` match instead.
 
 ```ruby
 Category.where(path: 'Top.Science')
@@ -151,6 +152,35 @@ A star also matches zero labels, so `Top.*` covers `Top` itself and is the same 
 which a GiST index serves just as well. That is why the whole subtree query needs no operator of
 its own.
 
+An Array is one value, unless its first entry is itself an Array, a path or a pattern. Then it is
+a list of values, and the condition asks whether any of them matches.
+
+```ruby
+Category.where(path: [%w[Top a], %w[Top b]])
+# WHERE "categories"."path" IN ('Top.a', 'Top.b')
+
+Category.where(path: [['Top', :any], ['Other', 1..]])
+# WHERE "categories"."path" ? '{Top.*,"Other.*{1,}"}'::lquery[]
+```
+
+The same rules serve an `ltree[]` column, where a single value asks whether any entry matches
+it, and an `lquery` column, where the kinds swap: a pattern is the equality and a path is the
+match, meaning which stored patterns match that path.
+
+```ruby
+User.where(permissions: 'app.users')
+# WHERE 'app.users' = ANY("users"."permissions")
+
+User.where(permissions: ['app', :any])
+# WHERE "users"."permissions" ~ 'app.*'::lquery
+
+Rule.where(pattern: ['users', :any])
+# WHERE "rules"."pattern"::text = 'users.*'
+
+Rule.where(pattern: 'users.admin')
+# WHERE "rules"."pattern" ~ 'users.admin'::ltree
+```
+
 Records and objects that describe their own path are accepted anywhere a label is, the first by
 its primary key and the second by whatever `to_tree_path` returns.
 
@@ -162,6 +192,6 @@ Category.where(path: [parent, :any])
 # WHERE "categories"."path" ~ '1.*'::lquery
 ```
 
-> **Note** An `Array` here is never a list of values, so this is **not** an `IN`. At the top level
-> it is the sequence of items of a single path, and nested it is a group of alternatives. Testing a
-> path against several whole patterns is the `?` operator, reached through Arel.
+> **Note** `nil` is still `IS NULL` and an empty list still matches nothing, but a Relation or
+> an Arel attribute is not accepted as a value on these columns. See
+> [ltree]({{ site.baseurl }}/data-types/ltree/#querying) for the full table of operators.

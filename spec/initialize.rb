@@ -22,6 +22,8 @@ require_relative '../lib/torque/postgresql/attributes/enum_set'
 require_relative '../lib/torque/postgresql/attributes/period'
 require_relative '../lib/torque/postgresql/attributes/struct'
 require_relative '../lib/torque/postgresql/attributes/full_text_search'
+require_relative '../lib/torque/postgresql/attributes/ltree'
+require_relative '../lib/torque/postgresql/attributes/lquery'
 
 require_relative '../lib/torque/postgresql/relation/auxiliary_statement'
 require_relative '../lib/torque/postgresql/relation/join_series'

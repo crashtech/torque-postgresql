@@ -141,6 +141,9 @@ module Torque
               require_relative 'adapter/oid/ltree'
               require_relative 'adapter/oid/lquery'
 
+              require_relative 'attributes/ltree'
+              require_relative 'attributes/lquery'
+
               ar_type.register(:ltree,  Adapter::OID::Ltree,  adapter: :postgresql)
               ar_type.register(:lquery, Adapter::OID::Lquery, adapter: :postgresql)
             end

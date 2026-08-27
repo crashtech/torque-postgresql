@@ -248,7 +248,7 @@ These are the keys available to configure LTree features:
 <a name="ltree.enabled"></a>`ltree.enabled` Enables the ltree and lquery data types handler by this gem.  
 Default value: `true`
 
-<a name="ltree.sanitize"></a>`ltree.sanitize` A hash of replacements applied to every label provided by the application before it gets validated, so that a source that does not satisfy PostgreSQL's rules on its own can still be used. Dashes, for example, are only accepted as of PostgreSQL 16, so `{ '-' => '_' }` turns them into underscores and `{ '-' => '' }` drops them. It never applies to values read from the database.  
+<a name="ltree.sanitize"></a>`ltree.sanitize` A hash of replacements applied to every label provided by the application before it is sent to the database, so that a source that does not satisfy PostgreSQL's rules on its own can still be used. Dashes, for example, are only accepted as of PostgreSQL 16, so `{ '-' => '_' }` turns them into underscores and `{ '-' => '' }` drops them. It never applies to values read from the database.  
 Default value: `nil`
 
 <a name="ltree.compatible_method"></a>`ltree.compatible_method` The name of a method that, whenever the given object responds to it, is used to translate that object into a path or a pattern. It lets any class be used wherever one is expected, on assignment, on a condition, and while comparing one path to another. Set it to `nil` to turn the behavior off.  
