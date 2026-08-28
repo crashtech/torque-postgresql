@@ -73,13 +73,23 @@ RSpec.describe 'Geometries' do
         expect(config_class).to receive(:new).with(1.0, 2.0, 3.0, 4.0).and_return(1)
         expect(instance.cast('1.0, 2.0, 3.0, 4.0')).to be_eql(1)
 
-        expect { instance.cast(['6 6 6']) }.to raise_error(RuntimeError, 'Invalid format')
+        expect(config_class).to receive(:new).with(6.0).and_return(9)
+        expect(instance.cast(['6 6 6'])).to be_eql(9)
+      end
+
+      it 'does not change the given value' do
+        value = '(1, 2, 3, 4)'
+        expect(config_class).to receive(:new).with(1, 2, 3, 4).twice.and_return(1)
+        expect(instance.cast(value)).to be_eql(1)
+        expect(value).to be_eql('(1, 2, 3, 4)')
+        expect(instance.cast(value.freeze)).to be_eql(1)
       end
 
       it 'accepts hash values' do
         expect(instance.cast({})).to be_nil
 
-        expect { instance.cast({ 'a' => 1, 'b' => 2 }) }.to raise_error(RuntimeError, 'Invalid format')
+        expect(config_class).to receive(:new).with(1, 2).and_return(9)
+        expect(instance.cast({ 'a' => 1, 'b' => 2 })).to be_eql(9)
 
         expect(config_class).to receive(:new).with(1, 2, 3, 4).and_return(4)
         expect(instance.cast({ 'a' => 1, 'b' => 2 , 'c' => 3, 'd' => 4})).to be_eql(4)
@@ -103,7 +113,8 @@ RSpec.describe 'Geometries' do
 
         expect(instance.cast([])).to be_nil
 
-        expect { instance.cast([6, 5, 4]) }.to raise_error(RuntimeError, 'Invalid format')
+        expect(config_class).to receive(:new).with(6, 5, 4).and_return(9)
+        expect(instance.cast([6, 5, 4])).to be_eql(9)
       end
     end
 
@@ -121,13 +132,13 @@ RSpec.describe 'Geometries' do
       end
 
       it 'accepts hash value' do
-        expect { instance.cast({a: 1, b: 2, c: 3}) }.to raise_error(RuntimeError, 'Invalid format')
+        expect(instance.serialize({a: 1, b: 2, c: 3})).to be_eql('(1, 2, <3, {}>)')
         expect(instance.serialize({a: 1, b: 2, c: 3, d: 4})).to be_eql('(1, 2, <3, {4}>)')
         expect(instance.serialize({a: 1, b: 2, c: 3, d: 4, e: 5, f: 6})).to be_eql('(1, 2, <3, {4}>)')
       end
 
       it 'accepts array value' do
-        expect { instance.serialize([6, 5, 4]) }.to raise_error(RuntimeError, 'Invalid format')
+        expect(instance.serialize([6, 5, 4])).to be_eql('(6, 5, <4, {}>)')
         expect(instance.serialize([1, 2, 3, 4])).to be_eql('(1, 2, <3, {4}>)')
         expect(instance.serialize([5, 4, 3, 2, 1, 0])).to be_eql('(5, 4, <3, {2}>)')
       end

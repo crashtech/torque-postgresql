@@ -60,7 +60,7 @@ module Torque
             name = type&.type
             return if name.nil? || PLAIN_TYPES.include?(name)
 
-            ActiveRecord::Base.connection.type_to_sql(name)
+            ActiveRecord::Base.with_connection { |c| c.type_to_sql(name) }
           end
       end
     end

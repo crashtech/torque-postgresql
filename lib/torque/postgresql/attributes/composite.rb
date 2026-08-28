@@ -48,7 +48,7 @@ module Torque
             @load_columns_monitor.synchronize do
               next if defined?(@columns)
 
-              columns = connection.composite_column_types(type_name)
+              columns = ActiveRecord::Base.with_connection { |c| c.composite_column_types(type_name) }
               columns.each do |attr_name, attr_type|
                 attribute(attr_name, attr_type) unless attribute_names.include?(attr_name)
               end
@@ -88,10 +88,6 @@ module Torque
             def resolve(klass, name)
               klass.type_name = name
               klass
-            end
-
-            def connection
-              ActiveRecord::Base.connection
             end
         end
       end

@@ -884,6 +884,11 @@ RSpec.describe 'Struct' do
       expect(Profile.where(settings: { notifications: true }).pluck(:name)).to be_eql(%w[a])
     end
 
+    it 'casts the property without a permanent connection' do
+      expect(ActiveRecord::Base).not_to receive(:connection)
+      expect(Profile.where(settings: { notifications: true }).to_sql).to include('::boolean = TRUE')
+    end
+
     it 'hands each property back to the predicate builder' do
       expect(Profile.where(settings: { theme: %w[light dark] }).to_sql)
         .to include(%{("profiles"."settings" #>> ARRAY['theme']) IN ('light', 'dark')})

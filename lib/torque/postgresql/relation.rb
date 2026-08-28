@@ -88,8 +88,11 @@ module Torque
       # the given column
       def cast_for_condition(column, value)
         column = columns_hash[column.to_s] unless column.is_a?(ARColumn)
-        caster = connection.lookup_cast_type_for_column(column)
-        connection.type_cast(caster.serialize(value))
+
+        klass.with_connection do |connection|
+          caster = connection.lookup_cast_type_for_column(column)
+          connection.type_cast(caster.serialize(value))
+        end
       end
 
       private

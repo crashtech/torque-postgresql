@@ -60,7 +60,7 @@ module Torque
               return value if value.is_a?(@klass)
               @klass.new(value)
             rescue Attributes::Enum::EnumError
-              nil
+              value
             end
 
         end

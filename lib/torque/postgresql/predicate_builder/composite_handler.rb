@@ -65,6 +65,11 @@ module Torque
             name = attribute.name
             cast = composite.name
 
+            if !array && value.is_a?(::Array)
+              records = value.map { |entry| FN.bind(name, entry, composite).pg_cast(cast) }
+              return attribute.in(records)
+            end
+
             return attribute.eq(FN.bind(name, value, composite).pg_cast(cast)) unless array
 
             if value.is_a?(::Array)

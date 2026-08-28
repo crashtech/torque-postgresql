@@ -283,4 +283,11 @@ RSpec.describe 'Relation', type: :helper do
     end
   end
 
+
+  context 'on connection' do
+    it 'casts a condition value without a permanent connection' do
+      expect(ActiveRecord::Base).not_to receive(:connection)
+      expect(User.all.cast_for_condition(:name, 'Rick')).to be_eql('Rick')
+    end
+  end
 end

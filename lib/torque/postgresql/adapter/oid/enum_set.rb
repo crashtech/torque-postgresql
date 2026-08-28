@@ -42,8 +42,8 @@ module Torque
               return if value.blank?
               return value if value.is_a?(@klass)
               @klass.new(value)
-            rescue Attributes::EnumSet::EnumSetError
-              nil
+            rescue Attributes::Enum::EnumError
+              ::Array.wrap(value)
             end
 
         end

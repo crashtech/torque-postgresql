@@ -98,6 +98,12 @@ RSpec.describe 'Interval' do
         expect(value).to eq(reference)
       end
 
+      it 'does not change the given array' do
+        value = [1, nil, 2]
+        subject.cast(value)
+        expect(value).to be_eql([1, nil, 2])
+      end
+
       it 'accepts array with Y-M-D H:M:S format' do
         value = subject.cast([1, 2, 3, 4, 5, 6])
         expect(value).to be_a(ActiveSupport::Duration)

@@ -96,6 +96,26 @@ RSpec.describe 'PredicateBuilder' do
       expect(sql).to include("WHERE \"items\".\"tag_ids\" IS NOT NULL")
     end
 
+    it 'keeps a nil among the values as a null check' do
+      sql = subject.where(tag_ids: [1, nil]).to_sql
+      expect(sql).to include("WHERE (\"items\".\"tag_ids\" && '{1}' OR \"items\".\"tag_ids\" IS NULL)")
+    end
+
+    it 'resolves records to their ids' do
+      tag = Tag.create!(name: 'A')
+
+      sql = subject.where(tag_ids: tag).to_sql
+      expect(sql).to include("WHERE #{tag.id} = ANY(\"items\".\"tag_ids\")")
+
+      sql = subject.where(tag_ids: [tag]).to_sql
+      expect(sql).to include("WHERE \"items\".\"tag_ids\" && '{#{tag.id}}'")
+    end
+
+    it 'accepts a set of values' do
+      sql = subject.where(tag_ids: Set[1, 2]).to_sql
+      expect(sql).to include("WHERE \"items\".\"tag_ids\" && '{1,2}'")
+    end
+
     it 'properly binds the provided values' do
       sql, binds = get_query_with_binds { subject.where(tag_ids: 1).load }
       expect(sql).to include("WHERE $1 = ANY(\"items\".\"tag_ids\")")

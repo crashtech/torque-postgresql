@@ -12,15 +12,17 @@ module Torque
         end
 
         def call_for_array(attribute, value)
-          if value.nil?
-            attribute.eq(nil)
-          elsif !value.is_a?(::Array)
-            call_with_value(attribute, value)
-          elsif value.any?
-            call_with_array(attribute, value)
-          else
-            call_with_empty(attribute)
-          end
+          return attribute.eq(nil) if value.nil?
+
+          value = value.to_a if value.is_a?(::Set)
+          return call_with_value(attribute, value) unless value.is_a?(::Array)
+          return call_with_empty(attribute) if value.empty?
+
+          nils, values = value.map { |entry| id_of(entry) }.partition(&:nil?)
+          return attribute.eq(nil) if values.empty?
+
+          condition = call_with_array(attribute, values)
+          nils.empty? ? condition : condition.or(attribute.eq(nil))
         end
 
         private
@@ -35,6 +37,10 @@ module Torque
 
           def call_with_empty(attribute)
             FN.cardinality(attribute).eq(0)
+          end
+
+          def id_of(entry)
+            entry.is_a?(::ActiveRecord::Base) ? entry.id : entry
           end
 
           def array_attribute?(attribute)

@@ -692,6 +692,22 @@ RSpec.describe 'Composite' do
       expect(Place.where(offices: many.offices).first).to be_eql(many)
     end
 
+    it 'lists whole values on a plain column' do
+      other = Composite::Address.new(street: 'Side', number: 1)
+
+      expect(Place.where(home: [address, other]).to_sql)
+        .to include(%{"places"."home" IN ('("Main",,"9",)'::address, '("Side",,"1",)'::address)})
+      expect(Place.where(home: [address, other]).first).to be_eql(place)
+      expect(Place.where(home: [other]).first).to be_nil
+    end
+
+    it 'loads the columns without a permanent connection' do
+      expect(ActiveRecord::Base).not_to receive(:connection)
+
+      Composite::Address.reset_columns!
+      expect(Composite::Address.new(street: 'Main').street).to be_eql('Main')
+    end
+
     it 'checks each entry of a list of hashes' do
       expect(Place.where(offices: [{ street: 'A' }, { street: 'B' }]).to_sql)
         .to include('EXISTS', 'OR')

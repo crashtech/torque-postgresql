@@ -101,6 +101,18 @@ RSpec.describe 'AuxiliaryStatement' do
       expect(query.send(:bound_attributes).map(&:value_before_type_cast)).to eql([1, 2])
     end
 
+    it 'collects the bound attributes without a permanent connection' do
+      klass.send(:auxiliary_statement, :comments) do |cte|
+        cte.query Comment.where(id: 1)
+        cte.attributes content: :comment_content
+      end
+
+      expect(ActiveRecord::Base).not_to receive(:connection)
+
+      query = subject.where(id: 2).with(:comments)
+      expect(query.send(:bound_attributes).map(&:value_before_type_cast)).to eql([1, 2])
+    end
+
     it 'accepts string as attributes' do
       klass.send(:auxiliary_statement, :comments) do |cte|
         cte.query Comment.all
