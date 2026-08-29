@@ -209,6 +209,12 @@ Profile.where(settings: { address: { city: 'SP' } })
 # WHERE ("profiles"."settings" #>> ARRAY['address', 'city']) = 'SP'
 ```
 
+A `Hash` beneath a property that is not a document of its own is just a deeper path, read the way `jsonb` reads it, so an entry of an array is reached by its index. Nothing is cast down there, since no class describes it.
+```ruby
+Profile.where(settings: { tags: { 0 => 'test' } })
+# WHERE ("profiles"."settings" #>> ARRAY['tags', '0']) = 'test'
+```
+
 A whole instance is still compared as a whole document, which means every property it holds has to match, and nothing else can be stored.
 ```ruby
 Profile.where(settings: Profile::Settings.new(theme: 'dark'))
@@ -216,6 +222,51 @@ Profile.where(settings: Profile::Settings.new(theme: 'dark'))
 ```
 
 > **Note** Only `jsonb` columns can be queried by their properties, since `json` has no operators for it, and a `json` column raises an `ArgumentError`. Columns holding a list of documents are compared as a whole, and a property that a strict class does not declare raises an `ArgumentError`.
+
+### Sorting and grouping
+
+The same `Hash` reaches a property wherever Rails takes a column, so `order`, `group`, `pluck` and `having` work over the document as well, and the property is cast the same way.
+```ruby
+Profile.order(settings: { theme: :asc })
+# ORDER BY ("profiles"."settings" #>> ARRAY['theme']) ASC
+
+Profile.order(settings: { notifications: :desc })
+# ORDER BY ("profiles"."settings" #>> ARRAY['notifications'])::boolean DESC
+
+Profile.group(settings: :theme).count
+# GROUP BY ("profiles"."settings" #>> ARRAY['theme'])  => {"dark" => 1, "light" => 1}
+
+Profile.group(:settings).having(settings: { theme: 'dark' })
+# HAVING (("profiles"."settings" #>> ARRAY['theme']) = 'dark')
+
+Profile.pluck(settings: :theme)                 # ["dark", "light"]
+Profile.order(:settings)                        # The whole document, ordered as jsonb
+```
+
+The gem's own [`distinct_on`]({{ site.baseurl }}/querying/distinct-on/), [`buckets`]({{ site.baseurl }}/querying/buckets/), [`join_series`]({{ site.baseurl }}/querying/join-series/) and the `Hash` form of calculations resolve a property the same way.
+```ruby
+Profile.distinct_on(settings: :theme)
+Profile.maximum(settings: :score)
+```
+
+> **Note** Rails resolves one level when sorting and grouping, so a property of a nested document is only reachable in `where`, or through the node below. Columns holding a list of documents are not resolved this way, and `having` follows PostgreSQL's rule that the property has to be grouped or aggregated.
+
+### The Arel node
+
+`arel_property_of` builds the node for any path into a document column, which is the way to use a property wherever an Arel node is accepted, at any depth. It goes through the struct class when there is one, so declared properties are cast and a strict class still refuses what it does not declare, and it works on any `jsonb` column, backed by a class or not.
+```ruby
+Profile.arel_property_of(:settings, :notifications)
+# ("profiles"."settings" #>> ARRAY['notifications'])::boolean
+
+Profile.arel_property_of(:settings, :address, :city)
+# ("profiles"."settings" #>> ARRAY['address', 'city'])
+
+Video.arel_property_of(:metadata, :file, :duration)
+# ("videos"."metadata" #>> ARRAY['file', 'duration'])
+
+Profile.order(Profile.arel_property_of(:settings, :address, :city).desc)
+Video.where(Video.arel_property_of(:metadata, :file, :duration).gt('10'))
+```
 
 ## Delegation
 

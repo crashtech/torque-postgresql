@@ -39,6 +39,11 @@ RSpec.describe 'DistinctOn' do
         eql('SELECT DISTINCT ON ( "authors"."name", "authors"."age" ) "posts".* FROM "posts"')
     end
 
+    it 'is able to do with a part of a column' do
+      expect(Profile.distinct_on(settings: :theme).to_sql).to \
+        eql(%{SELECT DISTINCT ON ( ("profiles"."settings" #>> ARRAY['theme']) ) "profiles".* FROM "profiles"})
+    end
+
     it 'raises with invalid relation' do
       expect { subject.distinct_on(supervisors: :name).to_sql }.to \
         raise_error(ArgumentError, /Relation for/)

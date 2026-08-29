@@ -34,6 +34,7 @@ module Torque
           MSG
 
           count ||= 1 if values.is_a?(Range)
+          attribute = resolve_column(attribute).first if attribute.is_a?(Hash)
           attribute = arel_table[attribute] unless ::Arel.arel_node?(attribute)
           self.buckets_value = [attribute, values, count, cast, as]
           self

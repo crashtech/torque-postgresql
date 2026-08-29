@@ -22,8 +22,6 @@ module Torque
         end
 
         def call(attribute, type, value)
-          return attribute.eq(nil) if value.nil?
-
           @attribute = attribute
           @column = self.class.column_of(type)
           @array = type.is_a?(ARRAY_OID)

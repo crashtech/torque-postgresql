@@ -119,6 +119,9 @@ user.role = :manager   # :manager
 user.role = 0          # :visitor
 ```
 
+A value that is not one of the type's values is kept as it is, so the database rejects it when
+the record is saved, exactly like any other invalid input.
+
 This allows you to compare values, or ask questions about it:
 ```ruby
 other_user = User.new(role: :manager)

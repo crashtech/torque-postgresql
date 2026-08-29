@@ -922,6 +922,18 @@ RSpec.describe 'Struct' do
       expect(model.where(settings: { address: { city: 'SP' } }).pluck(:name)).to be_eql(%w[n])
     end
 
+    it 'reaches inside a property that is not a document by path' do
+      expect(Profile.where(settings: { tags: { 0 => 'test' } }).to_sql)
+        .to include(%{("profiles"."settings" #>> ARRAY['tags', '0']) = 'test'})
+
+      expect(Profile.where(settings: { tags: { first: { name: 'x' } } }).to_sql)
+        .to include(%{("profiles"."settings" #>> ARRAY['tags', 'first', 'name']) = 'x'})
+
+      Profile.create!(name: 'n', settings: { tags: %w[test other] })
+      expect(Profile.where(settings: { tags: { 0 => 'test' } }).pluck(:name)).to be_eql(%w[n])
+      expect(Profile.where(settings: { tags: { 1 => 'test' } }).pluck(:name)).to be_empty
+    end
+
     it 'refuses a json column' do
       expect { Profile.where(bio: { headline: 'x' }).to_sql }
         .to raise_error(ArgumentError, /json columns cannot be queried/)
@@ -930,6 +942,127 @@ RSpec.describe 'Struct' do
     it 'refuses an undeclared property of a strict class' do
       expect { Profile.where(settings: { nope: 1 }).to_sql }
         .to raise_error(ArgumentError, /not a declared property/)
+    end
+  end
+
+  context 'on arel properties' do
+    it 'builds the path to a property' do
+      node = Profile.arel_property_of(:settings, :theme)
+
+      expect(node).to be_a(Torque::PostgreSQL::Arel::Nodes::Property)
+      expect(node.path).to be_eql(%w[theme])
+      expect(node.cast).to be_nil
+      expect(Profile.where(node.eq('dark')).to_sql)
+        .to include(%{("profiles"."settings" #>> ARRAY['theme']) = 'dark'})
+    end
+
+    it 'casts the property to what the class declares for it' do
+      node = Profile.arel_property_of(:settings, :notifications)
+
+      expect(node.cast).to be_eql('boolean')
+      expect(Profile.order(node.desc).to_sql)
+        .to include(%{ORDER BY ("profiles"."settings" #>> ARRAY['notifications'])::boolean DESC})
+    end
+
+    it 'goes as deep as the path says' do
+      node = Profile.arel_property_of(:settings, :tags, 0)
+
+      expect(node.path).to be_eql(%w[tags 0])
+      expect(Profile.order(node.asc).to_sql)
+        .to include(%{ORDER BY ("profiles"."settings" #>> ARRAY['tags', '0']) ASC})
+    end
+
+    it 'reaches the properties of a nested document' do
+      inner = stub_const('ArelInner', Class.new(Torque::PostgreSQL::Attributes::Struct))
+      inner.attribute(:zip, :integer)
+      outer = stub_const('ArelOuter', Class.new(Torque::PostgreSQL::Attributes::Struct))
+      outer.attribute(:address, Torque::PostgreSQL::Adapter::OID::Struct.new(inner))
+
+      model = stub_const('ArelProfile', Class.new(ActiveRecord::Base))
+      model.table_name = 'profiles'
+      model.struct_for(:settings, outer)
+
+      node = model.arel_property_of(:settings, :address, :zip)
+      expect(node.cast).to be_eql('integer')
+      expect(model.order(node.asc).to_sql)
+        .to include(%{ORDER BY ("profiles"."settings" #>> ARRAY['address', 'zip'])::integer ASC})
+    end
+
+    it 'works on a column that is not backed by a class' do
+      node = Video.arel_property_of(:metadata, :file, :duration)
+
+      expect(node.cast).to be_nil
+      expect(Video.where(node.eq('10')).to_sql)
+        .to include(%{("videos"."metadata" #>> ARRAY['file', 'duration']) = '10'})
+    end
+
+    it 'refuses a json column' do
+      expect { Profile.arel_property_of(:bio, :headline) }
+        .to raise_error(ArgumentError, /json columns cannot be queried/)
+    end
+
+    it 'refuses an undeclared property of a strict class' do
+      expect { Profile.arel_property_of(:settings, :nope) }
+        .to raise_error(ArgumentError, /not a declared property/)
+    end
+  end
+
+  context 'on ordering and grouping' do
+    let!(:dark) { Profile.create!(name: 'a', settings: { theme: 'dark', notifications: true }) }
+    let!(:light) { Profile.create!(name: 'b', settings: { theme: 'light', notifications: false }) }
+
+    it 'orders by a property' do
+      expect(Profile.order(settings: { theme: :asc }).to_sql)
+        .to include(%{ORDER BY ("profiles"."settings" #>> ARRAY['theme']) ASC})
+
+      expect(Profile.order(settings: { theme: :asc }).pluck(:name)).to be_eql(%w[a b])
+      expect(Profile.order(settings: { theme: :desc }).pluck(:name)).to be_eql(%w[b a])
+    end
+
+    it 'casts the property to what the class declares for it' do
+      expect(Profile.order(settings: { notifications: :desc }).to_sql)
+        .to include(%{ORDER BY ("profiles"."settings" #>> ARRAY['notifications'])::boolean DESC})
+
+      expect(Profile.order(settings: { notifications: :desc }).pluck(:name)).to be_eql(%w[a b])
+    end
+
+    it 'orders by the whole document' do
+      expect(Profile.order(:settings).to_sql).to include(%{ORDER BY "profiles"."settings" ASC})
+    end
+
+    it 'groups by a property' do
+      expect(Profile.group(settings: :theme).to_sql)
+        .to include(%{GROUP BY ("profiles"."settings" #>> ARRAY['theme'])})
+
+      expect(Profile.group(settings: :theme).count).to be_eql('dark' => 1, 'light' => 1)
+    end
+
+    it 'filters groups with having' do
+      expect(Profile.group(:settings).having(settings: { theme: 'dark' }).to_sql)
+        .to include(%{HAVING (("profiles"."settings" #>> ARRAY['theme']) = 'dark')})
+
+      expect(Profile.group(:settings).having(settings: { theme: 'dark' }).count.size).to be_eql(1)
+      expect(Profile.group(settings: :theme).having(settings: { theme: 'dark' }).count)
+        .to be_eql('dark' => 1)
+    end
+
+    it 'plucks a property' do
+      expect(Profile.order(:name).pluck(settings: :theme)).to be_eql(%w[dark light])
+      expect(Profile.order(:name).pluck('settings.theme')).to be_eql(%w[dark light])
+    end
+
+    it 'refuses a json column' do
+      expect { Profile.order(bio: { headline: :asc }).to_sql }
+        .to raise_error(ArgumentError, /json columns cannot be queried/)
+    end
+
+    it 'refuses an undeclared property of a strict class' do
+      expect { Profile.order(settings: { nope: :asc }).to_sql }
+        .to raise_error(ArgumentError, /not a declared property/)
+    end
+
+    it 'leaves associations alone' do
+      expect(Post.order(author: { name: :asc }).to_sql).to include(%{ORDER BY "author"."name" ASC})
     end
   end
 

@@ -8,14 +8,15 @@ module Torque
       # whole +where+ vocabulary works inside a composite
       class CompositeHandler
         class << self
-          # Values that this handler knows how to deal with, checked before the
-          # attribute itself because it is way cheaper
-          def candidate?(value, type)
+          # Values that this handler knows how to deal with. Without a value,
+          # only a single composite has parts that can be reached on their own
+          def candidate?(type, value = nil)
             return false unless Adapter::OID::Composite.from(type)
+            return !type.is_a?(ARRAY_OID) if value.nil?
 
             case value
             when ::Hash, Attributes::Composite then true
-            when ::Array then value.any? { |entry| candidate?(entry, type) }
+            when ::Array then value.compact.any? { |entry| candidate?(type, entry) }
             else false
             end
           end
@@ -39,6 +40,13 @@ module Torque
           return call_for_array(attribute, value) if array
 
           conditions_for(attribute, value)
+        end
+
+        # The columns of the composite value as the columns of a table, so that
+        # any of them can be resolved by name
+        def table_for(source, type)
+          @composite = Adapter::OID::Composite.from(type)
+          PredicateTable.new(self, source, Arel::Nodes::Column)
         end
 
         # The type of a single column of the composite type
@@ -104,7 +112,7 @@ module Torque
 
           def group_for(source, entry)
             entry = entry.to_h unless entry.is_a?(::Hash)
-            table = PredicateTable.new(self, source, Arel::Nodes::Column)
+            table = table_for(source, composite)
             nodes = predicate_builder.with(table).build_from_hash(entry.stringify_keys)
             ::Arel::Nodes::Grouping.new(nodes.reduce(:and))
           end

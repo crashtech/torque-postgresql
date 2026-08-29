@@ -172,6 +172,12 @@ Place.where(location: { base: { street: 'X' } })
 # WHERE (("places"."location")."base")."street" = 'X'
 ```
 
+A list of whole values asks whether any of them is the stored one.
+```ruby
+Place.where(home: [address, other])
+# WHERE "places"."home" IN ('("Main",,"9",)'::address, '("Side",,"1",)'::address)
+```
+
 For array columns, a whole value checks whether any entry matches it, while a `Hash` checks whether any entry matches the columns it describes.
 ```ruby
 Place.where(offices: address)
@@ -188,6 +194,31 @@ Place.where(offices: { street: 'Main' })
 ```
 
 > **Note** A key that is not a column of the type raises an `ArgumentError`, instead of being silently ignored.
+
+### Sorting and grouping
+
+The same `Hash` reaches a column wherever Rails takes one, so `order`, `group`, `pluck` and `having` work over the value as well.
+```ruby
+Place.order(home: { street: :desc })
+# ORDER BY ("places"."home")."street" DESC
+
+Place.group(home: :street).count
+# GROUP BY ("places"."home")."street"  => {"Main" => 1, "Side" => 1}
+
+Place.group(:home).having(home: { street: 'Main' })
+# HAVING (("places"."home")."street" = 'Main')
+
+Place.pluck(home: :number)                      # [9, 1]
+Place.order(:home)                              # The whole value, compared column by column
+```
+
+The gem's own [`distinct_on`]({{ site.baseurl }}/querying/distinct-on/), [`buckets`]({{ site.baseurl }}/querying/buckets/), [`join_series`]({{ site.baseurl }}/querying/join-series/) and the `Hash` form of calculations resolve a column the same way.
+```ruby
+Place.distinct_on(home: :street)
+Place.join_series(1..10, with: { home: :number })
+```
+
+> **Note** Rails resolves one level when sorting and grouping, so a column of a nested type is only reachable in `where`. Array columns are not resolved this way, and `having` follows PostgreSQL's rule that the column has to be grouped or aggregated.
 
 ## Validations
 

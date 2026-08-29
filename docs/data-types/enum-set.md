@@ -83,6 +83,9 @@ post.creator_permissions = [:read, :write]  # [:read, :write]
 post.creator_permissions = 7                # [:read, :write, :exec]
 ```
 
+A value that is not one of the type's values is kept as it is, so the database rejects it when
+the record is saved, exactly like any other invalid input.
+
 Given the power from the `to_i` operation, you can compare values, or ask questions about it:
 ```ruby
 other_post = Post.new(creator_permissions: [:read])

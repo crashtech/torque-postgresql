@@ -22,7 +22,7 @@ User.join_series(0..100, with: :age)
 
 The range can be of any type, including dates and times. Here is a list of all options that can be used to configure this operation:
 
-- `with:` The column on the `ON` clause of the join;
+- `with:` The column on the `ON` clause of the join. A `Hash` reaches a property of a [struct]({{ site.baseurl }}/data-types/struct/) column or a column of a [composite]({{ site.baseurl }}/data-types/composite/) one, as in `with: { home: :number }`;
 - `as:` The name of the generated values;
 - `step:` The step of the series generation. When using with dates and times, a duration (like `1.day`) must be provided;
 - `mode:` The type of the join to use. Valid values are: `:inner` for `INNER JOIN`, `:left` for `LEFT OUTER JOIN`, `:right` for `RIGHT OUTER JOIN`, and `:full` for `FULL OUTER JOIN`;

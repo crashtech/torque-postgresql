@@ -55,6 +55,16 @@ The primary purpose of this feature is to more accurately convey the meaning of 
 Video.where(tag_ids: [1,2,3])    # WHERE "videos"."tag_ids" && '{1,2,3}'
 Video.where(tag_ids: 1)          # WHERE 1 = ANY("videos"."tag_ids")
 Video.where(tag_ids: [])         # WHERE CARDINALITY("videos"."tag_ids") = 0
+Video.where(tag_ids: nil)        # WHERE "videos"."tag_ids" IS NULL
+```
+
+Records stand for their ids and a `Set` is a list, as they are anywhere else in `where`, and a
+`nil` among the values keeps meaning `IS NULL`, the same way Rails treats it on a plain column.
+
+```ruby
+Video.where(tag_ids: [tag])      # WHERE "videos"."tag_ids" && '{7}'
+Video.where(tag_ids: Set[1, 2])  # WHERE "videos"."tag_ids" && '{1,2}'
+Video.where(tag_ids: [1, nil])   # WHERE ("videos"."tag_ids" && '{1}' OR "videos"."tag_ids" IS NULL)
 ```
 
 ## Features combined
@@ -98,6 +108,9 @@ Place.where(offices: { street: 'Main' })
 # )
 ```
 
+The same resolution serves `order`, `group`, `having`, `distinct_on` and `buckets`, so
+`Place.order(home: { street: :asc })` sorts by that column.
+
 > **Note** A key that is not a column of the type raises an `ArgumentError`, instead of being
 > silently ignored. See [composite]({{ site.baseurl }}/data-types/composite/#querying) for the
 > full behavior.
@@ -120,7 +133,13 @@ Profile.where(settings: { theme: %w[light dark] })
 
 Profile.where(settings: { address: { city: 'SP' } })
 # WHERE ("profiles"."settings" #>> ARRAY['address', 'city']) = 'SP'
+
+Profile.where(settings: { tags: { 0 => 'test' } })
+# WHERE ("profiles"."settings" #>> ARRAY['tags', '0']) = 'test'
 ```
+
+The same resolution serves `order`, `group`, `having`, `distinct_on` and `buckets`, so
+`Profile.order(settings: { theme: :asc })` sorts by that property, cast as declared.
 
 > **Note** Only `jsonb` columns can be queried by their properties, because `json` has no
 > operators for it, and a `json` column raises an `ArgumentError`. See

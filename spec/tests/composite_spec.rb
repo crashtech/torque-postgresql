@@ -725,6 +725,46 @@ RSpec.describe 'Composite' do
     end
   end
 
+  context 'on ordering and grouping' do
+    let!(:first) { Place.create!(name: 'a', home: { street: 'Main', number: 9 }) }
+    let!(:second) { Place.create!(name: 'b', home: { street: 'Side', number: 1 }) }
+
+    it 'orders by a column' do
+      expect(Place.order(home: { street: :desc }).to_sql)
+        .to include(%{ORDER BY ("places"."home")."street" DESC})
+
+      expect(Place.order(home: { street: :desc }).pluck(:name)).to be_eql(%w[b a])
+      expect(Place.order(home: { number: :asc }).pluck(:name)).to be_eql(%w[b a])
+    end
+
+    it 'orders by the whole value' do
+      expect(Place.order(:home).to_sql).to include(%{ORDER BY "places"."home" ASC})
+      expect(Place.order(:home).pluck(:name)).to be_eql(%w[a b])
+    end
+
+    it 'groups by a column' do
+      expect(Place.group(home: :street).to_sql).to include(%{GROUP BY ("places"."home")."street"})
+      expect(Place.group(home: :street).count).to be_eql('Main' => 1, 'Side' => 1)
+    end
+
+    it 'filters groups with having' do
+      expect(Place.group(:home).having(home: { street: 'Main' }).to_sql)
+        .to include(%{HAVING (("places"."home")."street" = 'Main')})
+
+      expect(Place.group(home: :street).having(home: { street: 'Main' }).count)
+        .to be_eql('Main' => 1)
+    end
+
+    it 'plucks a column' do
+      expect(Place.order(:name).pluck(home: :number)).to be_eql([9, 1])
+    end
+
+    it 'raises when a key is not a column of the composite type' do
+      expect { Place.order(home: { nope: :asc }).to_sql }
+        .to raise_error(ArgumentError, /not a column of the "address"/)
+    end
+  end
+
   context 'on validation' do
     let(:validator) { Torque::PostgreSQL::Validations::NestedValidator }
 

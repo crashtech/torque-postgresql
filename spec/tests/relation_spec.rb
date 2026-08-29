@@ -43,6 +43,20 @@ RSpec.describe 'Relation', type: :helper do
       expect(subject.call(check)).to be_attributes_as(result)
     end
 
+    it 'resolves a struct column into its properties' do
+      Profile.create!(name: 'a', settings: { theme: 'dark' })
+      Profile.create!(name: 'b', settings: { theme: 'light' })
+
+      expect(Profile.unscoped.resolve_column([settings: :theme]).first)
+        .to be_a(Torque::PostgreSQL::Arel::Nodes::Property)
+      expect(Profile.maximum(settings: :theme)).to be_eql('light')
+    end
+
+    it 'resolves a composite column into its columns' do
+      expect(Place.unscoped.resolve_column([home: :street]).first)
+        .to be_a(Torque::PostgreSQL::Arel::Nodes::Column)
+    end
+
     it 'raises on relation not present' do
       check = [supervisors: :name]
       expect{ subject.call(check) }.to raise_error(ArgumentError, /Relation for/)
@@ -69,6 +83,13 @@ RSpec.describe 'Relation', type: :helper do
       sql += ' INNER JOIN GENERATE_SERIES(1::integer, 10::integer)'
       sql += ' AS series ON "series" = "videos"."id"'
       expect(source.join_series(1..10, with: :id).to_sql).to eq(sql)
+    end
+
+    it 'accepts a part of a column' do
+      sql = 'SELECT "places".* FROM "places"'
+      sql += ' INNER JOIN GENERATE_SERIES(1::integer, 10::integer)'
+      sql += ' AS series ON "series" = ("places"."home")."number"'
+      expect(Place.join_series(1..10, with: { home: :number }).to_sql).to eq(sql)
     end
 
     it 'can be renamed' do
@@ -223,6 +244,19 @@ RSpec.describe 'Relation', type: :helper do
         WIDTH_BUCKET("users"."age", $1::numeric, $2::numeric, $3::integer) AS bucket
       SQL
       expect(binds.map(&:value)).to eq([0, 50, 5])
+    end
+
+    it 'accepts a part of a column' do
+      Profile.create!(name: 'a', settings: { theme: 'dark' })
+      Profile.create!(name: 'b', settings: { theme: 'light' })
+
+      query = Profile.buckets({ settings: :theme }, %w[dark light])
+      expect(query.to_sql).to include(<<~SQL.squish)
+        WIDTH_BUCKET(("profiles"."settings" #>> ARRAY['theme']), ARRAY['dark', 'light']) AS bucket
+      SQL
+
+      query = Profile.buckets({ settings: :theme }, %w[dark light])
+      expect(query.count).to be_eql('dark' => 1, 'light' => 1)
     end
 
     it 'can query records by buckets' do

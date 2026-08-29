@@ -13,10 +13,12 @@ module Torque
 
         class << self
           # Only a hash describes properties, everything else is left alone so
-          # that whole documents are still compared as documents
-          def candidate?(value, type)
-            value.is_a?(::Hash) && type.is_a?(Adapter::OID::Struct) &&
-              !type.is_a?(Adapter::OID::StructList)
+          # that whole documents are still compared as documents. Without a
+          # value, a single document has properties that can be reached
+          def candidate?(type, value = nil)
+            return false if !type.is_a?(Adapter::OID::Struct) || type.is_a?(Adapter::OID::StructList)
+
+            value.nil? || value.is_a?(::Hash)
           end
         end
 
@@ -25,21 +27,39 @@ module Torque
         end
 
         def call(attribute, struct, value)
-          raise ArgumentError, <<~MSG.squish unless struct.type == :jsonb
-            Unable to build a condition over "#{attribute.name}" because json
-            columns cannot be queried by their properties. Use jsonb instead.
-          MSG
-
-          @struct = struct
-          table = PredicateTable.new(self, attribute, Arel::Nodes::Property)
+          table = table_for(attribute, struct)
           nodes = predicate_builder.with(table).build_from_hash(value.stringify_keys)
 
           ::Arel::Nodes::Grouping.new(nodes.reduce(:and))
         end
 
+        # The properties of the document as the columns of a table, so that any
+        # of them can be resolved by name. A document that no class describes
+        # is open, which means any path into it is accepted, without a type
+        def table_for(attribute, struct)
+          raise ArgumentError, <<~MSG.squish if struct.is_a?(Adapter::OID::Struct) && struct.type != :jsonb
+            Unable to build a condition over "#{attribute.name}" because json
+            columns cannot be queried by their properties. Use jsonb instead.
+          MSG
+
+          @struct = struct
+          PredicateTable.new(self, attribute, Arel::Nodes::Property)
+        end
+
+        # The node for a path into the document, resolved one property at a
+        # time so that each level is typed by the class that declares it
+        def property_for(attribute, struct, path)
+          path.reduce(attribute) do |node, key|
+            struct = node.type_caster if node.is_a?(Arel::Nodes::Property)
+            table_for(node, struct)[key]
+          end
+        end
+
         # The type of a single property, plus what it has to be casted to once
         # it is extracted from the document as text
         def type_of(name)
+          return [ActiveModel::Type.default_value, nil] unless @struct.is_a?(Adapter::OID::Struct)
+
           klass = @struct.klass
           name = name.to_s
 

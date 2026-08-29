@@ -87,6 +87,7 @@ module Torque
 
               return yield(result, relation.arel_table) if block_given?
 
+              with = relation.resolve_column(with).first if with.is_a?(Hash)
               with = relation.arel_table[with.to_s] if with.is_a?(Symbol)
               with = with.pg_cast(cast) if cast && with.respond_to?(:pg_cast)
 

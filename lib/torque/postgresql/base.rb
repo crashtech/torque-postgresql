@@ -20,6 +20,14 @@ module Torque
         delegate :distinct_on, :with, :itself_only, :expand_records, :join_series,
           :buckets, to: :all
 
+        # The Arel node for a path into a document column, typed by the struct
+        # class that backs the column when there is one
+        def arel_property_of(column, *path)
+          type = attribute_types[column.to_s]
+          handler = PredicateBuilder::StructHandler.new(predicate_builder)
+          handler.property_for(arel_table[column], type, path)
+        end
+
         # Composite values are objects that can be invalid on their own, so the
         # attributes backed by one are validated alongside the record
         def load_schema!

@@ -71,6 +71,17 @@ PG::Fn.coalesce(Video.arel_table['title'], Video.arel_table['subtitle'])    # Pr
 PG::Fn.something_else(Video.arel_table['title'])                            # Produces SOMETHING_ELSE("videos"."title")
 ```
 
+## Document properties
+
+`arel_property_of` builds the node for a path into a `json` or `jsonb` column, cast to what a [struct]({{ site.baseurl }}/data-types/struct/#the-arel-node) class declares for it when the column is backed by one.
+
+```ruby
+# ("videos"."metadata" #>> ARRAY['file', 'duration'])
+Video.arel_property_of(:metadata, :file, :duration)
+
+Video.order(Video.arel_property_of(:metadata, :file, :duration).desc)
+```
+
 ## Inflix operators
 
 PostgreSQL allows a bunch of custom operators while working with [Arrays](https://www.postgresql.org/docs/9.6/functions-array.html), [Ranges](https://www.postgresql.org/docs/9.6/functions-range.html), and [Hashes](https://www.postgresql.org/docs/9.6/hstore.html).

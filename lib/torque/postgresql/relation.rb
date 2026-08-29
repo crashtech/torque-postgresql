@@ -76,6 +76,9 @@ module Torque
         return unless relation
 
         table = predicate_builder.send(:table)
+        part = part_table_for(table, relation.to_s)
+        return part if part
+
         associated = AR810 ? table.associated_with(relation.to_s) : table.associated_with?(relation.to_s)
         if associated
           table.associated_table(relation.to_s).send(:klass)
@@ -101,6 +104,16 @@ module Torque
           arel = super
           arel.project(*select_extra_values) if select_values.blank?
           arel
+        end
+
+        def part_table_for(table, name)
+          return unless table.has_column?(name)
+
+          type = table.type(name)
+          handler = PredicateBuilder.handler_for(type)
+          return if handler.nil?
+
+          handler.new(predicate_builder).table_for(table.arel_table[name], type)
         end
 
       class_methods do

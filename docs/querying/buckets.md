@@ -23,6 +23,9 @@ User.buckets(:age, 0..100, count: 10).count      # Expect { (0...10) => N, (10..
 # Array
 User.buckets(:role, %w[visitor manager admin])   # Expect { nil => [...], 'visitor' => [...], ... }
                                                  # nil represents values that did not fall on any bucket
+
+# A property of a struct column, or a column of a composite one
+Profile.buckets({ settings: :theme }, %w[dark light]).count
 ```
 Here is a list of all options that can be used to configure this operation:
 
