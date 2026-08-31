@@ -9,7 +9,7 @@ description: This feature produces a join of your main query against a generated
 
 This feature produces a join of your main query against a `generated_series()` function result. The main motivation behind this feature was the generation of reports. More specifically, reports using `created_at` that would originally cause undesired rows in the output. [PostgreSQL Docs](https://www.postgresql.org/docs/current/functions-srf.html)
 
-You can disable this feature using [`config.join_series`]({{ site.baseurl }}/getting-started/configuring/#join_series).
+You can disable this feature using [`config.join_series`](/postgresql/getting-started/configuring/#join_series).
 
 ## How to
 
@@ -22,7 +22,7 @@ User.join_series(0..100, with: :age)
 
 The range can be of any type, including dates and times. Here is a list of all options that can be used to configure this operation:
 
-- `with:` The column on the `ON` clause of the join. A `Hash` reaches a property of a [struct]({{ site.baseurl }}/data-types/struct/) column or a column of a [composite]({{ site.baseurl }}/data-types/composite/) one, as in `with: { home: :number }`;
+- `with:` The column on the `ON` clause of the join. A `Hash` reaches a property of a [struct](/postgresql/data-types/struct/) column or a column of a [composite](/postgresql/data-types/composite/) one, as in `with: { home: :number }`;
 - `as:` The name of the generated values;
 - `step:` The step of the series generation. When using with dates and times, a duration (like `1.day`) must be provided;
 - `mode:` The type of the join to use. Valid values are: `:inner` for `INNER JOIN`, `:left` for `LEFT OUTER JOIN`, `:right` for `RIGHT OUTER JOIN`, and `:full` for `FULL OUTER JOIN`;

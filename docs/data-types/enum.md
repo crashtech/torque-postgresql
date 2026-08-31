@@ -4,7 +4,7 @@ section: data-types
 description: Enum type manager.
 ---
 
-Enum type manager. For each enum-type created on the database, it allows 2 behaviors: Single enum attribution, Array (Set-like) attribution. For [Array attribution]({{ site.baseurl }}/data-types/enum-set/) check the link. It creates a separated class to hold each enum set that can be used by multiple models, it also keeps the database consistent. The enum type is known to have a better performance against string- and integer-like enums. [PostgreSQL Docs](https://www.postgresql.org/docs/9.6/static/datatype-enum.html)
+Enum type manager. For each enum-type created on the database, it allows 2 behaviors: Single enum attribution, Array (Set-like) attribution. For [Array attribution](/postgresql/data-types/enum-set/) check the link. It creates a separated class to hold each enum set that can be used by multiple models, it also keeps the database consistent. The enum type is known to have a better performance against string- and integer-like enums. [PostgreSQL Docs](https://www.postgresql.org/docs/9.6/static/datatype-enum.html)
 
 ## Migration
 
@@ -72,7 +72,7 @@ end
 
 ## The type Class
 
-Each enum type loaded from the database will have its own class type of value, created under the [`enum.namespace`]({{ site.baseurl }}/getting-started/configuring/#enum.namespace) namespace.
+Each enum type loaded from the database will have its own class type of value, created under the [`enum.namespace`](/postgresql/getting-started/configuring/#enum.namespace) namespace.
 ```ruby
 Enum::Roles
 
@@ -97,7 +97,7 @@ Enum::Roles.admin.to_i   # 2
 
 ## Models
 
-You have to go to each of your models and enable the functionality for each enum-type field. You don't need to provide the values since they will be loaded from the database. The method name is defined on [`enum.base_method`]({{ site.baseurl }}/getting-started/configuring/#enum.base_method).
+You have to go to each of your models and enable the functionality for each enum-type field. You don't need to provide the values since they will be loaded from the database. The method name is defined on [`enum.base_method`](/postgresql/getting-started/configuring/#enum.base_method).
 ```ruby
 # models/user.rb
 class User < ActiveRecord::Base
@@ -133,14 +133,14 @@ user.role.manager?               # true
 user.visitor?                    # false
 ```
 
-The `bang!` methods are controlled by the [`enum.save_on_bang`]({{ site.baseurl }}/getting-started/configuring/#enum.save_on_bang):
+The `bang!` methods are controlled by the [`enum.save_on_bang`](/postgresql/getting-started/configuring/#enum.save_on_bang):
 ```ruby
 # The following will only perform a save on the database if enum.save_on_bang is set to true
 user = User.new(role: :manager)
 user.admin!
 ```
 
-You can reach the I18n translations in three different ways, and the scopes are configured on [`enum.i18n_scopes`]({{ site.baseurl }}/getting-started/configuring/#enum.i18n_scopes). On the third one, only the scopes on [`enum.i18n_type_scopes`]({{ site.baseurl }}/getting-started/configuring/#enum.i18n_type_scopes) are used, which allows per-model customization.
+You can reach the I18n translations in three different ways, and the scopes are configured on [`enum.i18n_scopes`](/postgresql/getting-started/configuring/#enum.i18n_scopes). On the third one, only the scopes on [`enum.i18n_type_scopes`](/postgresql/getting-started/configuring/#enum.i18n_type_scopes) are used, which allows per-model customization.
 ```ruby
 user = User.new(role: :manager)
 user.role.text                # User's manager

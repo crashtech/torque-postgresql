@@ -5,7 +5,7 @@ description: This method allows defining a conditional value that, if present in
   result set, don't do anything.
 ---
 
-This method allows defining a conditional value that, if present in the result set, does nothing. But, if it was not available, it will call its block in order to try returning the expected value. This feature is great when used together with [Auxiliary Statements]({{ site.baseurl }}/querying/auxiliary-statements/).
+This method allows defining a conditional value that, if present in the result set, does nothing. But, if it was not available, it will call its block in order to try returning the expected value. This feature is great when used together with [Auxiliary Statements](/postgresql/querying/auxiliary-statements/).
 
 ## Configurating
 

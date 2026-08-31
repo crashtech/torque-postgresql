@@ -5,11 +5,11 @@ description: Add smooth support to managing and utilizing multiple schemas in yo
   application.
 ---
 
-Add smooth support to managing and utilizing multiple schemas in your application. It works incredibly nicely with [Inherited Tables]({{ site.baseurl }}/modeling/inherited-tables/) and it's part of a larger feature for a better multi-tenancy application. [PostgreSQL Docs](https://www.postgresql.org/docs/current/ddl-schemas.html)
+Add smooth support to managing and utilizing multiple schemas in your application. It works incredibly nicely with [Inherited Tables](/postgresql/modeling/inherited-tables/) and it's part of a larger feature for a better multi-tenancy application. [PostgreSQL Docs](https://www.postgresql.org/docs/current/ddl-schemas.html)
 
 ## Configuration
 
-This feature works with a [whitelist]({{ site.baseurl }}/getting-started/configuring/#schemas.whitelist)/[blacklist]({{ site.baseurl }}/getting-started/configuring/#schemas.blacklist) set of schemas, that filters, in a LIKE manner, the ones that will be present in the schema. These lists are extremely important so that it can not only work properly, but also interact with other features from this gem.
+This feature works with a [whitelist](/postgresql/getting-started/configuring/#schemas.whitelist)/[blacklist](/postgresql/getting-started/configuring/#schemas.blacklist) set of schemas, that filters, in a LIKE manner, the ones that will be present in the schema. These lists are extremely important so that it can not only work properly, but also interact with other features from this gem.
 
 ```yaml
 default: &default

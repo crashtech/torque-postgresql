@@ -30,8 +30,8 @@ SETWEIGHT(TO_TSVECTOR('english', COALESCE(content, '')), 'B')
 ### Options
 
 * `columns`: It supports a single column (`:title`), an array of columns (`[:title, :description]`), or a Hash of column and weight (`{ title: 'A', description: 'A' }`).
-* `index`: If given `true`, it will set the column up with the [`full_text_search.default_index_type`]({{ site.baseurl }}/getting-started/configuring/#full_text_search.default_index_type).
-* `language`: This is the `regconfig` used for the `to_tsvector` function. It can be a plain string of the dictionary name, or a symbol to reference another column for dynamic language support (see example below). Defaults to [`full_text_search.default_language`]({{ site.baseurl }}/getting-started/configuring/#full_text_search.default_language).
+* `index`: If given `true`, it will set the column up with the [`full_text_search.default_index_type`](/postgresql/getting-started/configuring/#full_text_search.default_index_type).
+* `language`: This is the `regconfig` used for the `to_tsvector` function. It can be a plain string of the dictionary name, or a symbol to reference another column for dynamic language support (see example below). Defaults to [`full_text_search.default_language`](/postgresql/getting-started/configuring/#full_text_search.default_language).
 
 ```ruby
 # Example for a dynamic language

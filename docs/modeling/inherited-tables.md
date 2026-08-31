@@ -153,9 +153,9 @@ end
 
 Since the data that indicates the record type is a table name, this process relies on Rails' standard translation from class name to table name. But this is tricky, because `activity_posts` can either be `ActivityPost` or `Activity::Post` (or even another model using `self.table_name = "activity_posts"`). This gem tries its best to translate the table name to a model name, checking all the possibilities, so you might not face issues. **But**, you can always help it, and make the process more accurate or even faster.
 
-Please check the [Configuration Page]({{ site.baseurl }}/getting-started/configuring/) to see the options for improving this operation.
+Please check the [Configuration Page](/postgresql/getting-started/configuring/) to see the options for improving this operation.
 
-The most important setting is the [`irregular_models`]({{ site.baseurl }}/getting-started/configuring/#irregular_models) option, which can both help describe the correct relationship between a table name and a model name and improve performance by avoiding the default behavior of searching for the model based on the table name. Although the table name once associated with a model name is cached, please note this when setting irregular names.
+The most important setting is the [`irregular_models`](/postgresql/getting-started/configuring/#irregular_models) option, which can both help describe the correct relationship between a table name and a model name and improve performance by avoiding the default behavior of searching for the model based on the table name. Although the table name once associated with a model name is cached, please note this when setting irregular names.
 
 ```ruby
 Torque::PostgreSQL.configure do |c|
@@ -189,7 +189,7 @@ Author.eager_load(:activities).first.activities.map(&:class)
 # [Activity, ActivityPost, ActivityBook]
 ```
 
-If the table name cannot be translated into a model, the query raises a `Torque::PostgreSQL::InheritanceError` telling you to describe it through the [`irregular_models`]({{ site.baseurl }}/getting-started/configuring/#irregular_models) setting.
+If the table name cannot be translated into a model, the query raises a `Torque::PostgreSQL::InheritanceError` telling you to describe it through the [`irregular_models`](/postgresql/getting-started/configuring/#irregular_models) setting.
 
 ### Partial and read-only records
 
@@ -289,7 +289,7 @@ list.second.class.table_name               # "activity_posts"
 list.third.class.table_name                # "activity_books"
 ```
 
-> **Note** The `_record_class` name, which can be changed through the [`inheritance.record_class_column_name`]({{ site.baseurl }}/getting-started/configuring/#inheritance.record_class_column_name) setting, is only the alias of the marker column in the generated SQL. It is consumed while instantiating each record and is not kept as an attribute, which is why `record._record_class` does not exist.
+> **Note** The `_record_class` name, which can be changed through the [`inheritance.record_class_column_name`](/postgresql/getting-started/configuring/#inheritance.record_class_column_name) setting, is only the alias of the marker column in the generated SQL. It is consumed while instantiating each record and is not kept as an attribute, which is why `record._record_class` does not exist.
 
 ### Things to be aware of
 

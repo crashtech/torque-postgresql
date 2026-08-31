@@ -6,7 +6,7 @@ description: Line original implementation.
 
 Line original implementation. Provides an easy interface to manipulate, save and restore, line-like values from the database. Works very similarly to `ActiveRecord::Point`, but for the values that compose a line (`a`, `b`, and `c`). [PostgreSQL Docs](https://www.postgresql.org/docs/9.6/datatype-geometric.html#DATATYPE-LINE)
 
-The biggest difference between this and a [`segment`]({{ site.baseurl }}/data-types/segment/) is that its composition is based on the [`A, B, C` form](https://en.wikipedia.org/wiki/Line_(geometry)#In_Euclidean_geometry) (`0 = Ax + By + C`).
+The biggest difference between this and a [`segment`](/postgresql/data-types/segment/) is that its composition is based on the [`A, B, C` form](https://en.wikipedia.org/wiki/Line_(geometry)#In_Euclidean_geometry) (`0 = Ax + By + C`).
 
 ## Migration
 
@@ -20,7 +20,7 @@ end
 
 ## Using it
 
-The column is automatically identified and its value turned into what is defined in [`geometry.line_class`]({{ site.baseurl }}/getting-started/configuring/#geometry.line_class) or into a `Torque::PostgreSQL::Line`. 
+The column is automatically identified and its value turned into what is defined in [`geometry.line_class`](/postgresql/getting-started/configuring/#geometry.line_class) or into a `Torque::PostgreSQL::Line`. 
 
 This original implementation provides a couple of methods:
 ```ruby

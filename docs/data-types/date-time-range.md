@@ -21,7 +21,7 @@ end
 
 ## Models
 
-You have to go to each of your models and enable the functionality for each range-type field. The method name is defined on [`period.base_method`]({{ site.baseurl }}/getting-started/configuring/#period.base_method).
+You have to go to each of your models and enable the functionality for each range-type field. The method name is defined on [`period.base_method`](/postgresql/getting-started/configuring/#period.base_method).
 ```ruby
 # models/event.rb
 class Event < ActiveRecord::Base
@@ -48,11 +48,11 @@ period_for: :period, prefixed: false
 period_for :period, methods: { current: :ongoing, current?: :ongoing? }
 ```
 
-You can check the list of the methods that will be created on the configuration page for [`period.method_names`]({{ site.baseurl }}/getting-started/configuring/#period.method_names).
+You can check the list of the methods that will be created on the configuration page for [`period.method_names`](/postgresql/getting-started/configuring/#period.method_names).
 
 ## Scopes
 
-This is where the period has its best features. With now provided [Arel]({{ site.baseurl }}/querying/arel/) operators, a bunch of well-prepared statements can be used to query the records.
+This is where the period has its best features. With now provided [Arel](/postgresql/querying/arel/) operators, a bunch of well-prepared statements can be used to query the records.
 
 The `default` represents what was defined by the opposite of `pessimistic` option. If `pessimistic` is `TRUE`, then querying against `NULL` values will result in `FALSE`.
 

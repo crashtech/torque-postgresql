@@ -76,7 +76,7 @@ user = User.with(:comments, args: {id: 1}).order(:last_comment_content)
 ```
 
 You can also change the name of the key used to pass arguments using 
-[`auxiliary_statement.send_arguments_key`]({{ site.baseurl }}/getting-started/configuring/#auxiliary_statement.send_arguments_key) config.
+[`auxiliary_statement.send_arguments_key`](/postgresql/getting-started/configuring/#auxiliary_statement.send_arguments_key) config.
 
 ## Detached
 
@@ -103,7 +103,7 @@ end
 ```
 
 You can change the name of the class used to create the statements in the 
-[`auxiliary_statement.exposed_class`]({{ site.baseurl }}/getting-started/configuring/#auxiliary_statement.exposed_class) config.
+[`auxiliary_statement.exposed_class`](/postgresql/getting-started/configuring/#auxiliary_statement.exposed_class) config.
 
 ## Recursive
 

@@ -10,7 +10,7 @@ Additional Arel features. Other features of this gem do not require these to be 
 
 The `Arel::Nodes::NamedFunction.new` is not very developer-friendly, and there are a few things that are sometimes harder to do with it. Because of that, the gem has the [`Torque::PostgreSQL::Function`](https://github.com/crashtech/torque-postgresql/blob/master/lib/torque/postgresql/function.rb) helper to shortcut and facilitate such node building.
 
-You can make this helper available anywhere by just setting the [`arel.expose_function_helper_on`]({{ site.baseurl }}/getting-started/configuring/#arel.expose_function_helper_on) config. For example, setting to `'PG::Fn'`, will make the following features exposed in it:
+You can make this helper available anywhere by just setting the [`arel.expose_function_helper_on`](/postgresql/getting-started/configuring/#arel.expose_function_helper_on) config. For example, setting to `'PG::Fn'`, will make the following features exposed in it:
 
 ### Bind value
 
@@ -73,7 +73,7 @@ PG::Fn.something_else(Video.arel_table['title'])                            # Pr
 
 ## Document properties
 
-`arel_property_of` builds the node for a path into a `json` or `jsonb` column, cast to what a [struct]({{ site.baseurl }}/data-types/struct/#the-arel-node) class declares for it when the column is backed by one.
+`arel_property_of` builds the node for a path into a `json` or `jsonb` column, cast to what a [struct](/postgresql/data-types/struct/#the-arel-node) class declares for it when the column is backed by one.
 
 ```ruby
 # ("videos"."metadata" #>> ARRAY['file', 'duration'])
@@ -86,7 +86,7 @@ Video.order(Video.arel_property_of(:metadata, :file, :duration).desc)
 
 PostgreSQL allows a bunch of custom operators while working with [Arrays](https://www.postgresql.org/docs/9.6/functions-array.html), [Ranges](https://www.postgresql.org/docs/9.6/functions-range.html), and [Hashes](https://www.postgresql.org/docs/9.6/hstore.html).
 
-Now with the [`arel.infix_operators`]({{ site.baseurl }}/getting-started/configuring/#arel.infix_operators) config, you can set up all the ones that are used and take advantage of the method being available on any `Arel::Nodes::Node` and `Arel::Attributes::Attribute`. These are the ones configured by default (method => operator):
+Now with the [`arel.infix_operators`](/postgresql/getting-started/configuring/#arel.infix_operators) config, you can set up all the ones that are used and take advantage of the method being available on any `Arel::Nodes::Node` and `Arel::Attributes::Attribute`. These are the ones configured by default (method => operator):
 
 ```
 .contained_by        => <@

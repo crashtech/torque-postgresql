@@ -12,7 +12,7 @@ once the gem is in your Gemfile there is nothing to configure before you start u
 
 ## Requirements
 
-Ruby {{ site.ruby_version }} or newer, Rails {{ site.rails_version }}, and the `pg` adapter.
+Ruby 3.2 or newer, Rails 8.0, and the `pg` adapter.
 Every feature is built on PostgreSQL's own capabilities, so the database has to be PostgreSQL —
 there is no fallback for other adapters.
 
@@ -21,8 +21,15 @@ there is no fallback for other adapters.
 Each release line tracks a version of Rails. Add the one that matches your application:
 
 ```ruby
-{% for pair in site.data.versions -%}
-gem 'torque-postgresql', '{{ pair.gem }}'   # For Rails {{ pair.rails }}
+{% assign home = site.pages | where: 'docs', page.docs | where: 'layout', 'docs-home' | first -%}
+{% assign widest = 0 -%}
+{% for pair in home.versions -%}
+  {%- if pair.gem.size > widest %}{% assign widest = pair.gem.size %}{% endif -%}
+{% endfor -%}
+{% for pair in home.versions -%}
+{%- assign pad_size = widest | minus: pair.gem.size -%}
+{%- assign pad = '          ' | slice: 0, pad_size -%}
+gem 'torque-postgresql', '{{ pair.gem }}'{{ pad }}   # For Rails {{ pair.rails }}
 {% endfor -%}
 ```
 
@@ -44,6 +51,6 @@ Nothing changes in how you write Rails. The gem extends the PostgreSQL adapter, 
 and Active Record's query interface in place, so migrations, `schema.rb`, models and scopes keep
 the shape you already know — they simply understand more.
 
-From here, the [data types]({{ site.baseurl }}/data-types/composite/) cover what a column can
-hold, and [querying]({{ site.baseurl }}/querying/arel/) covers what you can ask of it. Every
-default the gem sets can be changed in [configuring]({{ site.baseurl }}/getting-started/configuring/).
+From here, the [data types](/postgresql/data-types/composite/) cover what a column can
+hold, and [querying](/postgresql/querying/arel/) covers what you can ask of it. Every
+default the gem sets can be changed in [configuring](/postgresql/getting-started/configuring/).

@@ -53,7 +53,7 @@ Any ActiveModel class that includes `ActiveModel::Attributes` is accepted too, a
 
 ## Models
 
-You have to go to each of your models and set up which columns are backed by which class. The method name is defined on [`struct.base_method`]({{ site.baseurl }}/getting-started/configuring/#struct.base_method).
+You have to go to each of your models and set up which columns are backed by which class. The method name is defined on [`struct.base_method`](/postgresql/getting-started/configuring/#struct.base_method).
 ```ruby
 # models/profile.rb
 class Profile < ActiveRecord::Base
@@ -243,7 +243,7 @@ Profile.pluck(settings: :theme)                 # ["dark", "light"]
 Profile.order(:settings)                        # The whole document, ordered as jsonb
 ```
 
-The gem's own [`distinct_on`]({{ site.baseurl }}/querying/distinct-on/), [`buckets`]({{ site.baseurl }}/querying/buckets/), [`join_series`]({{ site.baseurl }}/querying/join-series/) and the `Hash` form of calculations resolve a property the same way.
+The gem's own [`distinct_on`](/postgresql/querying/distinct-on/), [`buckets`](/postgresql/querying/buckets/), [`join_series`](/postgresql/querying/join-series/) and the `Hash` form of calculations resolve a property the same way.
 ```ruby
 Profile.distinct_on(settings: :theme)
 Profile.maximum(settings: :score)
@@ -294,7 +294,7 @@ profile.save!
 # settings => {"theme": "light", "legacy": 123}
 ```
 
-Writing a property that the class does not declare is only allowed when the class is not strict, which is defined by [`struct.default_strict`]({{ site.baseurl }}/getting-started/configuring/#struct.default_strict). Strict classes raise `ActiveModel::UnknownAttributeError`, and it can be changed per class, or per column with the `strict` option.
+Writing a property that the class does not declare is only allowed when the class is not strict, which is defined by [`struct.default_strict`](/postgresql/getting-started/configuring/#struct.default_strict). Strict classes raise `ActiveModel::UnknownAttributeError`, and it can be changed per class, or per column with the `strict` option.
 ```ruby
 profile.settings[:other] = 'x'   # ActiveModel::UnknownAttributeError
 

@@ -314,7 +314,7 @@ Default value: `2_000`
 
 ## Versioned commands configurations {#versioned_commands}
 
-These are the keys available to configure [versioned commands]({{ site.baseurl }}/experimental/versioned-commands/):
+These are the keys available to configure [versioned commands](/postgresql/experimental/versioned-commands/):
 
 <a name="versioned_commands.enabled"></a>`versioned_commands.enabled` Enables managing `views`, `functions`, and non-enum `types` from versioned `.sql` migrations. This is opt-in because it changes how migrations behave and adds an extra schema table.  
 Default value: `false`

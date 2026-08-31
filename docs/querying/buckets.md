@@ -9,7 +9,7 @@ description: This feature uses the width_bucket() function to return results or 
 
 This feature uses the `width_bucket()` function to return results or produce calculations in which the results fall into the configured buckets. [PostgreSQL Docs](https://www.postgresql.org/docs/current/functions-math.html#width_bucket)
 
-You can disable this feature using [config.buckets]({{ site.baseurl }}/getting-started/configuring/#buckets).
+You can disable this feature using [config.buckets](/postgresql/getting-started/configuring/#buckets).
 
 ## How to
 

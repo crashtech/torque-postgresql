@@ -26,7 +26,7 @@ User.joins(:photos).distinct_on(photos: :type).all
 User.joins(:photos).distinct_on(photos: [:type, :size]).all
 ```
 
-The same syntax reaches a property of a [struct]({{ site.baseurl }}/data-types/struct/) column or a column of a [composite]({{ site.baseurl }}/data-types/composite/) one:
+The same syntax reaches a property of a [struct](/postgresql/data-types/struct/) column or a column of a [composite](/postgresql/data-types/composite/) one:
 ```ruby
 # SELECT DISTINCT ON ( ("profiles"."settings" #>> ARRAY['theme']) ) "profiles".* FROM "profiles"
 Profile.distinct_on(settings: :theme).all

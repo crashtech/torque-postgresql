@@ -6,7 +6,7 @@ description: Belongs to an array of records, storing those locally.
 
 > It's so nice to be able to say that my videos belong to many tags! So clear and simple! Love it!
 
-Belongs to an array of records, storing those locally. The original `belongs_to` association defines a `SingularAssociation`, which means that it could be extended with `array: true`. In this case, I decided to create my own `CollectionAssociation` called `belongs_to_many`, which behaves similarly to the single one, but stores and returns a list of records. This was only possible due to PostgreSQL arrays and the new [Arel]({{ site.baseurl }}/querying/arel/) infix operators. [PostgreSQL Docs](https://www.postgresql.org/docs/9.6/arrays.html)
+Belongs to an array of records, storing those locally. The original `belongs_to` association defines a `SingularAssociation`, which means that it could be extended with `array: true`. In this case, I decided to create my own `CollectionAssociation` called `belongs_to_many`, which behaves similarly to the single one, but stores and returns a list of records. This was only possible due to PostgreSQL arrays and the new [Arel](/postgresql/querying/arel/) infix operators. [PostgreSQL Docs](https://www.postgresql.org/docs/9.6/arrays.html)
 
 With this, now you can say things like `Project belongs to many employees`, which is more syntactically correct than `Project has many employees`.
 
@@ -51,7 +51,7 @@ Most of the options are just like the `has_many` association, but they also incl
 
 There are no additional or custom features on top of those provided by a normal `has_many` association.
 
-## Combined with [Predicate Builder]({{ site.baseurl }}/querying/predicate-builder/#array)
+## Combined with [Predicate Builder](/postgresql/querying/predicate-builder/#array)
 
 You can enable enhancements to Rails' `PredicateBuilder` to simplify how you query the association column even further.
 

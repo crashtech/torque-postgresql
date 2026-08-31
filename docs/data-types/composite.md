@@ -74,7 +74,7 @@ end
 
 ## The composite Class
 
-There is nothing to declare. Classes are created on demand under the namespace defined by [`composite.namespace`]({{ site.baseurl }}/getting-started/configuring/#composite.namespace), and their attributes come from the columns of the type.
+There is nothing to declare. Classes are created on demand under the namespace defined by [`composite.namespace`](/postgresql/getting-started/configuring/#composite.namespace), and their attributes come from the columns of the type.
 ```ruby
 Composite::Address                          # Created on demand
 Composite::Address.type_name                # 'address'
@@ -101,7 +101,7 @@ class Composite::Address < Torque::PostgreSQL::Composite
 end
 ```
 
-Use [`composite.irregular_types`]({{ site.baseurl }}/getting-started/configuring/#composite.irregular_types) when the name of the class does not match the name of the type.
+Use [`composite.irregular_types`](/postgresql/getting-started/configuring/#composite.irregular_types) when the name of the class does not match the name of the type.
 ```ruby
 c.composite.irregular_types = { 'address' => 'Places::Location' }
 ```
@@ -212,7 +212,7 @@ Place.pluck(home: :number)                      # [9, 1]
 Place.order(:home)                              # The whole value, compared column by column
 ```
 
-The gem's own [`distinct_on`]({{ site.baseurl }}/querying/distinct-on/), [`buckets`]({{ site.baseurl }}/querying/buckets/), [`join_series`]({{ site.baseurl }}/querying/join-series/) and the `Hash` form of calculations resolve a column the same way.
+The gem's own [`distinct_on`](/postgresql/querying/distinct-on/), [`buckets`](/postgresql/querying/buckets/), [`join_series`](/postgresql/querying/join-series/) and the `Hash` form of calculations resolve a column the same way.
 ```ruby
 Place.distinct_on(home: :street)
 Place.join_series(1..10, with: { home: :number })

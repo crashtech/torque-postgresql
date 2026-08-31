@@ -4,7 +4,7 @@ section: data-types
 description: Enum set type manager.
 ---
 
-Enum set type manager. For each enum-type created on the database, it allows 2 behaviors: Single enum attribution, Array (Set-like) attribution. For [Single enum attribution]({{ site.baseurl }}/data-types/enum/) check the link. The enum type is known to have a better performance against string- and integer-like enums. Now with the array option, which behaves like binary assignment, each record can have multiple enum values. [PostgreSQL Docs](https://www.postgresql.org/docs/9.6/static/datatype-enum.html)
+Enum set type manager. For each enum-type created on the database, it allows 2 behaviors: Single enum attribution, Array (Set-like) attribution. For [Single enum attribution](/postgresql/data-types/enum/) check the link. The enum type is known to have a better performance against string- and integer-like enums. Now with the array option, which behaves like binary assignment, each record can have multiple enum values. [PostgreSQL Docs](https://www.postgresql.org/docs/9.6/static/datatype-enum.html)
 
 ## Migration
 
@@ -13,7 +13,7 @@ First, you have to create the enum during your migration, since it's the databas
 create_enum :permissions, %i(read write exec)
 ```
 
-You can check more about the type creation on the [Enum docs]({{ site.baseurl }}/data-types/enum/).
+You can check more about the type creation on the [Enum docs](/postgresql/data-types/enum/).
 
 Just as a reference, we will be using this table for the examples:
 ```ruby
@@ -34,7 +34,7 @@ end
 
 ## The type Class
 
-Each enum type loaded from the database will have its own class type of value for sets, created under the [`enum.namespace`]({{ site.baseurl }}/getting-started/configuring/#enum.namespace) namespace.
+Each enum type loaded from the database will have its own class type of value for sets, created under the [`enum.namespace`](/postgresql/getting-started/configuring/#enum.namespace) namespace.
 ```ruby
 Enum::PermissionsSet
 
@@ -60,7 +60,7 @@ Enum::PermissionsSet.exec.to_i    # 4
 
 ## Models
 
-You have to go to each of your models and enable the functionality for each enum-set-type field. You don't need to provide the values since they will be loaded from the database. The method name is defined on [`enum.set_method`]({{ site.baseurl }}/getting-started/configuring/#enum.set_method).
+You have to go to each of your models and enable the functionality for each enum-set-type field. You don't need to provide the values since they will be loaded from the database. The method name is defined on [`enum.set_method`](/postgresql/getting-started/configuring/#enum.set_method).
 ```ruby
 # models/user.rb
 class Post < ActiveRecord::Base
@@ -97,7 +97,7 @@ post.creator_permissions.write?                             # true
 post.read?                                                  # false
 ```
 
-The `bang!` methods are controlled by the [`enum.save_on_bang`]({{ site.baseurl }}/getting-started/configuring/#enum.save_on_bang):
+The `bang!` methods are controlled by the [`enum.save_on_bang`](/postgresql/getting-started/configuring/#enum.save_on_bang):
 ```ruby
 # The following will only perform a save on the database if enum.save_on_bang is set to true
 post = Post.new(creator_permissions: [:write])
@@ -105,7 +105,7 @@ post.read!
 post.creator_permissions === [:read, :write]
 ```
 
-You can reach the I18n translations in three different ways, and the scopes are configured on [`enum.i18n_scopes`]({{ site.baseurl }}/getting-started/configuring/#enum.i18n_scopes). On the third one, only the scopes on [`enum.i18n_type_scopes`]({{ site.baseurl }}/getting-started/configuring/#enum.i18n_type_scopes) are used, which allows per-model customization.
+You can reach the I18n translations in three different ways, and the scopes are configured on [`enum.i18n_scopes`](/postgresql/getting-started/configuring/#enum.i18n_scopes). On the third one, only the scopes on [`enum.i18n_type_scopes`](/postgresql/getting-started/configuring/#enum.i18n_type_scopes) are used, which allows per-model customization.
 ```ruby
 post = Post.new(creator_permissions: [:read, :write])
 post.creator_permissions.text         # Read post and Write post

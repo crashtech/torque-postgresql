@@ -91,7 +91,7 @@ category.path = [:Top, :Science]
 Nothing is validated on the Ruby side. Whatever cannot be a label reaches PostgreSQL
 as it is and fails there, as a syntax error. Dashes are only accepted as of
 PostgreSQL 16, which is what
-[`ltree.sanitize`]({{ site.baseurl }}/getting-started/configuring/#ltree.sanitize)
+[`ltree.sanitize`](/postgresql/getting-started/configuring/#ltree.sanitize)
 is for.
 
 ## Paths made of records
@@ -123,7 +123,7 @@ primary key, raises an `ArgumentError` rather than producing a broken path.
 
 > **Note** A UUID primary key contains dashes, which PostgreSQL only accepts in a
 > label as of version 16. On anything older, set
-> [`ltree.sanitize`]({{ site.baseurl }}/getting-started/configuring/#ltree.sanitize)
+> [`ltree.sanitize`](/postgresql/getting-started/configuring/#ltree.sanitize)
 > to `{ '-' => '_' }`.
 
 ## Objects that describe their own path
@@ -155,7 +155,7 @@ Category.where(path: something)     # path ~ 'app.*' when to_tree_path says so
 ```
 
 The method name comes from
-[`ltree.compatible_method`]({{ site.baseurl }}/getting-started/configuring/#ltree.compatible_method),
+[`ltree.compatible_method`](/postgresql/getting-started/configuring/#ltree.compatible_method),
 and setting it to `nil` turns the behavior off.
 
 ## Patterns
@@ -266,7 +266,7 @@ Every value given to one of these columns goes through this handler. `nil` is st
 
 ### Operators
 
-The remaining operators are [Arel]({{ site.baseurl }}/querying/arel/) attribute
+The remaining operators are [Arel](/postgresql/querying/arel/) attribute
 methods, and PostgreSQL defines all of them for `ltree[]` columns as well, where
 they mean that *some* entry of the array matches.
 
@@ -283,7 +283,7 @@ path.matches_any_lquery(value)  # path ?  ?  Does it match any of the patterns
 
 Labels that come from somewhere else rarely satisfy PostgreSQL's rules on their own,
 and a slug with dashes only works as of PostgreSQL 16. Set
-[`ltree.sanitize`]({{ site.baseurl }}/getting-started/configuring/#ltree.sanitize)
+[`ltree.sanitize`](/postgresql/getting-started/configuring/#ltree.sanitize)
 to normalize them before they are sent:
 
 ```ruby
