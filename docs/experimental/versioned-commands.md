@@ -10,11 +10,11 @@ description: The idea behind this feature is to allow versioned schema objects t
 
 The idea behind this feature is to allow versioned schema objects to be properly managed without having to dump them all on `schema.rb` and not having to manually write `down` statements or explicitly indicate which version to go to. It can look a bit off-Rails, and for that reason, it is disabled by default. You can enable it via [`versioned_commands.enabled`](/postgresql/getting-started/configuring/#versioned_commands.enabled).
 
-Once enabled, you will be able to manage `views`, `functions`, and non-enum `types` from `.sql` versioned migrations. The migration files themselves are expected to be reversible, which means they are validated against that capability. Each file is also validated against a "single" object operation (multiple functions are okay as long as they all have the same name).
+Once enabled, you will be able to manage `views`, `functions`, `triggers`, and non-enum `types` from `.sql` versioned migrations. The migration files themselves are expected to be reversible, which means they are validated against that capability. Each file is also validated against a "single" object operation (multiple functions are okay as long as they all have the same name, and a trigger may bundle the single function it executes).
 
 ## How to
 
-You can use the provided generators (via `rails g`) `torque:view`, `torque:function`, and `torque:type` to create the proper migration file. There is not much beyond that. However, here is how these are managed:
+You can use the provided generators (via `rails g`) `torque:view`, `torque:function`, `torque:trigger`, and `torque:type` to create the proper migration file. There is not much beyond that. However, here is how these are managed:
 
 ### 1. A new `schema_versioned_commands` table
 
@@ -39,8 +39,13 @@ ActiveRecord::Schema.define(version: NNNN) do
   # ... tables and foreign keys
   # These are views managed by versioned commands
   create_view "view_example", version: 1
+
+  # These are triggers managed by versioned commands
+  create_trigger "trigger_example", version: 1
 end
 ```
+
+Triggers require `CREATE OR REPLACE TRIGGER` (PostgreSQL 14+) so that each version stays reversible. Since a trigger always executes a function, its migration file may also contain the one `CREATE OR REPLACE FUNCTION` it executes, and rolling back the first version drops both.
 
 ### 3. Methods are not available on regular migrations
 

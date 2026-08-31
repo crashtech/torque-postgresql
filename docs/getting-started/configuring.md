@@ -316,11 +316,11 @@ Default value: `2_000`
 
 These are the keys available to configure [versioned commands](/postgresql/experimental/versioned-commands/):
 
-<a name="versioned_commands.enabled"></a>`versioned_commands.enabled` Enables managing `views`, `functions`, and non-enum `types` from versioned `.sql` migrations. This is opt-in because it changes how migrations behave and adds an extra schema table.  
+<a name="versioned_commands.enabled"></a>`versioned_commands.enabled` Enables managing `views`, `functions`, `triggers`, and non-enum `types` from versioned `.sql` migrations. This is opt-in because it changes how migrations behave and adds an extra schema table.  
 Default value: `false`
 
 <a name="versioned_commands.types"></a>`versioned_commands.types` The list of commands that are versioned by this feature.  
-Default value: `%i[function type view]`
+Default value: `%i[function type view trigger]`
 
 <a name="versioned_commands.table_name"></a>`versioned_commands.table_name` The name of the table that inherits from `schema_migrations` and stores the list of versioned commands that have been executed.  
 Default value: `'schema_versioned_commands'`

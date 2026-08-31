@@ -118,6 +118,45 @@ module Torque
           end
 
           # Validate that the content of the command is correct
+          def validate_trigger!(content, name)
+            result = content.scan(Regexp.new([
+              '^\s*CREATE\s+(OR\s+REPLACE)?\s*',
+              "TRIGGER\\s+#{NAME_MATCH}",
+            ].join, 'mi'))
+
+            raise ArgumentError, <<~MSG.squish if result.empty?
+              Missing or invalid trigger definition.
+            MSG
+
+            raise ArgumentError, <<~MSG.squish if result.size > 1
+              More than one trigger definition found.
+            MSG
+
+            raise ArgumentError, <<~MSG.squish unless result.all?(&:first)
+              'OR REPLACE' is required for proper migration support.
+            MSG
+
+            trigger_name = result.first.last.downcase.sub('.', '_')
+            raise ArgumentError, <<~MSG.squish if trigger_name != name.downcase
+              Trigger name must match file name.
+            MSG
+
+            functions = content.scan(Regexp.new([
+              '^\s*CREATE\s+(OR\s+REPLACE)?\s*',
+              "FUNCTION\\s+#{NAME_MATCH}",
+            ].join, 'mi'))
+            return if functions.empty?
+
+            raise ArgumentError, <<~MSG.squish if functions.map(&:last).uniq(&:downcase).many?
+              Only one function can be bundled with a trigger.
+            MSG
+
+            raise ArgumentError, <<~MSG.squish unless functions.all?(&:first)
+              'OR REPLACE' is required for proper migration support.
+            MSG
+          end
+
+          # Validate that the content of the command is correct
           def validate_view!(content, name)
             result = content.scan(Regexp.new([
               '^\s*CREATE\s+(OR\s+REPLACE)?\s*',

@@ -253,6 +253,15 @@ module Torque
                 WHERE 1=1 AND c.relkind IN ('v', 'm')
                   AND #{filter_by_schema.join(' AND ')};
               SQL
+            when :trigger
+              <<-SQL.squish
+                SELECT n.nspname AS schema, t.tgname AS name
+                FROM pg_trigger t
+                INNER JOIN pg_class c ON c.oid = t.tgrelid
+                INNER JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE 1=1 AND NOT t.tgisinternal
+                  AND #{filter_by_schema.join(' AND ')};
+              SQL
             end
 
           select_rows(query, 'SCHEMA')

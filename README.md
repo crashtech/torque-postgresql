@@ -78,7 +78,7 @@ These are the currently available features:
 ## Experimental
 
 * [Multiple Schemas](https://github.com/crashtech/torque-postgresql/wiki/Multiple-Schemas)
-* [Versioned Commands (Views, Functions, Types)](https://github.com/crashtech/torque-postgresql/wiki/Versioned-Commands)
+* [Versioned Commands (Views, Functions, Types, Triggers)](https://github.com/crashtech/torque-postgresql/wiki/Versioned-Commands)
 
 # How to Contribute
 

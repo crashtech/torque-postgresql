@@ -72,6 +72,7 @@ module Torque
 
             yield
             versioned_commands(stream, :view, true)
+            versioned_commands(stream, :trigger, true)
 
             functions(stream) if fx_functions_position == :end
             triggers(stream) if defined?(::Fx::SchemaDumper::Trigger)

@@ -8,6 +8,7 @@ RSpec.describe 'VersionedCommands' do
       expect(connection).not_to respond_to(:create_function)
       expect(connection).not_to respond_to(:create_type)
       expect(connection).not_to respond_to(:create_view)
+      expect(connection).not_to respond_to(:create_trigger)
     end
 
     it 'does not have the methods available in a migration' do
@@ -15,6 +16,7 @@ RSpec.describe 'VersionedCommands' do
       expect(instance).not_to respond_to(:create_function)
       expect(instance).not_to respond_to(:create_type)
       expect(instance).not_to respond_to(:create_view)
+      expect(instance).not_to respond_to(:create_trigger)
     end
 
     it 'does have the methods in schema definition' do
@@ -22,6 +24,7 @@ RSpec.describe 'VersionedCommands' do
       expect(instance).to respond_to(:create_function)
       expect(instance).to respond_to(:create_type)
       expect(instance).to respond_to(:create_view)
+      expect(instance).to respond_to(:create_trigger)
     end
 
     context 'on context' do
@@ -39,6 +42,7 @@ RSpec.describe 'VersionedCommands' do
         expect(result[4]).to eq('20250101000005_create_view_all_users_v1.sql')
         expect(result[5]).to eq('20250101000006_create_type_user_id_v1.sql')
         expect(result[6]).to eq('20250101000007_remove_function_count_users_v2.sql')
+        expect(result[7]).to eq('20250101000008_create_trigger_audit_users_v1.sql')
       end
 
       it 'correctly report the status of all migrations' do
@@ -50,6 +54,7 @@ RSpec.describe 'VersionedCommands' do
         expect(result[4]).to eq(['down', '20250101000005', 'Create View all_users (v1)'])
         expect(result[5]).to eq(['down', '20250101000006', 'Create Type user_id (v1)'])
         expect(result[6]).to eq(['down', '20250101000007', 'Remove Function count_users (v2)'])
+        expect(result[7]).to eq(['down', '20250101000008', 'Create Trigger audit_users (v1)'])
       end
 
       it 'reports for invalid names' do
@@ -280,6 +285,89 @@ RSpec.describe 'VersionedCommands' do
           expect { base.validate!(:view, content, 'internal_test') }.not_to raise_error
         end
       end
+
+      context 'on trigger' do
+        it 'requires a proper definition' do
+          content = <<~SQL
+            CREATE OR REPLACE FUNCTION test() RETURNS trigger;
+          SQL
+
+          expect do
+            base.validate!(:trigger, content, 'test')
+          end.to raise_error(ArgumentError, /Missing or invalid trigger/)
+        end
+
+        it 'prevents multiple trigger definitions' do
+          content = <<~SQL
+            CREATE OR REPLACE TRIGGER test BEFORE INSERT ON users FOR EACH ROW EXECUTE FUNCTION fn();
+            CREATE OR REPLACE TRIGGER other_test BEFORE INSERT ON users FOR EACH ROW EXECUTE FUNCTION fn();
+          SQL
+
+          expect do
+            base.validate!(:trigger, content, 'test')
+          end.to raise_error(ArgumentError, /More than one trigger/)
+        end
+
+        it 'requires OR REPLACE clause' do
+          content = <<~SQL
+            CREATE TRIGGER test BEFORE INSERT ON users FOR EACH ROW EXECUTE FUNCTION fn();
+          SQL
+
+          expect do
+            base.validate!(:trigger, content, 'test')
+          end.to raise_error(ArgumentError, /'OR REPLACE' is required/)
+        end
+
+        it 'requires matching name' do
+          content = <<~SQL
+            CREATE OR REPLACE TRIGGER other_test BEFORE INSERT ON users FOR EACH ROW EXECUTE FUNCTION fn();
+          SQL
+
+          expect do
+            base.validate!(:trigger, content, 'test')
+          end.to raise_error(ArgumentError, /must match file name/)
+        end
+
+        it 'works when setup correctly' do
+          content = <<~SQL
+            CREATE OR REPLACE TRIGGER TEST BEFORE INSERT ON users FOR EACH ROW EXECUTE FUNCTION fn();
+          SQL
+
+          expect { base.validate!(:trigger, content, 'test') }.not_to raise_error
+        end
+
+        it 'supports a bundled function' do
+          content = <<~SQL
+            CREATE OR REPLACE FUNCTION fn() RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql;
+            CREATE OR REPLACE TRIGGER test BEFORE INSERT ON users FOR EACH ROW EXECUTE FUNCTION fn();
+          SQL
+
+          expect { base.validate!(:trigger, content, 'test') }.not_to raise_error
+        end
+
+        it 'prevents multiple bundled functions' do
+          content = <<~SQL
+            CREATE OR REPLACE FUNCTION fn() RETURNS trigger;
+            CREATE OR REPLACE FUNCTION other_fn() RETURNS trigger;
+            CREATE OR REPLACE TRIGGER test BEFORE INSERT ON users FOR EACH ROW EXECUTE FUNCTION fn();
+          SQL
+
+          expect do
+            base.validate!(:trigger, content, 'test')
+          end.to raise_error(ArgumentError, /one function/)
+        end
+
+        it 'requires OR REPLACE on the bundled function' do
+          content = <<~SQL
+            CREATE FUNCTION fn() RETURNS trigger;
+            CREATE OR REPLACE TRIGGER test BEFORE INSERT ON users FOR EACH ROW EXECUTE FUNCTION fn();
+          SQL
+
+          expect do
+            base.validate!(:trigger, content, 'test')
+          end.to raise_error(ArgumentError, /'OR REPLACE' is required/)
+        end
+      end
     end
 
     context 'on running' do
@@ -361,6 +449,34 @@ RSpec.describe 'VersionedCommands' do
 
         sql.replace('CREATE RECURSIVE VIEW test AS SELECT 1;')
         expect(connection).to receive(:execute).with('DROP VIEW test;')
+        command.migrate(:down)
+      end
+
+      it 'properly drops triggers' do
+        command.type = 'trigger'
+
+        sql.replace(<<~SQL)
+          CREATE OR REPLACE TRIGGER test
+            BEFORE INSERT ON users
+            FOR EACH ROW EXECUTE FUNCTION fn();
+        SQL
+
+        expect(connection).to receive(:execute).with('DROP TRIGGER test ON users;')
+        command.migrate(:down)
+      end
+
+      it 'properly drops triggers with bundled functions' do
+        command.type = 'trigger'
+
+        sql.replace(<<~SQL)
+          CREATE OR REPLACE FUNCTION fn() RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql;
+          CREATE OR REPLACE TRIGGER test
+            BEFORE INSERT ON internal.users
+            FOR EACH ROW EXECUTE FUNCTION fn();
+        SQL
+
+        expect(connection).to receive(:execute).with('DROP TRIGGER test ON internal.users;')
+        expect(connection).to receive(:execute).with('DROP FUNCTION fn();')
         command.migrate(:down)
       end
     end
@@ -449,6 +565,8 @@ RSpec.describe 'VersionedCommands' do
     end
 
     before do
+      connection.instance_variable_set(:@schemas_whitelist, nil)
+
       allow(commands_table).to receive(:new).and_return(schema_table)
       allow(schema_table).to receive(:versions_of).and_return([])
       allow(schema_table).to receive(:table_name).and_return('versioned_commands_tbl')
@@ -459,6 +577,7 @@ RSpec.describe 'VersionedCommands' do
       expect(dump_result).not_to include('# These are types managed by versioned commands')
       expect(dump_result).not_to include('# These are functions managed by versioned commands')
       expect(dump_result).not_to include('# These are views managed by versioned commands')
+      expect(dump_result).not_to include('# These are triggers managed by versioned commands')
     end
 
     it 'includes all types' do
@@ -508,6 +627,32 @@ RSpec.describe 'VersionedCommands' do
       expect(dump_result).to include('create_view "test", version: 1')
       expect(dump_result).to include('create_view "internal_other", version: 2')
       expect(dump_result).not_to include('create_view "removed", version: 1')
+    end
+
+    it 'includes all triggers' do
+      body = 'RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql'
+      connection.execute('CREATE TABLE trigger_users (id integer);')
+      connection.execute('CREATE TABLE internal.trigger_users (id integer);')
+      connection.execute("CREATE FUNCTION trigger_fn() #{body};")
+      connection.execute(<<~SQL)
+        CREATE TRIGGER test BEFORE INSERT ON trigger_users
+        FOR EACH ROW EXECUTE FUNCTION trigger_fn();
+      SQL
+      connection.execute(<<~SQL)
+        CREATE TRIGGER other BEFORE INSERT ON internal.trigger_users
+        FOR EACH ROW EXECUTE FUNCTION trigger_fn();
+      SQL
+
+      allow(schema_table).to receive(:versions_of).with('trigger').and_return([
+        ['test', 1],
+        ['internal_other', 2],
+        ['remove', 1],
+      ])
+
+      expect(dump_result).to include('# These are triggers managed by versioned commands')
+      expect(dump_result).to include('create_trigger "test", version: 1')
+      expect(dump_result).to include('create_trigger "internal_other", version: 2')
+      expect(dump_result).not_to include('create_trigger "removed", version: 1')
     end
   end
 end

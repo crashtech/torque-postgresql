@@ -115,6 +115,11 @@ module Torque
           execute VersionedCommands.fetch_command(dir, :view, name, version)
         end
 
+        def create_trigger(name, version:, dir: pool.migrations_paths)
+          return super unless VersionedCommands.valid_type?(:trigger)
+          execute VersionedCommands.fetch_command(dir, :trigger, name, version)
+        end
+
       end
 
       ActiveRecord::ConnectionAdapters::PostgreSQL::Table.include ColumnMethods

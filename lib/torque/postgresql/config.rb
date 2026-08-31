@@ -411,7 +411,7 @@ module Torque
 
       # Define the list of commands that are going to be versioned by this
       # method
-      vs.types = %i[function type view]
+      vs.types = %i[function type view trigger]
 
       # The name of the table that will inherit from +schema_migrations+ and
       # store the list of versioned commands that have been executed
