@@ -44,7 +44,7 @@ module Torque
           end
 
           def array_attribute?(attribute)
-            attribute.type_caster.is_a?(ARRAY_OID)
+            Adapter::OID.unwrap(attribute.type_caster).is_a?(ARRAY_OID)
           end
       end
 

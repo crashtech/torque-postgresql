@@ -53,7 +53,7 @@ module Torque
       def build(attribute, value, operator = nil)
         return super if value.nil?
 
-        type = table.type(attribute.name)
+        type = Adapter::OID.unwrap(table.type(attribute.name))
         handler = PredicateBuilder.handler_for(type, value) || handler_for_path(attribute, value)
         return super if handler.nil?
 
@@ -65,7 +65,7 @@ module Torque
       def resolve_arel_attribute(table_name, column_name, &block)
         return super unless table.has_column?(table_name)
 
-        type = table.type(table_name)
+        type = Adapter::OID.unwrap(table.type(table_name))
         handler = PredicateBuilder.handler_for(type)
         return super if handler.nil?
 

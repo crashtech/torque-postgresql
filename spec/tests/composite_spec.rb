@@ -792,6 +792,17 @@ RSpec.describe 'Composite' do
       expect(Place.new(name: 'Fine', home: { street: 'Main' })).to be_valid
     end
 
+    it 'validates the attributes that are also normalized' do
+      klass = Class.new(Place) do
+        normalizes :home, with: ->(value) { value }
+      end
+
+      place = klass.new(name: 'Broken', home: invalid_address)
+
+      expect(place).to be_invalid
+      expect(place.errors.attribute_names).to include(:home)
+    end
+
     it 'only validates the attributes backed by a composite type' do
       Place.new
 

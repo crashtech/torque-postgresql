@@ -786,6 +786,18 @@ RSpec.describe 'Struct' do
     it 'leaves nil alone' do
       expect(normalized_klass.new.email).to be_nil
     end
+
+    it 'keeps a normalized struct property as a document inside another' do
+      klass = Class.new(Torque::PostgreSQL::Attributes::Struct) do
+        attribute :bio, Torque::PostgreSQL::Adapter::OID::Struct.new(Profile::Bio)
+        normalizes :bio, with: ->(value) { value }
+      end
+
+      type = Torque::PostgreSQL::Adapter::OID::Struct.new(klass)
+      value = klass.new(bio: { headline: 'Hi' })
+
+      expect(type.serialize(value)).to be_eql('{"bio":{"headline":"Hi"}}')
+    end
   end
 
   context 'on store accessor' do
@@ -1003,6 +1015,18 @@ RSpec.describe 'Struct' do
 
     it 'refuses an undeclared property of a strict class' do
       expect { Profile.arel_property_of(:settings, :nope) }
+        .to raise_error(ArgumentError, /not a declared property/)
+    end
+
+    it 'keeps the type of the property when the column is normalized' do
+      klass = Class.new(Profile) do
+        normalizes :settings, with: ->(value) { value }
+      end
+
+      node = klass.arel_property_of(:settings, :notifications)
+      expect(node.to_sql).to be_eql(%{("profiles"."settings" #>> ARRAY['notifications'])::boolean})
+
+      expect { klass.arel_property_of(:settings, :nope) }
         .to raise_error(ArgumentError, /not a declared property/)
     end
   end

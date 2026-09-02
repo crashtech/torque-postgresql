@@ -25,7 +25,7 @@ module Torque
         private
 
           def array_typed?(attribute)
-            attribute.able_to_type_cast? && attribute.type_caster.is_a?(ARRAY_OID)
+            attribute.able_to_type_cast? && Adapter::OID.unwrap(attribute.type_caster).is_a?(ARRAY_OID)
           end
       end
     end

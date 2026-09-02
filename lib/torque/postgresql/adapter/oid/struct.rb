@@ -79,7 +79,7 @@ module Torque
             set = value.instance_variable_get(:@attributes)
             set.keys.to_h do |name|
               attribute = set[name]
-              type = attribute.type
+              type = OID.unwrap(attribute.type)
 
               next [name, type.document_for(attribute.value)] if type.is_a?(Struct)
               [name, attribute.value_for_database]

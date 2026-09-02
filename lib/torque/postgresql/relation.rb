@@ -109,7 +109,7 @@ module Torque
         def part_table_for(table, name)
           return unless table.has_column?(name)
 
-          type = table.type(name)
+          type = Adapter::OID.unwrap(table.type(name))
           handler = PredicateBuilder.handler_for(type)
           return if handler.nil?
 

@@ -23,7 +23,7 @@ module Torque
         # The Arel node for a path into a document column, typed by the struct
         # class that backs the column when there is one
         def arel_property_of(column, *path)
-          type = attribute_types[column.to_s]
+          type = Adapter::OID.unwrap(attribute_types[column.to_s])
           handler = PredicateBuilder::StructHandler.new(predicate_builder)
           handler.property_for(arel_table[column], type, path)
         end

@@ -13,8 +13,9 @@ module Torque
           attr_reader :name
 
           # The composite type behind the given type, if there is one, wrapped
-          # or not by an array
+          # or not by an array or a delegator
           def self.from(type)
+            type = OID.unwrap(type)
             type = type.subtype if type.is_a?(ARRAY)
             type if type.is_a?(self)
           end
