@@ -284,10 +284,12 @@ RSpec.describe 'Relation', type: :helper do
 
     it 'works with calculations' do
       list = [create(:user, age: 5), create(:user, age: 5), create(:user, age: 15)]
+      list << create(:user, age: nil)
       query = source.buckets(:age, 0..50, count: 5).count
 
       expect(query).to be_a(Hash)
-      expect(query.keys).to match_array([0...10, 10...20])
+      expect(query.keys).to match_array([nil, 0...10, 10...20])
+      expect(query[nil]).to eq(1)
       expect(query[0...10]).to eq(2)
       expect(query[10...20]).to eq(1)
     end
