@@ -38,8 +38,8 @@ For this option, you can use either a `String`, a `Proc`, or an `ActiveRecord::R
 
 ```ruby
 cte.query :comments, 'SELECT * FROM comments'
-cte.query :comments, -> { Comments.all }
-cte.query Comments.all
+cte.query :comments, -> { Comment.all }
+cte.query Comment.all
 ```
 
 ### Accessing attributes
@@ -60,7 +60,7 @@ with(*list)
 
 Once you have configured all your statements, you can easily use them by calling `with` method.
 ```ruby
-user = User.with(:last_comment, :first_comment).first
+user = User.with(:last_comment).first
 user.last_comment_content
 ```
 
@@ -72,7 +72,7 @@ user = User.with(:last_comment).order(:last_comment_content)
 The advantage of the String and Proc query option on an auxiliary statement is that they allow arguments, which means that they can be further configured based on what you provide on the `:args` key. **CAUTION** if you use `with` with multiple values and the `:args` for arguments, the list of arguments will be used for all `String` and `Proc` queries.
 
 ```ruby
-user = User.with(:comments, args: {id: 1}).order(:last_comment_content)
+user = User.with(:last_comment, args: {id: 1}).order(:last_comment_content)
 ```
 
 You can also change the name of the key used to pass arguments using 
@@ -86,7 +86,7 @@ Auxiliary statements can be defined detached from models, which means that you c
 class HomeController < ApplicationController
   def index
     last_notification = TorqueCTE.create(:last_notification) do |cte|
-      cte.query Notification.distinct_on(:post_id).order(created_at: :desc)
+      cte.query Notification.distinct_on(:post_id).order(:post_id, created_at: :desc)
       cte.attributes content: :last_notification
     end
 
@@ -94,7 +94,7 @@ class HomeController < ApplicationController
   end
 
   def show
-    recipients = TorqueCTE.create(User.recipient_of(params[:id]).post_groupped)
+    recipients = TorqueCTE.create(User.recipient_of(params[:id]).post_grouped)
     @notifications = Notification.from_post(params[:id]).with(recipients, select: {
       Arel.sql('array_agg("users"."email")') => :recipient_emails
     })
@@ -107,7 +107,7 @@ You can change the name of the class used to create the statements in the
 
 ## Recursive
 
-Auxiliary statements can run with a `RECURSIVE` modifier composed of two parts. The first query, as a regular query and auxiliary statement, and then a second query, added after a `UNION`, which will occur consecutively until it does not bring any more records. [PostgreSQL Docs](https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-RECURSIVE)
+Auxiliary statements can run with a `RECURSIVE` modifier composed of two parts. The first query, as a regular query and auxiliary statement, and then a second query, added after a `UNION`, which will occur consecutively until it does not bring any more records. [PostgreSQL Docs](https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-RECURSIVE) The sections below cover the model-based setup, the manual `sub_query` configuration and detached recursion.
 
 ## Recursive model
 
@@ -148,7 +148,7 @@ This option will add a calculated `path` column to your queries to show the path
 
 ### Setting up sub_query manually
 
-The `cte.sub_query` option works in the same way as the `cte.query`, which means it supports the same things (Relation, proc, and string). But once it is set, the connection must be defined manually in both definitions (`query` and `sub_query`). Be aware that the automatic setup of the `sub_query` uses multiple from to make sure records are loaded correctly, as in: `UNION SELECT * FROM categories, all_categories`.
+The `cte.sub_query` option works in the same way as the `cte.query`, which means it supports the same things (Relation, proc, and string). But once it is set, the connection must be defined manually in both definitions (`query` and `sub_query`). Be aware that the automatic setup of the `sub_query` uses a multiple-table FROM clause to make sure records are loaded correctly, as in: `UNION SELECT * FROM categories, all_categories`.
 
 ## Detached recursive
 

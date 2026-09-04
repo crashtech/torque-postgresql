@@ -47,6 +47,7 @@ There is also `lquery`, for the rare case of storing a pattern in a column.
 
 ```ruby
 add_column :rules, :pattern, :lquery
+add_column :rules, :patterns, :lquery, array: true
 ```
 
 ## Using it
@@ -80,7 +81,7 @@ a.ancestor_of?(b)   # Or a.covers?(b)
 a.descendant_of?(b) # Or a.covered_by?(b)
 ```
 
-The value can be set as a string, an array or symbols:
+The value can be set as a string, or as an array of strings or symbols:
 
 ```ruby
 category.path = 'Top.Science'
@@ -141,8 +142,7 @@ end
 
 document.path = category            # The path the category describes
 Category.where(path: category)      # Same, as a condition
-Category.where(path: [category, :any])
-                                    # Everything below it
+Category.where(path: [category, :any])  # Everything below it
 category_path.ancestor_of?(other)   # And while comparing two paths
 ```
 
@@ -227,7 +227,7 @@ them matches: paths become an `IN`, patterns go through the `?` operator.
 
 ```ruby
 Category.where(path: [%w[Top a], %w[Top b]])            # path IN ('Top.a', 'Top.b')
-Category.where(path: [['Top', :any], ['Other', 1..]])    # path ? '{Top.*,Other.*{1,}}'::lquery[]
+Category.where(path: [['Top', :any], ['Other', 1..]])   # path ? '{Top.*,Other.*{1,}}'::lquery[]
 Category.where(path: [LTree['Top'], 'Other'])            # path IN ('Top', 'Other')
 ```
 

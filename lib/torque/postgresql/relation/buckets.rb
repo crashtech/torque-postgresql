@@ -52,7 +52,7 @@ module Torque
 
           keys = buckets_keys
           self.group_values = [FN.group_by(build_buckets_node, :bucket)]
-          super.transform_keys { |key| keys[key - 1] }
+          super.transform_keys { |key| keys[key - 1] if key.positive? }
         end
 
         module Initializer

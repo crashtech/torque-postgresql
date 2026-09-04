@@ -24,7 +24,7 @@ end
 This operation will create a proper virtual column named `search_vector` with the following function:
 ```sql
 SETWEIGHT(TO_TSVECTOR('english', COALESCE(title, '')), 'A') ||
-SETWEIGHT(TO_TSVECTOR('english', COALESCE(content, '')), 'B')
+SETWEIGHT(TO_TSVECTOR('english', COALESCE(description, '')), 'B')
 ```
 
 ### Options
@@ -39,7 +39,7 @@ create_table :courses do |t|
   t.string :title, null: false
   t.text :description
   t.search_language :lang, null: false, default: 'english'
-  t.column :lang, type: :regconfig, null: false, default: 'english' # Same as above
+  t.column :lang, :regconfig, null: false, default: 'english'       # Same as above
   t.search_vector :search_vector, language: :lang, columns: [:title, :description]
   t.timestamps
 end
@@ -62,7 +62,7 @@ end
 * `language`: This value affects the language of the input search term. It supports a `String` as a plain value, or a `Symbol` that refers to an attribute or a public class method.
 * `order`: This sets the default value for ordering the result. It can be either `true` or `:asc` for `ASC` or `:desc` for `DESC`.
 * `with_rank`: This sets the default value for retrieving the result of the `RANK` function as an accessible attribute of the records. It can be `true` to add the `"rank"` attribute, or the name of the alias.
-* `use_mode`: It sets the default mode of parsing the provided value. Values can be: `:default`, `:plain`, `:phrase`, or `:web`, respectively. Defaults to: `:phrase`.
+* `mode`: It sets the default mode of parsing the provided value. Values can be: `:default`, `:plain`, `:phrase`, or `:web`. Defaults to: `:phrase`.
 
 ```ruby
 class Course < ApplicationRecord
@@ -93,7 +93,7 @@ Course.full_text_search('Ruby', order: :desc, rank: :rank_result, language: :lan
 Produces:
 
 ```sql
-SELECT "courses".*, TS_RANK("courses"."search_vector", WEBSEARCH_TO_TSQUERY(lang, 'Ruby')) AS rank_result
+SELECT "courses".*, TS_RANK("courses"."search_vector", WEBSEARCH_TO_TSQUERY(lang, 'Ruby')) AS "rank_result"
 FROM "courses" WHERE "courses"."search_vector" @@ WEBSEARCH_TO_TSQUERY(lang, 'Ruby')
 ORDER BY TS_RANK("courses"."search_vector", WEBSEARCH_TO_TSQUERY(lang, 'Ruby')) DESC
 ```

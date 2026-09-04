@@ -1,13 +1,13 @@
 ---
 title: Dynamic Attributes
 section: modeling
-description: This method allows defining a conditional value that, if present in the
-  result set, don't do anything.
+description: This method allows defining a conditional value that, if present in
+  the result set, does nothing, and is otherwise resolved by its block.
 ---
 
 This method allows defining a conditional value that, if present in the result set, does nothing. But, if it was not available, it will call its block in order to try returning the expected value. This feature is great when used together with [Auxiliary Statements](/postgresql/querying/auxiliary-statements/).
 
-## Configurating
+## Configuring
 
 In any model, you just need to call `dynamic_attribute` method, passing a name for it and the block that will be called in case the attribute is not present.
 

@@ -1,4 +1,4 @@
-<a href="https://github.com/crashtech/torque-postgresql">
+<a href="https://torque.dev/postgresql/">
   <img src="./docs/assets/images/github.png" alt="Torque PostgreSQL - Advanced PG features in a seamlessly RoR interface" />
 </a>
 
@@ -7,7 +7,7 @@
 [![Gem Version](https://badge.fury.io/rb/torque-postgresql.svg)](https://badge.fury.io/rb/torque-postgresql)
 <!--([![Test Coverage](https://codeclimate.com/github/crashtech/torque-postgresql/badges/coverage.svg)](https://codeclimate.com/github/crashtech/torque-postgresql/coverage))-->
 
-* [Wiki](https://github.com/crashtech/torque-postgresql/wiki)
+* [Docs](https://torque.dev/postgresql/)
 * [Bugs](https://github.com/crashtech/torque-postgresql/issues)
 * [TODO](https://github.com/crashtech/torque-postgresql/wiki/TODO)
 
@@ -44,41 +44,41 @@ gem install torque-postgresql
 # Usage
 These are the currently available features:
 
-* [Configuring](https://github.com/crashtech/torque-postgresql/wiki/Configuring)
+* [Configuring](https://torque.dev/postgresql/getting-started/configuring/)
 
 ## Data types
 
-* [Box](https://github.com/crashtech/torque-postgresql/wiki/Box)
-* [Circle](https://github.com/crashtech/torque-postgresql/wiki/Circle)
-* [Composite](https://github.com/crashtech/torque-postgresql/wiki/Composite)
-* [Date/Time Range](https://github.com/crashtech/torque-postgresql/wiki/Date-Time-Range)
-* [Enum](https://github.com/crashtech/torque-postgresql/wiki/Enum)
-* [EnumSet](https://github.com/crashtech/torque-postgresql/wiki/Enum-Set)
-* [Interval](https://github.com/crashtech/torque-postgresql/wiki/Interval)
-* [Line](https://github.com/crashtech/torque-postgresql/wiki/Line)
-* [LTree](https://github.com/crashtech/torque-postgresql/wiki/LTree)
-* [Segment](https://github.com/crashtech/torque-postgresql/wiki/Segment)
-* [Struct](https://github.com/crashtech/torque-postgresql/wiki/Struct)
+* [Box](https://torque.dev/postgresql/data-types/box/)
+* [Circle](https://torque.dev/postgresql/data-types/circle/)
+* [Composite](https://torque.dev/postgresql/data-types/composite/)
+* [Date/Time Range](https://torque.dev/postgresql/data-types/date-time-range/)
+* [Enum](https://torque.dev/postgresql/data-types/enum/)
+* [EnumSet](https://torque.dev/postgresql/data-types/enum-set/)
+* [Interval](https://torque.dev/postgresql/data-types/interval/)
+* [Line](https://torque.dev/postgresql/data-types/line/)
+* [LTree](https://torque.dev/postgresql/data-types/ltree/)
+* [Segment](https://torque.dev/postgresql/data-types/segment/)
+* [Struct](https://torque.dev/postgresql/data-types/struct/)
 
 ## Querying
 
-* [Arel](https://github.com/crashtech/torque-postgresql/wiki/Arel)
-* [Auxiliary Statements](https://github.com/crashtech/torque-postgresql/wiki/Auxiliary-Statements)
-* [Belongs to Many](https://github.com/crashtech/torque-postgresql/wiki/Belongs-to-Many)
-* [Distinct On](https://github.com/crashtech/torque-postgresql/wiki/Distinct-On)
-* [Dynamic Attributes](https://github.com/crashtech/torque-postgresql/wiki/Dynamic-Attributes)
-* [Has Many](https://github.com/crashtech/torque-postgresql/wiki/Has-Many)
-* [Inherited Tables](https://github.com/crashtech/torque-postgresql/wiki/Inherited-Tables)
-* [Insert All](https://github.com/crashtech/torque-postgresql/wiki/Insert-All)
-* [Predicate Builder](https://github.com/crashtech/torque-postgresql/wiki/Predicate-Builder)
-* [Full‐Text Search](https://github.com/crashtech/torque-postgresql/wiki/Full‐Text-Search)
-* [Join Series](https://github.com/crashtech/torque-postgresql/wiki/Join-Series)
-* [Buckets](https://github.com/crashtech/torque-postgresql/wiki/Buckets)
+* [Arel](https://torque.dev/postgresql/querying/arel/)
+* [Auxiliary Statements](https://torque.dev/postgresql/querying/auxiliary-statements/)
+* [Belongs to Many](https://torque.dev/postgresql/modeling/belongs-to-many/)
+* [Distinct On](https://torque.dev/postgresql/querying/distinct-on/)
+* [Dynamic Attributes](https://torque.dev/postgresql/modeling/dynamic-attributes/)
+* [Has Many](https://torque.dev/postgresql/modeling/has-many/)
+* [Inherited Tables](https://torque.dev/postgresql/modeling/inherited-tables/)
+* [Insert All](https://torque.dev/postgresql/modeling/insert-all/)
+* [Predicate Builder](https://torque.dev/postgresql/querying/predicate-builder/)
+* [Full‐Text Search](https://torque.dev/postgresql/querying/full-text-search/)
+* [Join Series](https://torque.dev/postgresql/querying/join-series/)
+* [Buckets](https://torque.dev/postgresql/querying/buckets/)
 
 ## Experimental
 
-* [Multiple Schemas](https://github.com/crashtech/torque-postgresql/wiki/Multiple-Schemas)
-* [Versioned Commands (Views, Functions, Types, Triggers)](https://github.com/crashtech/torque-postgresql/wiki/Versioned-Commands)
+* [Multiple Schemas](https://torque.dev/postgresql/experimental/multiple-schemas/)
+* [Versioned Commands (Views, Functions, Types, Triggers)](https://torque.dev/postgresql/experimental/versioned-commands/)
 
 # How to Contribute
 

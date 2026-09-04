@@ -232,7 +232,7 @@ place.errors.added?(:home, :invalid)            # true
 This is done with the `nested` validator, which is available for any attribute that holds objects that can validate themselves.
 ```ruby
 validates :home, nested: true
-validates :settings, nested: true, allow_blank: true
+validates :offices, nested: true, allow_blank: true
 ```
 
 ## Encryption

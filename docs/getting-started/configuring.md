@@ -38,7 +38,7 @@ These are the keys available to configure associations features:
 Default value: `false`
 
 <!--
-<a name="associations.belongs_to_many_required_by_default"></a>`associations.optimize_for_binds` Define if `belongs_to_many` and `has_many array: true` will use `ANY($1)` when possible to reduce the number of binds (and the number of necessary prepared statements).  
+<a name="associations.optimize_for_binds"></a>`associations.optimize_for_binds` Define if `belongs_to_many` and `has_many array: true` will use `ANY($1)` when possible to reduce the number of binds (and the number of necessary prepared statements).  
 Default value: `false`
 -->
 
@@ -50,7 +50,7 @@ These are the keys available to configure schemas features:
 Default value: `true`
 
 <a name="schemas.blacklist"></a>`schemas.blacklist` Defines a list of LIKE-based schemas to not consider for a multiple schema database. This is also available on `config/database.yml` as `schemas` and nested to it, `blacklist`.  
-Default value: `['information_schema ', 'pg_%']`
+Default value: `['information_schema', 'pg_%']`
 
 <a name="schemas.whitelist"></a>`schemas.whitelist` Defines a list of LIKE-based schemas to consider for a multiple schema database. This is also available on `config/database.yml` as `schemas` and nested to it, `whitelist`.  
 Default value: `['public']`
@@ -116,10 +116,10 @@ Default value: `true`
 <a name="geometry.point_class"></a>`geometry.point_class` Define the class that will be handling Point data types after decoding it. Any class provided here must respond to 'x', and 'y'.  
 Default value: `ActiveRecord::Point`
 
-<a name="geometry.box_class"></a>`geometry.box_class` Define the class that will be handling Circle data types after decoding it. Any class provided here must respond to 'x', 'y', and 'r'.  
+<a name="geometry.box_class"></a>`geometry.box_class` Define the class that will be handling Box data types after decoding it. Any class provided here must respond to 'x1', 'y1', 'x2', and 'y2'.  
 Default value: `nil # Which will define an internal Circle class`
 
-<a name="geometry.circle_class"></a>`geometry.circle_class` Define the class that will be handling Box data types after decoding it. Any class provided here must respond to 'x1', 'y1', 'x2', and 'y2'.  
+<a name="geometry.circle_class"></a>`geometry.circle_class` Define the class that will be handling Circle data types after decoding it. Any class provided here must respond to 'x', 'y', and 'r'.  
 Default value: `nil # Which will define an internal Box class`
 
 <a name="geometry.line_class"></a>`geometry.line_class` Define the class that will be handling Line data types after decoding it. Any class provided here must respond to 'a', 'b', and 'c'.  
@@ -168,7 +168,7 @@ Default value: `{}`
 
 These are the keys available to configure Period features:
 
-<a name="period.enabled"></a>`period.enabled` Enables period handler by this gem  
+<a name="period.enabled"></a>`period.enabled` Enables the period handler provided by this gem.  
 Default value: `true`
 
 <a name="period.base_method"></a>`period.base_method` The name of the method to be used on any ActiveRecord::Base to initialize model-based period features.  
@@ -303,10 +303,10 @@ These are the keys available to configure Predicate Builder features:
 <a name="predicate_builder.enabled"></a>`predicate_builder.enabled` List which handlers are enabled by default. Possible values are: `regexp`, `arel_attribute`, `enumerator_lazy`.  
 Default value: `%i[regexp arel_attribute enumerator_lazy]`
 
-<a name="predicate_builder.handle_array_attributes"></a>`predicate_builder.handle_array_attributes` When active, values provided to array attributes will be handled more friendly. It will use the +ANY+ operator on a equality check and overlaps when the given value is an array.  
+<a name="predicate_builder.handle_array_attributes"></a>`predicate_builder.handle_array_attributes` When active, values provided to array attributes will be handled more friendly. It will use the `ANY` operator on an equality check and overlaps when the given value is an array.  
 Default value: `false`
 
-<a name="predicate_builder.lazy_timeout"></a>`predicate_builder.lazy_timeout`  Make sure that the predicate builder will not spend more than 20ms trying to produce the underlying array.  
+<a name="predicate_builder.lazy_timeout"></a>`predicate_builder.lazy_timeout` Make sure that the predicate builder will not spend more than this many seconds trying to produce the underlying array.  
 Default value: `0.02`
 
 <a name="predicate_builder.lazy_limit"></a>`predicate_builder.lazy_limit` Since lazy array is uncommon, it is better to limit the number of entries we try to pull so we don't cause a timeout or a long wait iteration.  

@@ -15,12 +15,12 @@ The idea is simple, one table stores all the ids and the other one says that `ha
 Unlike the usual `has_many`, the class that invokes it does not hold the foreign key. It is the foreign table that stores them.
 
 ```ruby
-create_table "tag" do |t|
+create_table "tags" do |t|
   t.string "name"
 end
 
-# For this version 1.0.0, the references with array: true is not enabled
-create_table "video" do |t|
+# `references` with array: true is not available; declare the array column directly
+create_table "videos" do |t|
   t.bigint "tag_ids", array: true
   t.string "title"
 end

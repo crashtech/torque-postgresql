@@ -50,7 +50,8 @@ GROUP BY "bucket";
 Since the resulting bucket attribute is added to the resulting query, you can access the raw value from each record:
 ```ruby
 keys = 16.times.map { |add| Date.new(2010 + add) }
-records = User.buckets(:created_at, keys, cast: :date).load
+key, records = User.buckets(:created_at, keys, cast: :date).records.first
 
-records.values.first.bucket       # Will return the numeric value of the bucket
+key                    # Have the bucket range
+records.first.bucket   # Will return the numeric value of the bucket
 ```

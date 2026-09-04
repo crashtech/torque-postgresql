@@ -12,7 +12,7 @@ once the gem is in your Gemfile there is nothing to configure before you start u
 
 ## Requirements
 
-Ruby 3.2 or newer, Rails 8.0, and the `pg` adapter.
+Ruby 3.2 or newer and the `pg` adapter. The newest gem line tracks Rails 8.x; older lines cover Rails 6.0 through 7.2, per the table below.
 Every feature is built on PostgreSQL's own capabilities, so the database has to be PostgreSQL —
 there is no fallback for other adapters.
 

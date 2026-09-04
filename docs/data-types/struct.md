@@ -246,7 +246,7 @@ Profile.order(:settings)                        # The whole document, ordered as
 The gem's own [`distinct_on`](/postgresql/querying/distinct-on/), [`buckets`](/postgresql/querying/buckets/), [`join_series`](/postgresql/querying/join-series/) and the `Hash` form of calculations resolve a property the same way.
 ```ruby
 Profile.distinct_on(settings: :theme)
-Profile.maximum(settings: :score)
+Profile.maximum(settings: :theme)
 ```
 
 > **Note** Rails resolves one level when sorting and grouping, so a property of a nested document is only reachable in `where`, or through the node below. Columns holding a list of documents are not resolved this way, and `having` follows PostgreSQL's rule that the property has to be grouped or aggregated.
@@ -331,9 +331,9 @@ class Profile::Credentials < Torque::PostgreSQL::Struct
   encrypts :label, deterministic: true   # Same content produces the same ciphertext
 end
 
-# settings => {"label": "a", "token": "{\"p\":\"5nQ==\",\"h\":{...}}"}
-profile.settings.token                   # 'secret'
-profile.settings.ciphertext_for(:token)  # The stored ciphertext
+# credentials => {"label": "a", "token": "{\"p\":\"5nQ==\",\"h\":{...}}"}
+profile.credentials.token                   # 'secret'
+profile.credentials.ciphertext_for(:token)  # The stored ciphertext
 Profile::Credentials.encrypted_attributes # #<Set: {:token, :label}>
 ```
 
@@ -391,6 +391,7 @@ profile.changed?                 # false, it went back to what is stored
 
 The instance exposes its own changes as well.
 ```ruby
+profile.settings.theme = 'dark'
 profile.settings.theme_changed?  # true
 profile.settings.changes         # {'theme' => ['light', 'dark']}
 ```

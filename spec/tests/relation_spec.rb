@@ -315,8 +315,40 @@ RSpec.describe 'Relation', type: :helper do
       expect(query[0...10]).to match_array([records[0], records[1]])
       expect(query[10...20]).to match_array([records[2]])
     end
-  end
 
+    context 'with dates' do
+      let(:keys) { 3.times.map { |add| Date.new(2010 + add) } }
+      let(:query) { source.buckets(:created_at, keys, cast: :date) }
+
+      let!(:list) do
+        list = [create(:user, created_at: Date.new(2009, 6, 1))]
+        list << create(:user, created_at: Date.new(2010, 6, 1))
+        list << create(:user, created_at: Date.new(2011, 6, 1))
+        list << create(:user, created_at: Date.new(2011, 12, 31))
+        list << create(:user, created_at: Date.new(2015, 6, 1))
+        list
+      end
+
+      it 'produces the right query' do
+        expect(query.to_sql).to include(<<~SQL.squish)
+          WIDTH_BUCKET("users"."created_at", ARRAY['2010-01-01', '2011-01-01', '2012-01-01']::date[]) AS bucket
+        SQL
+      end
+
+      it 'outputs the right results' do
+        result = query.records
+        expect(result.keys).to match_array([nil, *keys])
+        expect(result[nil]).to eq([list[0]])
+        expect(result[keys[0]]).to eq([list[1]])
+        expect(result[keys[1]]).to match_array([list[2], list[3]])
+        expect(result[keys[2]]).to eq([list[4]])
+      end
+
+      it 'works with count just fine' do
+        expect(query.count).to be_eql(nil => 1, keys[0] => 1, keys[1] => 2, keys[2] => 1)
+      end
+    end
+  end
 
   context 'on connection' do
     it 'casts a condition value without a permanent connection' do

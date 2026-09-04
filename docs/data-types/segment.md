@@ -12,7 +12,7 @@ The biggest difference between this and a [`line`](/postgresql/data-types/line/)
 
 Just set the type of the column as `segment` when creating a table.
 ```ruby
-create_table "Hit" do |t|
+create_table "hits" do |t|
   t.string  "source", null: false
   t.segment "trajectory"
 end

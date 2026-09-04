@@ -37,7 +37,7 @@ end
 
 ## Migration
 
-Once you have stipulated which schemas will be supported in the configuration, you can now create a migration that creates it.
+Once you have stipulated which schemas will be supported in the configuration, you can now create a migration that creates them.
 
 ```ruby
 create_schema :internal
@@ -45,7 +45,7 @@ create_schema :internal
 
 ## Models
 
-There are 2 ways to set a model's schema. You can define it directly or use the model as the reference for all its models' schemas.
+There are 2 ways to set a model's schema. You can define it directly or use the module as the reference for all its models' schemas.
 
 ```ruby
 # Directly on the model

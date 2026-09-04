@@ -31,7 +31,8 @@ end
 
 There are a couple of important settings that can be provided to this:
 ```ruby
-# This means that nil value will be treated as false, the default is false, hence treated as true
+# Pessimistic mode: an unset (nil) value is treated as false; by default the
+# check is optimistic and a nil value is treated as true
 period_for :period, pessimistic: true
 
 # You can define a column or a value to be used as a threshold
@@ -42,7 +43,7 @@ period_for :period, threshold: 15.minutes
 period_for :period, force: true
 
 # If you don't want the methods to have the field name, then you can use this option
-period_for: :period, prefixed: false
+period_for :period, prefixed: false
 
 # You can also rename any method that will be created
 period_for :period, methods: { current: :ongoing, current?: :ongoing? }
@@ -89,7 +90,7 @@ Checks if the value is contained in the range. You can pass either an Arel attri
 ### `:not_containing` as `.period_not_containing(value)`
 The opposite version of the `:containing` scope.  
 ```sql
-NOT "events"."period" @> value1
+NOT "events"."period" @> value
 ```
 
 ### `:overlapping` as `.period_overlapping(left, right = nil)`
@@ -173,45 +174,43 @@ Filter records whose right value with the threshold is less than the one provide
 ### `:containing_date` as `.period_containing_date(value)` **(NON DATERANGE ONLY)**
 Checks if the value is contained in the range as date. You can pass either an Arel attribute or a plain value.  
 ```sql
-daterange(LOWER("events"."period")::date),UPPER("events"."period")::date) @> value
+daterange(LOWER("events"."period")::date,UPPER("events"."period")::date) @> value
 ```
 
 ### `:not_containing_date` as `.period_not_containing_date(value)` **(NON DATERANGE ONLY)**
 The opposite version of the `:containing_date` scope.  
 ```sql
-NOT daterange(LOWER("events"."period")::date),UPPER("events"."period")::date) @> value
--- With threshold
-NOT daterange((LOWER("events"."period") - "events"."interval")::date),(UPPER("events"."period") + "events"."interval")::date) @> value
+NOT daterange(LOWER("events"."period")::date,UPPER("events"."period")::date) @> value
 ```
 
 ### `:overlapping_date` as `.period_overlapping_date(left, right = nil)` **(NON DATERANGE ONLY)**
 Checks if two ranges overlap but comparing only dates. You can pass either another range column as an Arel attribute, a plain range on the left, or the 2 parts of a range.  
 ```sql
-daterange(LOWER("events"."period")::date),UPPER("events"."period")::date) && value
+daterange(LOWER("events"."period")::date,UPPER("events"."period")::date) && value
 -- OR
-daterange(LOWER("events"."period")::date),UPPER("events"."period")::date) && daterange(left, right)
+daterange(LOWER("events"."period")::date,UPPER("events"."period")::date) && daterange(left, right)
 ```
 
 ### `:not_overlapping_date` as `.period_not_overlapping_date(left, right = nil)` **(NON DATERANGE ONLY)**
 The opposite version of the `:overlapping_date` scope.  
 ```sql
-NOT daterange(LOWER("events"."period")::date),UPPER("events"."period")::date) && value
+NOT daterange(LOWER("events"."period")::date,UPPER("events"."period")::date) && value
 -- OR
-NOT daterange(LOWER("events"."period")::date),UPPER("events"."period")::date) && daterange(left, right)
+NOT daterange(LOWER("events"."period")::date,UPPER("events"."period")::date) && daterange(left, right)
 ```
 
 ### `:real_containing_date` as `.period_real_containing_date(value)` **(NON DATERANGE ONLY)**
 Checks if the value is contained in the range as date and considering the threshold. You can pass either an Arel attribute or a plain value.  
 ```sql
-daterange((LOWER("events"."period") - "events"."interval")::date),(UPPER("events"."period") + "events"."interval")::date) @> value
+daterange((LOWER("events"."period") - "events"."interval")::date,(UPPER("events"."period") + "events"."interval")::date) @> value
 ```
 
 ### `:real_overlapping_date` as `.period_real_overlapping_date(left, right = nil)` **(NON DATERANGE ONLY)**
 Checks if two ranges overlap but comparing only dates and considering the threshold. You can pass either another range column as an Arel attribute, a plain range on the left, or the 2 parts of a range.  
 ```sql
-daterange((LOWER("events"."period") - "events"."interval")::date),(UPPER("events"."period") + "events"."interval")::date) && value
+daterange((LOWER("events"."period") - "events"."interval")::date,(UPPER("events"."period") + "events"."interval")::date) && value
 -- OR
-daterange((LOWER("events"."period") - "events"."interval")::date),(UPPER("events"."period") + "events"."interval")::date) && daterange(left, right)
+daterange((LOWER("events"."period") - "events"."interval")::date,(UPPER("events"."period") + "events"."interval")::date) && daterange(left, right)
 ```
 
 ## Instance methods

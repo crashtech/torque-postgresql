@@ -15,11 +15,11 @@ With this, now you can say things like `Project belongs to many employees`, whic
 The only difference here, while creating the association, is that you just need to set the column as an array. The `references` or similar helpers are not yet available.
 
 ```ruby
-create_table "employee" do |t|
+create_table "employees" do |t|
   t.string "name"
 end
 
-create_table "project" do |t|
+create_table "projects" do |t|
   t.bigint "employee_ids", array: true
   t.string "title"
 end
@@ -47,9 +47,9 @@ Most of the options are just like the `has_many` association, but they also incl
 - `required`: When set to **true**, the association will also have its presence validated. Default: `false`
 - `dependent`: Controls what happens to the associated objects when their owner is destroyed. Default: `:nullify`
 - `primary_key`: The name of the column on the foreign table that connects to the array. Default: `:id`
-- `foreign_key`: The name of the array column used to store the association IDs locally. Default: `:"#{name.singular}_ids"`
+- `foreign_key`: The name of the array column used to store the association IDs locally. Default: `:"#{name.to_s.singularize}_ids"`
 
-There are no additional or custom features on top of those provided by a normal `has_many` association.
+Beyond those, the behavior matches a normal `has_many` association.
 
 ## Combined with [Predicate Builder](/postgresql/querying/predicate-builder/#array)
 

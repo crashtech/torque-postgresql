@@ -1,19 +1,19 @@
 ---
 title: Join Series
 section: querying
-description: This feature produces a join of your main query against a generated_series()
+description: This feature produces a join of your main query against a generate_series()
   function result.
 ---
 
 > Part 1 of the report `series`
 
-This feature produces a join of your main query against a `generated_series()` function result. The main motivation behind this feature was the generation of reports. More specifically, reports using `created_at` that would originally cause undesired rows in the output. [PostgreSQL Docs](https://www.postgresql.org/docs/current/functions-srf.html)
+This feature produces a join of your main query against a `generate_series()` function result. The main motivation behind this feature was the generation of reports. More specifically, reports using `created_at` that would originally cause undesired rows in the output. [PostgreSQL Docs](https://www.postgresql.org/docs/current/functions-srf.html)
 
 You can disable this feature using [`config.join_series`](/postgresql/getting-started/configuring/#join_series).
 
 ## How to
 
-The `join_series` will basically generate a proper join between the `generated_series()` PG function, using a `Range` as base, and the column provided on the `with:` argument.
+The `join_series` will basically generate a proper join between the `generate_series()` PG function, using a `Range` as base, and the column provided on the `with:` argument.
 
 ```ruby
 # SELECT "users".* FROM "users" INNER JOIN GENERATE_SERIES(0::integer, 100::integer) AS series ON "series" = "users"."age"
@@ -34,7 +34,7 @@ Here is a full example that will count the number of users created each day for 
 
 ```ruby
 range = Date.new(2025, 1, 1)..Date.new(2025, 1, 31)
-User.join_series(range , step: 1.day) do |series, table|
+User.join_series(range, step: 1.day) do |series, table|
   series.pg_cast(:date).eq(table['created_at'].pg_cast(:date))
 end.group('series').count
 ```
@@ -51,7 +51,7 @@ GROUP BY series;
 
 ```ruby
 range = Date.new(2025, 1, 1)..Date.new(2025, 1, 31)
-result = User.join_series(range, with: :created_at, step: 1.day, cast: :date, join: :right).group('series').count(:id)
+result = User.join_series(range, with: :created_at, step: 1.day, cast: :date, mode: :right).group('series').count(:id)
 # result => { 2025-01-01 00:00:00 UTC => 0, ... }
 ```
 

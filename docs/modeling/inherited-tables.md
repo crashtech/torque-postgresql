@@ -1,23 +1,23 @@
 ---
 title: Inherited Tables
 section: modeling
-description: This is one great feature from PostgreSQL, the ability to have a table
-  with the most generic data, and then many other tables with the information necessar
+description: One great feature from PostgreSQL, the ability to have a table with
+  the most generic data and other tables with the information for specific types
 ---
 
-> Tired of `polymorphic` or the infamous `type` column. Well, **NEVER MORE!!!**
+> Tired of `polymorphic` or the infamous `type` column? Well, **NEVER MORE!!!**
 
-This is one great feature from PostgreSQL, the ability to have a table with the most generic data, and then many other tables with the information necessary only for that specific type of the main one. Rails does allow us to do that, using the `type` attribute, but its biggest problem is that columns from different types end up getting mixed together. [PostgreSQL Docs](https://www.postgresql.org/docs/current/static/ddl-inherit.html)
+This is one great feature from PostgreSQL, the ability to have a table with the most generic data, and then many other tables with the information necessary only for that specific type of the main one. Rails does allow us to do that, using the `type` attribute, but its biggest problem is that columns from different types end up getting mixed together. [PostgreSQL Docs](https://www.postgresql.org/docs/current/ddl-inherit.html)
 
 This will allow you to work with inherited models, as they are separated tables but share methods, scopes, validations, and all other features from the super models.
 
 > **Feature rich** Table inheritance is now a stable and complete part of this gem. Records come back as their real class without any opt-in, they carry the guarantees you would expect from a regular record, and the rough edges of the previous opt-in approach are gone. What you will find below is the behavior you should be able to assume, not a preview.
 
-**CAUTION** PostgreSQL has some [**caveats**](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html#DDL-INHERIT-CAVEATS) while using this resource. Most of them come down to what a child table does **not** get from its parent, which is what [Syncing features](#syncing-features) exists to solve.
+**CAUTION** PostgreSQL has some [**caveats**](https://www.postgresql.org/docs/current/ddl-inherit.html#DDL-INHERIT-CAVEATS) while using this resource. Most of them come down to what a child table does **not** get from its parent, which is what [Syncing features](#syncing-features) exist to solve.
 
 ## Migration
 
-First, you have to create a base table. Then, create as many tables as wanted, specifying the `:inherited` key.
+First, you have to create a base table. Then, create as many tables as wanted, specifying the `inherits:` key.
 
 ```ruby
 create_table "activities" do |t|
@@ -25,12 +25,12 @@ create_table "activities" do |t|
 end
 
 create_table "activity_books", inherits: :activities do |t|
-  t.belongs_to "author_id"
+  t.belongs_to "author"
   t.datetime   "published_at"
 end
 
 create_table "activity_posts", inherits: :activities do |t|
-  t.belongs_to "post_id"
+  t.belongs_to "post"
   t.datetime   "published_at"
 end
 ```

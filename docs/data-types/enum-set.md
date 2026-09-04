@@ -20,11 +20,11 @@ Just as a reference, we will be using this table for the examples:
 create_table :posts do |t|
   t.string :title
   t.permissions :creator_permissions, array: true                            # ONLY RAILS <  7.0
-  t.enum :creator_permissions, enum_type: :creator_permissions, array: true  # ONLY RAILS >= 7.0
+  t.enum :creator_permissions, enum_type: :permissions, array: true          # ONLY RAILS >= 7.0
 end
 ```
 
-If you want to add a default value that is an array containing elements, you will need to enable the `use_extended_defaults` setting. This is still experimental, so use it with caution.
+A default value that is an array containing elements can be set directly:
 ```ruby
 create_table :posts do |t|
   t.string :title
@@ -62,7 +62,7 @@ Enum::PermissionsSet.exec.to_i    # 4
 
 You have to go to each of your models and enable the functionality for each enum-set-type field. You don't need to provide the values since they will be loaded from the database. The method name is defined on [`enum.set_method`](/postgresql/getting-started/configuring/#enum.set_method).
 ```ruby
-# models/user.rb
+# models/post.rb
 class Post < ActiveRecord::Base
   torque_enum_set :creator_permissions
 end
@@ -102,7 +102,7 @@ The `bang!` methods are controlled by the [`enum.save_on_bang`](/postgresql/gett
 # The following will only perform a save on the database if enum.save_on_bang is set to true
 post = Post.new(creator_permissions: [:write])
 post.read!
-post.creator_permissions === [:read, :write]
+post.creator_permissions       # [:read, :write]
 ```
 
 You can reach the I18n translations in three different ways, and the scopes are configured on [`enum.i18n_scopes`](/postgresql/getting-started/configuring/#enum.i18n_scopes). On the third one, only the scopes on [`enum.i18n_type_scopes`](/postgresql/getting-started/configuring/#enum.i18n_type_scopes) are used, which allows per-model customization.
@@ -115,14 +115,14 @@ Enum::PermissionsSet.read.text        # Read
 
 ## Set features
 
-The value by itself behaves just like a [Set](https://ruby-doc.org/stdlib-2.5.1/libdoc/set/rdoc/Set.html), which allows all sorts of bitwise operations.
+The value by itself behaves just like a [Set](https://ruby-doc.org/stdlib-2.5.1/libdoc/set/rdoc/Set.html), which allows all sorts of set operations.
 
 ```ruby
 post = Post.new(creator_permissions: [:read, :write])
 post.creator_permissions & [:write]    # [:write]
 post.creator_permissions & [:exec]     # []
 post.creator_permissions | [:exec]     # [:read, :write, :exec]
-post.creator_permissions -= :write     # [:read]
+post.creator_permissions - [:write]    # [:read]
 ```
 
 ### Scopes
@@ -144,5 +144,5 @@ Post.has_any_creator_permissions('write', 'exec')    # Records that have 'write'
 When testing models or creating records using factories, `EnumSet` provides an easy way to get a random number of values from the list of any enum types. Besides the normal `Post.creator_permissions.sample`, you can also use:
 
 ```ruby
-Enum.sample(:permissions_set)
+Enum.sample(:permissions)
 ```

@@ -13,16 +13,15 @@ First, you have to create the enum during your migration, since it's the databas
 create_enum :roles, %i(visitor manager admin)
 ```
 
-Some other examples are:
+On Rails older than 7.0, where the gem still provided `create_enum`, the values could also be prefixed or suffixed:
 ```ruby
-# Only for Rails < 7.0
 # ['status_foo', 'status_bar']
 create_enum :status, %i(foo bar), prefix: true
-# 'foo_tst', 'bar_tst']
+# ['foo_tst', 'bar_tst']
 create_enum :status, %i(foo bar), suffix: 'tst'
 ```
 
-> **Note** The `create_enum` method now exists on Rails, so it was removed from the gem, preventing the use of prefix and suffix. However, the `add_enum_values` still exists only in this gem.
+> **Note** Rails now ships its own `create_enum`, so the gem removed its version — and with it the `prefix` and `suffix` options above. `add_enum_values` still exists only in this gem.
 
 You can also manage this type alongside other migrations, renaming, adding values, or deleting it.
 ```ruby

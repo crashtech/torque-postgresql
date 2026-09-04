@@ -1,9 +1,8 @@
 ---
 title: Predicate Builder
 section: querying
-description: This is just somewhat specific to PostgreSQL, but mostly an enhancement
-  to Rails ActiveRecord::PredicateBuilder, whose primary purpose is to make .where
-  an
+description: An enhancement to Rails ActiveRecord::PredicateBuilder that makes .where
+  understand the PostgreSQL-specific types and operators provided by this gem
 ---
 
 This is just somewhat specific to PostgreSQL, but mostly an enhancement to Rails `ActiveRecord::PredicateBuilder`, whose primary purpose is to make `.where` and `.where.not` calls in the format for `(attribute: value)` correctly translate into several distinct Arel and SQL operations. Its sole purpose is to ease the process of writing queries, without the need to use Arel directly for everything.

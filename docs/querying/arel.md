@@ -10,7 +10,7 @@ Additional Arel features. Other features of this gem do not require these to be 
 
 The `Arel::Nodes::NamedFunction.new` is not very developer-friendly, and there are a few things that are sometimes harder to do with it. Because of that, the gem has the [`Torque::PostgreSQL::Function`](https://github.com/crashtech/torque-postgresql/blob/master/lib/torque/postgresql/function.rb) helper to shortcut and facilitate such node building.
 
-You can make this helper available anywhere by just setting the [`arel.expose_function_helper_on`](/postgresql/getting-started/configuring/#arel.expose_function_helper_on) config. For example, setting to `'PG::Fn'`, will make the following features exposed in it:
+You can make this helper available anywhere by just setting the [`arel.expose_function_helper_on`](/postgresql/getting-started/configuring/#arel.expose_function_helper_on) config. For example, setting it to `'PG::Fn'` makes the following features available through it:
 
 ### Bind value
 
@@ -82,7 +82,7 @@ Video.arel_property_of(:metadata, :file, :duration)
 Video.order(Video.arel_property_of(:metadata, :file, :duration).desc)
 ```
 
-## Inflix operators
+## Infix operators
 
 PostgreSQL allows a bunch of custom operators while working with [Arrays](https://www.postgresql.org/docs/9.6/functions-array.html), [Ranges](https://www.postgresql.org/docs/9.6/functions-range.html), and [Hashes](https://www.postgresql.org/docs/9.6/hstore.html).
 
@@ -98,11 +98,13 @@ Now with the [`arel.infix_operators`](/postgresql/getting-started/configuring/#a
 .doesnt_right_extend => &<
 .doesnt_left_extend  => &>
 .adjacent_to         => -|-
+.matches_lquery      => ~
+.matches_any_lquery  => ?
 ```
 
 ## Cast values
 
-One of the things that allowed array associations and period operations is the ability to cast things from one type to another directly on Arel. This means that time columns can be cast into dates and have all the capabilities of a normal Arel node. Rails `8.0.2` introduces the same method with a small difference, so now there are two methods available: `.cast` and `.pg_cast`.
+One of the things that enabled array associations and period operations is the ability to cast things from one type to another directly on Arel. This means that time columns can be cast into dates and have all the capabilities of a normal Arel node. Rails `8.0.2` introduces the same method with a small difference, so now there are two methods available: `.cast` and `.pg_cast`.
 
 If you are used to Arel, to cast something, it's pretty simple:
 ```ruby

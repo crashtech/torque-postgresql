@@ -23,8 +23,8 @@ versions:
   - { rails: '6.0', gem: '~> 2.0' }
 
 # Sections shown in the top bar, the sidebar, and the home page link strips.
-# A page without a `url` has not been migrated from the wiki yet: it renders
-# as a dimmed, non-clickable entry rather than a broken link.
+# A page without a `url` renders as a dimmed, non-clickable entry rather than
+# a broken link.
 nav:
   - title: Getting Started
     id: getting-started
@@ -116,7 +116,7 @@ nav:
       <a class="tui-button tui-button-outline" href="#install">Install</a>
     </div>
   </div>
-  <img src="/assets/images/pg.svg" alt="TORQUE POSTGRESQL" />
+  <img src="/assets/images/pg.svg" alt="TORQUE POSTGRESQL" style="margin-block-start: -10%;" />
 </section>
 
 <section class="tui-grid tui-grid-md-2 tui-gap-6 tui-mb-12 tui-items-start" id="install">
@@ -139,7 +139,7 @@ nav:
         are running:</p>
       <div class="pill tui-flex tui-gap-2 tui-items-stretch">
         <div class="tui-input-group tui-flex-1">
-          <span class="tui-input-addon"><code data-gem-line><span class="cmd">gem</span> <span class="str">'torque-postgresql'</span>, <span class="str">'~&gt; 4.0'</span></code></span>
+          <span class="tui-input-addon"><code data-gem-line><span class="cmd">gem</span> <span class="str">'torque-postgresql'</span>, <span class="str">'~&gt; 4.1'</span></code></span>
           {%- include copy-button.html label="Copy the gem line" -%}
         </div>
         <select class="rails" data-rails aria-label="Rails version">

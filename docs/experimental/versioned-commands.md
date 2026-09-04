@@ -1,9 +1,8 @@
 ---
 title: Versioned Commands
 section: experimental
-description: The idea behind this feature is to allow versioned schema objects to
-  be properly managed without having to dump them all on schema.rb and not having
-  to man
+description: Allow versioned schema objects to be properly managed without dumping
+  them all on schema.rb or managing them by hand
 ---
 
 > Migrations with some SQL steroids

@@ -27,6 +27,6 @@ end
 entries = [{ id: 1, name: 'Tag 10' }, { id: 2, name: 'Tag 20' }]
 
 result = Tag.upsert_all(entries, where: 'tags.version <= excluded.version')
-result.rows.flatten                                            # ["1"] these are the ids of the records successfully updated
-result.rows.flatten - entries.map { |entry| entry[:id] }       # ["2"] these are the ids of the records that were not updated
+updated = result.rows.flatten.map(&:to_i)                      # [1] the ids of the records successfully updated
+entries.map { |entry| entry[:id] } - updated                   # [2] the ids of the records that were not updated
 ```
