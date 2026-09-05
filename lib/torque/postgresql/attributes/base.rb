@@ -22,7 +22,7 @@ module Torque
         include(AR810 ? ActiveModel::Attributes::Normalization : ActiveRecord::Normalization)
         include ActiveRecord::Encryption::EncryptableRecord
 
-        delegate :inspect, to: :to_h
+        class_attribute :filter_attributes, instance_accessor: false, default: []
 
         class << self
           # These classes are not backed by a table, so nothing here has the
@@ -43,6 +43,14 @@ module Torque
 
             super
           end
+
+          def inspection_filter
+            ActiveSupport::ParameterFilter.new(filter_attributes)
+          end
+        end
+
+        def inspect
+          self.class.inspection_filter.filter(to_h).inspect
         end
 
         # Plain access to any property, declared or not

@@ -1127,4 +1127,44 @@ RSpec.describe 'Struct' do
       expect(one).not_to be_eql(two)
     end
   end
+
+  context 'on filtered parameters' do
+    before do
+      ActiveRecord::Encryption.configure(
+        primary_key: 'test master key',
+        deterministic_key: 'test deterministic key',
+        key_derivation_salt: 'testing salt',
+      )
+    end
+
+    let(:app) { Struct.new(:config).new(Struct.new(:filter_parameters).new([])) }
+
+    around do |example|
+      listeners = ActiveRecord::Encryption.encrypted_attribute_declaration_listeners
+      ActiveRecord::Encryption.encrypted_attribute_declaration_listeners = nil
+      ActiveRecord::Encryption::AutoFilteredParameters.new(app).enable
+      example.run
+    ensure
+      ActiveRecord::Encryption.encrypted_attribute_declaration_listeners = listeners
+    end
+
+    let(:struct_klass) do
+      Class.new(Torque::PostgreSQL::Attributes::Struct) do
+        attribute :label, :string
+        attribute :token, :string
+
+        encrypts :token
+      end
+    end
+
+    it 'records the encrypted attribute on the filter list' do
+      expect(struct_klass.filter_attributes).to include(:token)
+    end
+
+    it 'hides the encrypted attribute when inspecting' do
+      inspected = struct_klass.new(label: 'a', token: 'secret').inspect
+      expect(inspected).to include('a')
+      expect(inspected).not_to include('secret')
+    end
+  end
 end
