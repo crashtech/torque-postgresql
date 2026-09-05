@@ -207,6 +207,153 @@ RSpec.describe 'LTree' do
     end
   end
 
+  context 'on matching' do
+    let(:root) { Category.create!(title: 'Top') }
+
+    after { Torque::PostgreSQL.config.ltree.sanitize = nil }
+
+    it 'compiles into a regular expression over the text of a path' do
+      subject = lquery.new('Top.*{1,}.sport*@')
+      expect(subject.pattern).to be_a(Regexp)
+      expect(subject.pattern).to be_equal(subject.pattern)
+      expect(subject.pattern).to match('Top.Science.Sports')
+      expect(subject.pattern).not_to match('Top.Sports')
+      expect(subject.pattern).not_to match('Other.Top.Science.Sports')
+    end
+
+    it 'matches a string, an array or a path' do
+      subject = lquery['Top', :any]
+      expect(subject.match?('Top.Science')).to be_truthy
+      expect(subject.match?(%w[Top Science])).to be_truthy
+      expect(subject.match?(ltree['Top'])).to be_truthy
+      expect(subject.match?('Other')).to be_falsey
+      expect(subject.match?(nil)).to be_falsey
+    end
+
+    it 'works like a regular expression on the match operator' do
+      subject = lquery['Top', :any]
+      expect(subject =~ 'Top.Science').to be_eql(0)
+      expect(subject =~ 'Other').to be_nil
+      expect('Top.Science' =~ subject).to be_eql(0)
+    end
+
+    it 'matches a record by its primary key' do
+      expect(lquery[root, :any].match?([root, 'Science'])).to be_truthy
+      expect(lquery[root, :any].match?(root)).to be_truthy
+      expect(lquery['Top', :any].match?(root)).to be_falsey
+    end
+
+    it 'sanitizes the path like a condition would' do
+      Torque::PostgreSQL.config.ltree.sanitize = { '-' => '_' }
+      expect(lquery.new('top.my-slug').match?('top.my_slug')).to be_truthy
+      expect(lquery.new('top.my_slug').match?('top.my-slug')).to be_truthy
+    end
+
+    samples = [
+      ['a.b.c.d.e',  'a.b.c.d.e',           true],
+      ['a.b.c.d.e',  'A.b.c.d.e',           false],
+      ['a.b.c.d.e',  'A@.b.c.d.e',          true],
+      ['aa.b.c.d.e', 'A@.b.c.d.e',          false],
+      ['aa.b.c.d.e', 'A*.b.c.d.e',          false],
+      ['aa.b.c.d.e', 'A*@.b.c.d.e',         true],
+      ['aa.b.c.d.e', 'A*@|g.b.c.d.e',       true],
+      ['g.b.c.d.e',  'A*@|g.b.c.d.e',       true],
+      ['a.b.c.d.e',  'a.*.e',               true],
+      ['a.b.c.d.e',  'a.*{3}.e',            true],
+      ['a.b.c.d.e',  'a.*{2}.e',            false],
+      ['a.b.c.d.e',  'a.*{4}.e',            false],
+      ['a.b.c.d.e',  'a.*{,4}.e',           true],
+      ['a.b.c.d.e',  'a.*{2,}.e',           true],
+      ['a.b.c.d.e',  'a.*{2,4}.e',          true],
+      ['a.b.c.d.e',  'a.*{2,3}.e',          true],
+      ['a.b.c.d.e',  'a.*{2,3}',            false],
+      ['a.b.c.d.e',  'a.*{2,4}',            true],
+      ['a.b.c.d.e',  'a.*{2,5}',            true],
+      ['a.b.c.d.e',  '*{2,3}.e',            false],
+      ['a.b.c.d.e',  '*{2,4}.e',            true],
+      ['a.b.c.d.e',  '*{2,5}.e',            true],
+      ['a.b.c.d.e',  '*.e',                 true],
+      ['a.b.c.d.e',  '*.e.*',               true],
+      ['a.b.c.d.e',  '*.d.*',               true],
+      ['a.b.c.d.e',  '*.a.*.d.*',           true],
+      ['a.b.c.d.e',  '*.!d.*',              true],
+      ['a.b.c.d.e',  '*.!d',                true],
+      ['a.b.c.d.e',  '!d.*',                true],
+      ['a.b.c.d.e',  '!a.*',                false],
+      ['a.b.c.d.e',  '*.!e',                false],
+      ['a.b.c.d.e',  '*.!e.*',              true],
+      ['a.b.c.d.e',  'a.*.!e',              false],
+      ['a.b.c.d.e',  'a.*.!d',              true],
+      ['a.b.c.d.e',  'a.*.!d.*',            true],
+      ['a.b.c.d.e',  'a.*.!f.*',            true],
+      ['a.b.c.d.e',  '*.a.*.!f.*',          true],
+      ['a.b.c.d.e',  '*.a.*.!d.*',          true],
+      ['a.b.c.d.e',  '*.a.!d.*',            true],
+      ['a.b.c.d.e',  '*.a.!d',              false],
+      ['a.b.c.d.e',  'a.!d.*',              true],
+      ['a.b.c.d.e',  '*.!b.*',              true],
+      ['a.b.c.d.e',  '*.!b.c.*',            false],
+      ['a.b.c.d.e',  '*.!b.*.c.*',          true],
+      ['a.b.c.d.e',  '!b.*.c.*',            true],
+      ['a.b.c.d.e',  '!b.b.*',              true],
+      ['a.b.c.d.e',  '!b.*.e',              true],
+      ['a.b.c.d.e',  '!b.!c.*.e',           true],
+      ['a.b.c.d.e',  '!b.*.!c.*.e',         true],
+      ['a.b.c.d.e',  '*{2}.!b.*.!c.*.e',    true],
+      ['a.b.c.d.e',  '*{1}.!b.*.!c.*.e',    false],
+      ['a.b.c.d.e',  '*{1}.!b.*{1}.!c.*.e', false],
+      ['a.b.c.d.e',  'a.!b.*{1}.!c.*.e',    false],
+      ['a.b.c.d.e',  '!b.*{1}.!c.*.e',      false],
+      ['a.b.c.d.e',  '*.!b.*{1}.!c.*.e',    false],
+      ['a.b.c.d.e',  '*.!b.*.!c.*.e',       true],
+      ['a.b.c.d.e',  '!b.!c.*',             true],
+      ['a.b.c.d.e',  '!b.*.!c.*',           true],
+      ['a.b.c.d.e',  '*{2}.!b.*.!c.*',      true],
+      ['a.b.c.d.e',  '*{1}.!b.*.!c.*',      false],
+      ['a.b.c.d.e',  '*{1}.!b.*{1}.!c.*',   false],
+      ['a.b.c.d.e',  'a.!b.*{1}.!c.*',      false],
+      ['a.b.c.d.e',  '!b.*{1}.!c.*',        false],
+      ['a.b.c.d.e',  '*.!b.*{1}.!c.*',      true],
+      ['a.b.c.d.e',  '*.!b.*.!c.*',         true],
+      ['a.b.c.d.e',  'a.*{2}.*{2}',         true],
+      ['a.b.c.d.e',  'a.*{1}.*{2}.e',       true],
+      ['a.b.c.d.e',  'a.*{1}.*{4}',         false],
+      ['a.b.c.d.e',  'a.*{5}.*',            false],
+      ['5.0.1.0',    '5.!0.!0.0',           false],
+      ['a.b',        '!a.!a',               false],
+      ['a.b.c.d.e',  'a{,}',                false],
+      ['a.b.c.d.e',  'a{1,}.*',             true],
+      ['a.b.c.d.e',  'a{,}.!a{,}',          true],
+      ['a.b.c.d.a',  'a{,}.!a{,}',          false],
+      ['a.b.c.d.a',  'a{,2}.!a{1,}',        false],
+      ['a.b.c.d.e',  'a{,2}.!a{1,}',        true],
+      ['a.b.c.d.e',  '!x{,}',               true],
+      ['a.b.c.d.e',  '!c{,}',               false],
+      ['a.b.c.d.e',  '!c{0,3}.!a{2,}',      true],
+      ['a.b.c.d.e',  '!c{0,3}.!d{2,}.*',    true],
+      ['QWER_TY',    'q%@*',                true],
+      ['QWER_TY',    'q%@*%@*',             true],
+      ['QWER_TY',    'Q_t%@*',              true],
+      ['QWER_GY',    'q_t%@*',              false],
+    ]
+
+    samples.each do |path, query, expected|
+      it "agrees with PostgreSQL that '#{path}' ~ '#{query}' is #{expected}" do
+        expect(lquery.new(query).match?(path)).to be(expected)
+      end
+    end
+
+    it 'holds the same outcomes as the database for every sample' do
+      rows = samples.map { |path, query, _| "('#{path}', '#{query}')" }
+      result = connection.select_values(<<~SQL)
+        SELECT path::ltree ~ query::lquery
+        FROM (VALUES #{rows.join(', ')}) AS samples(path, query)
+      SQL
+
+      expect(result).to be_eql(samples.map(&:last))
+    end
+  end
+
   context 'on records' do
     let(:root) { Category.create!(title: 'Top') }
     let(:child) { Category.create!(title: 'Science') }

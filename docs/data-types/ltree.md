@@ -199,6 +199,34 @@ rule.reload.pattern.items   # => ["users", :any]
 rule.pattern.to_s           # => "users.*"
 ```
 
+### Matching in Ruby
+
+A pattern tests a path on its own, with the same rules as the `~` operator, so a
+loaded record can be checked without a round trip. It takes whatever a path takes: a
+string, an array of labels, a path or a record.
+
+```ruby
+query = LQuery['Top', :any, 'sport*@']
+
+query.match?('Top.Science.Sports')   # => true
+query.match?(category.path)          # => true
+query =~ 'Top.Science.Sports'        # => 0, like a Regexp
+'Top.Science.Sports' =~ query        # => 0
+```
+
+It is compiled once into a `Regexp` over the text of the path, which `pattern`
+exposes, so anything that takes a regular expression takes it too.
+
+```ruby
+query.pattern                        # => /\A(?:(?:\A|\.)(?:Top))(?:(?:\A|\.)[^.]+)*.../
+'Top.Science.Sports'.match?(query.pattern)
+```
+
+Every rule of the `~` operator is honored, including `@`, `%`, negation and
+quantifiers, and it is checked against the matching cases of PostgreSQL's own test
+suite. The `@` modifier is the only case-insensitive match PostgreSQL offers, so
+there is no option for it on the Ruby side either.
+
 ## Querying
 
 A value without any pattern feature is a plain path, so it is compared with `=` and
