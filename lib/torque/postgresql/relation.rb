@@ -13,7 +13,9 @@ module Torque
       include DistinctOn
       include Inheritance
 
-      SINGLE_VALUE_METHODS = %i[itself_only buckets expand_records_eager_load expand_records_scoped]
+      SINGLE_VALUE_METHODS = %i[
+        itself_only buckets segments expand_records_eager_load expand_records_scoped
+      ]
       MULTI_VALUE_METHODS = %i[
         select_extra distinct_on auxiliary_statements expand_records
       ]
@@ -160,7 +162,8 @@ module Torque
     ActiveRecord::Relation::MULTI_VALUE_METHODS.concat(Relation::MULTI_VALUE_METHODS)
     ActiveRecord::Relation::VALUE_METHODS.concat(Relation::VALUE_METHODS)
     ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES.merge(%i[expand_records itself_only
-      expand_records_eager_load expand_records_scoped distinct_on auxiliary_statements buckets])
+      expand_records_eager_load expand_records_scoped distinct_on auxiliary_statements buckets
+      segments])
 
   end
 end

@@ -38,6 +38,9 @@ module Torque
     # Add support for querying and calculating histogram buckets
     config.buckets = true
 
+    # Add support for segmenting calculations by named conditions
+    config.segments = true
+
     # Set a list of irregular model name when associated with table names
     config.irregular_models = {}
     def config.irregular_models=(hash)

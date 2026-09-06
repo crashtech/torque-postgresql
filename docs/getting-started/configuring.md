@@ -27,6 +27,9 @@ Default value: `true`
 <a name="buckets"></a>`buckets` Add support for querying and calculating histogram buckets, through the `buckets` method on relations.  
 Default value: `true`
 
+<a name="segments"></a>`segments` Add support for segmenting calculations by named conditions, through the `segments` method on relations.  
+Default value: `true`
+
 <a name="irregular_models"></a>`irregular_models` Set a list of irregular model names when associated with table names. It uses the `'table_name' => 'ModelName'` format. This is widely used for inheritance because record types need to be associated with a model class.  
 Default value: `{}`
 

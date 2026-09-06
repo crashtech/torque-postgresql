@@ -74,6 +74,7 @@ These are the currently available features:
 * [Full‐Text Search](https://torque.dev/postgresql/querying/full-text-search/)
 * [Join Series](https://torque.dev/postgresql/querying/join-series/)
 * [Buckets](https://torque.dev/postgresql/querying/buckets/)
+* [Segments](https://torque.dev/postgresql/querying/segments/)
 
 ## Experimental
 

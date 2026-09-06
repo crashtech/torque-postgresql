@@ -30,6 +30,11 @@ module Torque
               Relation.include(Relation::Buckets)
             end
 
+            if torque_config.segments
+              require_relative 'relation/segments'
+              Relation.include(Relation::Segments)
+            end
+
             ## Schemas Enabled Setup
             if (config = torque_config.schemas).enabled
               require_relative 'adapter/schema_overrides'

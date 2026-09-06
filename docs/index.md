@@ -95,6 +95,8 @@ nav:
         url: /querying/join-series/
       - title: Predicate Builder
         url: /querying/predicate-builder/
+      - title: Segments
+        url: /querying/segments/
 
   - title: Experimental
     id: experimental
@@ -112,8 +114,8 @@ nav:
     <h1>The seamless <span class="ror">RoR</span> interfaces to empower your <span class="accent">PG</span> queries.</h1>
     <h1>Unlock these advanced features under the same <span class="ror">DSL</span></h1>
     <div class="tui-hero-actions">
-      <a class="tui-button tui-button-primary" href="/postgresql/getting-started/installation/">Read the docs</a>
-      <a class="tui-button tui-button-outline" href="#install">Install</a>
+      <a class="tui-button tui-button-gradient tui-button-lg" href="/postgresql/getting-started/installation/">Read the docs</a>
+      <a class="tui-button tui-button-outline tui-button-lg" href="#install">Install</a>
     </div>
   </div>
   <img src="/assets/images/pg.svg" alt="TORQUE POSTGRESQL" style="margin-block-start: -10%;" />

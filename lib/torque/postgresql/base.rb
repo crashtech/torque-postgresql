@@ -18,7 +18,7 @@ module Torque
 
       class_methods do
         delegate :distinct_on, :with, :itself_only, :expand_records, :join_series,
-          :buckets, to: :all
+          :buckets, :segments, to: :all
 
         # The Arel node for a path into a document column, typed by the struct
         # class that backs the column when there is one

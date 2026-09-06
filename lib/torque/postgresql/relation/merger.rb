@@ -13,6 +13,7 @@ module Torque
           merge_auxiliary_statements
           merge_inheritance
           merge_buckets
+          merge_segments
 
           relation
         end
@@ -80,6 +81,14 @@ module Torque
             return if other.buckets_value.blank?
 
             relation.buckets_value = other.buckets_value
+          end
+
+          # Merge the named conditions used to segment calculations
+          def merge_segments
+            return unless defined?(Relation::Segments) && relation.is_a?(Relation::Segments)
+            return if other.segments_value.blank?
+
+            relation.segments_value = relation.segments_value.merge(other.segments_value)
           end
 
       end
