@@ -81,7 +81,7 @@ module Torque
             end
 
             segments_value.each_with_object(projections) do |(name, predicate), list|
-              node = predicate.nil? ? aggregate : aggregate.filter(predicate)
+              node = predicate.nil? ? aggregate.dup : aggregate.filter(predicate)
               list << node.as(connection.quote_column_name(name.to_s))
             end
           end
