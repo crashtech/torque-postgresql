@@ -1,0 +1,22 @@
+module Torque
+  module PostgreSQL
+    module InsertAll
+      attr_reader where: String | relation | nil
+
+      def initialize: (*untyped args, ?where: String | relation | nil, **untyped xargs) -> void
+
+      module Builder
+        def where: () -> (String | relation | nil)
+        def where_condition?: () -> bool
+      end
+    end
+  end
+end
+
+class ActiveRecord::InsertAll
+  prepend Torque::PostgreSQL::InsertAll
+
+  class Builder
+    include Torque::PostgreSQL::InsertAll::Builder
+  end
+end

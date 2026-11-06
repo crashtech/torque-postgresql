@@ -1,0 +1,106 @@
+module Torque
+  module PostgreSQL
+    module Attributes
+      module Builder
+        class Period
+          type threshold = Symbol | ActiveSupport::Duration | Numeric | nil
+          type method_names = Hash[Symbol, String | Symbol]
+
+          DIRECT_ACCESS_REGEX: Regexp
+          SUPPORTED_TYPES: Array[Symbol]
+          CURRENT_GETTERS: Hash[Symbol, String]
+          TYPE_CASTERS: Hash[Symbol, Symbol]
+          FN: String
+
+          attr_accessor klass: model
+          attr_accessor attribute: String
+          attr_accessor options: Hash[Symbol, untyped]
+          attr_accessor type: Symbol
+          attr_accessor default: bool
+          attr_accessor current_getter: String
+          attr_accessor type_caster: Symbol
+          attr_writer threshold: threshold
+          attr_accessor dynamic_threshold: untyped
+          attr_accessor klass_module: Module?
+          attr_accessor instance_module: Module?
+
+          @threshold: threshold
+          @method_names: method_names
+          @klass_method_names: method_names
+          @instance_method_names: method_names
+          @arel_attribute: String
+          @arel_default_sql: String
+          @arel_threshold_value: String?
+          @arel_start_at: String
+          @arel_finish_at: String
+          @arel_real_start_at: String
+          @arel_real_finish_at: String
+          @arel_real_attribute: String
+
+          def initialize: (model klass, column_ref attribute, Hash[Symbol, untyped] options) -> void
+          def threshold: () -> threshold
+          def method_names: () -> method_names
+          def klass_method_names: () -> method_names
+          def instance_method_names: () -> method_names
+          def conflicting?: () -> untyped
+          def build: () -> untyped
+          def build_method_helper: (Symbol type, Symbol key, ?Array[String] args) -> untyped
+
+          private
+
+          def default_method_names: () -> method_names
+          def dangerous?: (String | Symbol method_name, ?bool class_method) -> untyped
+          def define_string_method: (String | Symbol name, String body, ?Array[String] args) -> String
+          def arel_attribute: () -> String
+          def arel_default_sql: () -> String
+          def arel_sql_bind: (String value) -> String
+          def arel_threshold_value: () -> String?
+          def arel_start_at: () -> String
+          def arel_finish_at: () -> String
+          def arel_real_start_at: () -> String
+          def arel_real_finish_at: () -> String
+          def arel_real_attribute: () -> String
+          def arel_convert_to_type: (String left, ?String? right, ?Symbol? set_type) -> String
+          def arel_named_function: (String | Symbol name, *String args) -> String
+          def arel_nullif: (*String args) -> String
+          def arel_coalesce: (*String args) -> String
+          def arel_empty_value: () -> String
+          def arel_daterange: (?bool real) -> String
+          def arel_check_condition: (Symbol type) -> String
+          def arel_formatting_value: (?String? condition, ?String value, ?cast: Symbol?) -> String
+          def arel_formatting_left_right: (String condition, ?Symbol? set_type, ?cast: Symbol?) -> String
+          def klass_current_on: () -> String
+          def klass_current: () -> String
+          def klass_not_current: () -> String
+          def klass_containing: () -> String
+          def klass_not_containing: () -> String
+          def klass_overlapping: () -> String
+          def klass_not_overlapping: () -> String
+          def klass_starting_after: () -> String
+          def klass_starting_before: () -> String
+          def klass_finishing_after: () -> String
+          def klass_finishing_before: () -> String
+          def klass_real_containing: () -> String
+          def klass_real_overlapping: () -> String
+          def klass_real_starting_after: () -> String
+          def klass_real_starting_before: () -> String
+          def klass_real_finishing_after: () -> String
+          def klass_real_finishing_before: () -> String
+          def klass_containing_date: () -> String
+          def klass_not_containing_date: () -> String
+          def klass_overlapping_date: () -> String
+          def klass_not_overlapping_date: () -> String
+          def klass_real_containing_date: () -> String
+          def klass_real_overlapping_date: () -> String
+          def instance_current?: () -> String
+          def instance_current_on?: () -> String
+          def instance_start: () -> String
+          def instance_finish: () -> String
+          def instance_real: () -> String
+          def instance_real_start: () -> String
+          def instance_real_finish: () -> String
+        end
+      end
+    end
+  end
+end

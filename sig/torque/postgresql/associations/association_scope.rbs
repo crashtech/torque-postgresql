@@ -1,0 +1,28 @@
+module Torque
+  module PostgreSQL
+    module Associations
+      module AssociationScope
+        class PredicateBuilderArray
+          include PredicateBuilder::ArrayHandler
+
+          def call_with_empty: (arel_node attribute) -> String
+        end
+
+        module ClassMethods
+          def get_bind_values: (*untyped) -> Array[untyped]
+        end
+
+        private
+
+        def last_chain_scope: (relation scope, any_reflection reflection, record owner) -> relation
+        def next_chain_scope: (relation scope, any_reflection reflection, any_reflection next_reflection) -> relation
+        def transform_value: (untyped value) -> untyped
+      end
+    end
+  end
+end
+
+class ActiveRecord::Associations::AssociationScope
+  extend Torque::PostgreSQL::Associations::AssociationScope::ClassMethods
+  prepend Torque::PostgreSQL::Associations::AssociationScope
+end

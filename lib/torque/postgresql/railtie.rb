@@ -35,6 +35,15 @@ module Torque
               Relation.include(Relation::Segments)
             end
 
+            ## Cross Join Setup
+            if torque_config.cross_join.enabled
+              require_relative 'relation/cross_join'
+              Relation.include(Relation::CrossJoin)
+
+              # TODO: delegate join_struct and join_composite once they exist
+              ActiveRecord::Base.singleton_class.delegate(:cross_join, to: :all)
+            end
+
             ## Schemas Enabled Setup
             if (config = torque_config.schemas).enabled
               require_relative 'adapter/schema_overrides'

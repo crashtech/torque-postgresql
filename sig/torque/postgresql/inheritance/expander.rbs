@@ -1,0 +1,23 @@
+module Torque
+  module PostgreSQL
+    module Inheritance
+      class Expander
+        @model: model
+        @records: Array[record]
+        @targets: Array[model]
+
+        def initialize: (model model, Array[record] records, Array[model] targets) -> void
+        def call: () -> Array[record]
+
+        private
+
+        def model: () -> model
+        def targets: () -> Array[model]
+        def pending: () -> Hash[model, Array[record]]
+        def extra_columns: (model klass) -> Array[String]
+        def fetch: (model klass, Array[untyped] ids) -> Hash[untyped, Hash[String, untyped]]
+        def amend: (model klass, Array[record] records, Hash[untyped, Hash[String, untyped]] rows) -> untyped
+      end
+    end
+  end
+end

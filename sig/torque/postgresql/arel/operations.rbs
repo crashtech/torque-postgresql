@@ -1,0 +1,28 @@
+module Torque
+  module PostgreSQL
+    module Arel
+      module Operations
+        def pg_cast: (column_ref type, ?bool | Symbol array) -> Nodes::Cast
+        def cast: (column_ref type, ?bool | Symbol array) -> untyped
+      end
+    end
+  end
+end
+
+module Arel
+  module Attributes
+    class Attribute
+      include Torque::PostgreSQL::Arel::Operations
+    end
+  end
+
+  module Nodes
+    class SqlLiteral
+      include Torque::PostgreSQL::Arel::Operations
+    end
+
+    class Node
+      include Torque::PostgreSQL::Arel::Operations
+    end
+  end
+end

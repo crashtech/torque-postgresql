@@ -1,0 +1,28 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module OID
+        class Range < ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Range[untyped]
+          HASH_PICK: ::Array[Symbol]
+
+          module Comparison
+            def <=>: (untyped other) -> Integer?
+          end
+
+          def cast_value: (untyped value) -> untyped
+          def map: (untyped value) { (untyped) -> untyped } -> untyped
+
+          private
+
+          def cast_custom: (untyped from, untyped to) -> ::Range[untyped]
+          def custom_cast_single: (untyped value, ?bool negative) -> untyped
+          def custom_infinity: (bool negative) -> Float
+        end
+      end
+    end
+  end
+end
+
+class Float
+  prepend Torque::PostgreSQL::Adapter::OID::Range::Comparison
+end

@@ -56,3 +56,31 @@ end
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec)
 task default: :spec
+
+RBS_TEST_ENV = {
+  'RBS_TEST' => '1',
+  'RBS_TEST_TARGET' => 'Torque::PostgreSQL::*,Torque::Generators::*',
+  'RBS_TEST_SKIP' => '::Torque::PostgreSQL::Attributes::Lazy,::Torque::PostgreSQL::Adapter::OID::Range::Comparison',
+  'RBS_TEST_OPT' => '-I sig',
+  'RBS_TEST_LOGLEVEL' => ENV.fetch('RBS_TEST_LOGLEVEL', 'warn'),
+}.freeze
+
+namespace :rbs do
+  desc 'Install the third-party signatures listed in rbs_collection.yaml'
+  task :collection do
+    sh 'bundle', 'exec', 'rbs', 'collection', 'install'
+  end
+
+  desc 'Validate sig/ against the collection and the local stubs'
+  task validate: :collection do
+    sh 'bundle', 'exec', 'rbs', '-I', 'sig', 'validate', '--exit-error-on-syntax-error'
+  end
+
+  desc 'Run the spec suite with runtime type checking of every signature'
+  task test: :collection do
+    sh RBS_TEST_ENV, 'bundle', 'exec', 'rspec'
+  end
+end
+
+desc 'Validate the signatures and run the typed spec suite'
+task rbs: %w[rbs:validate rbs:test]

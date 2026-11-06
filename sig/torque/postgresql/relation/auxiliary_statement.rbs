@@ -1,0 +1,29 @@
+module Torque
+  module PostgreSQL
+    module Relation
+      module AuxiliaryStatement
+        type statement = Symbol | singleton(PostgreSQL::AuxiliaryStatement)
+
+        def auxiliary_statements_values: () -> Array[PostgreSQL::AuxiliaryStatement]
+        def auxiliary_statements_values=: (Array[PostgreSQL::AuxiliaryStatement] value) -> Array[PostgreSQL::AuxiliaryStatement]
+        def with: (*statement args, ?recursive: bool, **untyped settings) -> relation
+        def with!: (*statement args, ?recursive: bool, **untyped settings) -> self
+        alias auxiliary_statements with
+        alias auxiliary_statements! with!
+        def bound_attributes: () -> Array[untyped]
+
+        private
+
+        def build_arel: (*untyped) -> ::Arel::SelectManager
+        def instantiate_auxiliary_statements: (*statement args, **untyped options) -> Array[PostgreSQL::AuxiliaryStatement]
+        def build_auxiliary_statements: (::Arel::SelectManager arel) -> Array[untyped]?
+        def auxiliary_statement_type: () -> (:recursive)?
+        def auxiliary_statement_error: (Symbol | String name) -> bot
+      end
+    end
+  end
+end
+
+class ActiveRecord::Relation
+  include Torque::PostgreSQL::Relation::AuxiliaryStatement
+end

@@ -1,0 +1,38 @@
+module Torque
+  module PostgreSQL
+    module Attributes
+      class Struct < Base
+        type struct_class = Class | String | Symbol
+        type delegate = column_ref | Array[column_ref] | nil
+
+        class Uninitialized < ActiveModel::Attribute::Uninitialized
+          def original_value: () -> nil
+        end
+
+        @strict: bool
+        @_struct_default_attributes: ActiveModel::AttributeSet
+
+        def self.strict=: (bool value) -> bool
+        def self.strict?: () -> bool
+        def self._default_attributes: () -> ActiveModel::AttributeSet
+        def self.include_on: (model klass, ?Symbol? method_name) -> untyped
+        def self.build_on: (model model, column_ref column, struct_class klass, ?default: untyped, ?array: bool?, ?delegate: delegate, ?backfill: Adapter::OID::Struct::backfill, ?strict: bool?) -> untyped
+
+        private
+
+        def self.reset_default_attributes!: () -> untyped
+        def self.resolve_default_on: (model model, String column, Proc | Symbol default) -> untyped
+
+        public
+
+        def attribute_writer_missing: (column_ref name, untyped value) -> untyped
+      end
+    end
+
+    class Struct = Attributes::Struct
+  end
+end
+
+class ActiveRecord::Base
+  def self.struct_for: (Torque::PostgreSQL::column_ref column, Torque::PostgreSQL::Attributes::Struct::struct_class struct_klass, ?default: untyped, ?array: bool?, ?delegate: Torque::PostgreSQL::Attributes::Struct::delegate, ?backfill: Torque::PostgreSQL::Adapter::OID::Struct::backfill, ?strict: bool?) -> untyped
+end

@@ -1,0 +1,41 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module OID
+        class Struct < ActiveRecord::Type::Json
+          type backfill = bool | column_ref | ::Array[column_ref] | nil
+          type document = Hash[String, untyped]
+
+          attr_reader klass: Class
+          attr_reader type: Symbol
+          attr_reader backfill: backfill
+
+          @without_backfill: Struct
+
+          def self.state: (untyped value) -> untyped
+          def initialize: (Class klass, ?type: Symbol, ?backfill: backfill) -> void
+          def cast: (untyped value) -> untyped
+          def deserialize: (String | Hash[untyped, untyped] | nil value) -> untyped
+          def serialize: (untyped value) -> String?
+          def changed?: (untyped old_value, untyped new_value, untyped _new_value_before_cast) -> bool
+          def changed_in_place?: (String? raw_old_value, untyped new_value) -> bool
+          def without_backfill: () -> Struct
+          def empty?: (untyped value) -> bool
+          def document_for: (untyped value) -> document?
+          def document: (untyped value) -> document
+          def blank_document: () -> document
+          def ==: (untyped other) -> bool
+          alias eql? ==
+          def hash: () -> Integer
+
+          private
+
+          def parse: (untyped value) -> untyped
+          def build: (untyped data, ?from_database: bool, ?blank: bool) -> untyped
+          def blank!: (untyped instance) -> untyped
+          def load: (untyped instance, Hash[column_ref, untyped] data) -> untyped
+        end
+      end
+    end
+  end
+end

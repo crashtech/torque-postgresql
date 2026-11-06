@@ -1,0 +1,23 @@
+module Torque
+  module PostgreSQL
+    # initialize is not declared: the handler files reopen this module before
+    # it is defined, and the runtime checker hooks it eagerly
+    module PredicateBuilder
+      type handler = singleton(CompositeHandler) | singleton(StructHandler) | singleton(LtreeHandler)
+
+      ARRAY_OID: singleton(ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Array)
+
+      def self.handler_for: (type_caster? type, ?untyped value) -> handler?
+      def build: (arel_node attribute, untyped value, ?Symbol? operator) -> arel_node
+      def resolve_arel_attribute: (column_ref table_name, column_ref column_name) ?{ (?) -> untyped } -> arel_node
+
+      private
+
+      def handler_for_path: (arel_node attribute, untyped value) -> singleton(StructHandler)?
+    end
+  end
+end
+
+class ActiveRecord::PredicateBuilder
+  prepend Torque::PostgreSQL::PredicateBuilder
+end

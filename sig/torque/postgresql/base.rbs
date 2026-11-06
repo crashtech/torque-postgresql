@@ -1,0 +1,41 @@
+module Torque
+  module PostgreSQL
+    module Base
+      extend ActiveSupport::Concern
+
+      module ClassMethods
+        def distinct_on: (*Relation::column_spec value) -> relation
+        def with: (*Relation::AuxiliaryStatement::statement args, ?recursive: bool, **untyped settings) -> relation
+        def itself_only: () -> relation
+        def expand_records: (*model types, ?eager_load: bool, ?filter: bool) -> relation
+        def join_series: (untyped range, ?with: Relation::JoinSeries::with?, ?as: column_ref, ?step: Relation::JoinSeries::step?, ?time_zone: untyped, ?cast: column_ref?, ?mode: Symbol) ?{ (Torque::PostgreSQL::Arel::Nodes::Ref series, arel_table table) -> arel_node } -> relation
+        def buckets: (Relation::column_spec | arel_node attribute, Relation::Buckets::keys values, ?count: Integer?, ?cast: column_ref?, ?as: column_ref?) -> relation
+        def segments: (**Relation::Segments::condition map) -> relation
+        def arel_property_of: (column_ref column, *column_ref | Integer path) -> Torque::PostgreSQL::Arel::Nodes::Property
+        def load_schema!: () -> untyped
+        def reset_table_name: () -> (String | TableName)
+        def inherited: (model subclass) -> untyped
+        def belongs_to_many: (Symbol name, ?Proc? scope, ?class_name: String, ?foreign_key: column_ref, ?primary_key: column_ref, ?dependent: Symbol, ?touch: bool | Symbol, ?optional: bool, ?required: bool, ?default: Proc, ?inverse_of: Symbol, ?autosave: bool, ?validate: bool, **untyped options) ?{ (?) -> untyped } -> untyped
+        def dynamic_attribute: (Symbol name) { (?) -> untyped } -> Symbol
+        def auxiliary_statement: (Symbol table) ?{ (AuxiliaryStatement::Settings) -> void } -> untyped
+        alias cte auxiliary_statement
+        def recursive_auxiliary_statement: (Symbol table) ?{ (AuxiliaryStatement::Settings) -> void } -> untyped
+        alias recursive_cte recursive_auxiliary_statement
+      end
+    end
+  end
+end
+
+class ActiveRecord::Base
+  include Torque::PostgreSQL::Base
+  extend Torque::PostgreSQL::Base::ClassMethods
+
+  def self.belongs_to_many_required_by_default: () -> bool?
+  def self.belongs_to_many_required_by_default=: (bool? value) -> bool?
+  def self.schema: () -> (String | Symbol | nil)
+  def self.schema=: (String | Symbol | nil value) -> (String | Symbol | nil)
+  def schema: () -> (String | Symbol | nil)
+  def self.auxiliary_statements_list: () -> Hash[Symbol, singleton(Torque::PostgreSQL::AuxiliaryStatement)]
+  def self.auxiliary_statements_list=: (Hash[Symbol, singleton(Torque::PostgreSQL::AuxiliaryStatement)] value) -> Hash[Symbol, singleton(Torque::PostgreSQL::AuxiliaryStatement)]
+  def auxiliary_statements_list: () -> Hash[Symbol, singleton(Torque::PostgreSQL::AuxiliaryStatement)]
+end

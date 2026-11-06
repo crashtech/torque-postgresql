@@ -1,0 +1,23 @@
+module Torque
+  module PostgreSQL
+    module VersionedCommands
+      class SchemaTable
+        attr_reader arel_table: arel_table
+
+        @pool: pool
+
+        def initialize: (pool pool) -> void
+        def create_version: (CommandMigration command) -> untyped
+        def delete_version: (CommandMigration command) -> Integer
+        def primary_key: () -> String
+        def name: () -> String
+        def table_name: () -> String
+        def create_table: () -> untyped
+        def drop_table: () -> untyped
+        def count: () -> Integer
+        def table_exists?: () -> bool
+        def versions_of: (Symbol | String type) -> Array[[String, Integer]]
+      end
+    end
+  end
+end

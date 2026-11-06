@@ -1,0 +1,9 @@
+module Torque
+  module Generators
+    class ViewGenerator < Rails::Generators::Base
+      include Torque::PostgreSQL::VersionedCommands::Generator
+
+      alias create_view_file create_migration_file
+    end
+  end
+end

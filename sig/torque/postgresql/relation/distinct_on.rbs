@@ -1,0 +1,16 @@
+module Torque
+  module PostgreSQL
+    module Relation
+      module DistinctOn
+        def distinct_on_values: () -> Array[column_spec]
+        def distinct_on_values=: (Array[column_spec] value) -> Array[column_spec]
+        def distinct_on: (*column_spec value) -> relation
+        def distinct_on!: (*column_spec value) -> self
+
+        private
+
+        def build_arel: (*untyped) -> ::Arel::SelectManager
+      end
+    end
+  end
+end

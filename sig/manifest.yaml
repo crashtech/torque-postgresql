@@ -1,0 +1,7 @@
+dependencies:
+  - name: delegate
+  - name: date
+  - name: monitor
+  - name: rubygems
+  - name: stringio
+  - name: timeout

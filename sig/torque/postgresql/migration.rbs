@@ -1,0 +1,6 @@
+module Torque
+  module PostgreSQL
+    module Migration
+    end
+  end
+end

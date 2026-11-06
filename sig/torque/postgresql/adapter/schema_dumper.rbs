@@ -1,0 +1,37 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module SchemaDumper
+        SEARCH_VECTOR_SCANNER: Regexp
+
+        @versioned_commands: VersionedCommands::SchemaTable
+
+        def initialize: (*untyped) -> void
+        def dump: (stream stream) -> stream
+
+        private
+
+        def types: (stream stream) -> untyped
+        def composite_types: (stream stream) -> untyped
+        def tables: (stream stream) -> untyped
+        def around_tables: (stream stream) { () -> void } -> untyped
+        def dump_tables: (stream stream) -> untyped
+        def remove_prefix_and_suffix: (String table) -> String
+        def schemas: (stream stream) -> untyped
+        def schema_type_with_virtual: (column column) -> Symbol
+        def schema_type: (column column) -> Symbol
+        def prepare_column_options: (column column) -> Hash[Symbol, untyped]
+        def parse_search_vector_options: (column column, Hash[Symbol, untyped] options) -> Hash[Symbol, untyped]?
+        def parse_search_vector_columns: (Array[Array[String?]] settings) -> (String | Hash[String, String])
+        def versioned_commands: (stream stream, Symbol type, ?bool add_newline) -> untyped
+        def list_existing_versioned_commands: (Symbol type) -> Set[String]
+        def with_versioned_commands?: () -> bool
+        def fx_functions_position: () -> Symbol?
+      end
+    end
+  end
+end
+
+class ActiveRecord::ConnectionAdapters::PostgreSQL::SchemaDumper
+  prepend Torque::PostgreSQL::Adapter::SchemaDumper
+end

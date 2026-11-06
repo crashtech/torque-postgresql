@@ -1,0 +1,46 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module SchemaOverrides
+        def quote_table_name: (table_ref name) -> String
+        def table_exists?: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def indexes: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def index_exists?: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def columns: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def column_exists?: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def primary_key: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def create_table: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def change_table: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def add_column: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def add_columns: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def remove_columns: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def remove_column: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def change_column: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def change_column_default: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def change_column_null: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def rename_column: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def add_index: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def remove_index: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def rename_index: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def index_name_exists?: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def foreign_keys: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def add_timestamps: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def remove_timestamps: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def change_table_comment: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def change_column_comment: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def bulk_change_table: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def rename_table: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def add_foreign_key: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def remove_foreign_key: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def foreign_key_exists?: (table_ref table_name, *untyped args, **untyped options) ?{ (?) -> untyped } -> untyped
+        def drop_table: (*table_ref table_names, **untyped options) -> untyped
+
+        private
+
+        def validate_table_length!: (table_ref table_name) -> untyped
+      end
+
+      include SchemaOverrides
+    end
+  end
+end

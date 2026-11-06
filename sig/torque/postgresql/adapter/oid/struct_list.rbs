@@ -1,0 +1,20 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module OID
+        class StructList < Struct
+          def cast: (untyped value) -> untyped
+          def deserialize: (untyped value) -> ::Array[Attributes::Struct]
+          def serialize: (untyped value) -> String?
+          def document_for: (untyped value) -> ::Array[untyped]
+          def empty?: (untyped value) -> bool
+          def blank_document: () -> ::Array[untyped]
+
+          private
+
+          def encode: (::Array[untyped] items) -> String
+        end
+      end
+    end
+  end
+end

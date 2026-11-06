@@ -1,0 +1,20 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module OID
+        class Interval < ActiveModel::Type::Value
+          CAST_PARTS: ::Array[Symbol]
+
+          def type: () -> :interval
+          def cast: (untyped value) -> untyped
+          def deserialize: (String? value) -> ActiveSupport::Duration?
+          def serialize: (untyped value) -> String?
+          def type_cast_for_schema: (untyped value) -> String
+          def assert_valid_value: (untyped value) -> nil
+          def parts_to_duration: (Hash[untyped, untyped] | ::Array[untyped] parts) -> ActiveSupport::Duration
+          def remove_weeks: (ActiveSupport::Duration value) -> ActiveSupport::Duration
+        end
+      end
+    end
+  end
+end

@@ -1,0 +1,15 @@
+module Torque
+  module PostgreSQL
+    module Arel
+      module SelectManager
+        def only: () -> true
+      end
+    end
+  end
+end
+
+module Arel
+  class SelectManager
+    include Torque::PostgreSQL::Arel::SelectManager
+  end
+end

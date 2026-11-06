@@ -1,0 +1,63 @@
+module Torque
+  module PostgreSQL
+    class AuxiliaryStatement
+      class Settings
+        attr_reader base: base
+        attr_reader source: statement_class
+        attr_reader depth: [String, untyped, String?]?
+        attr_reader path: [String, String?, String?]?
+
+        @recursive: bool?
+        @query: query?
+        @sub_query: query?
+        @connect: [Symbol, Symbol] | Array[column_ref] | nil
+        @union_all: bool?
+        @query_table: arel_table?
+
+        def attributes: (*untyped) -> Hash[untyped, untyped]?
+        def attributes=: (Hash[untyped, untyped] value) -> Hash[untyped, untyped]
+        alias select attributes
+        def join: (*untyped) -> Hash[untyped, untyped]?
+        def join=: (Hash[untyped, untyped] value) -> Hash[untyped, untyped]
+        def join_type: (*untyped) -> join_type?
+        def join_type=: (join_type value) -> join_type
+        def requires: (*untyped) -> (Symbol | Array[untyped] | nil)
+        def requires=: (Symbol | Array[untyped] value) -> (Symbol | Array[untyped])
+        def polymorphic: (*untyped) -> untyped
+        def polymorphic=: (untyped value) -> untyped
+        def through: (*untyped) -> (Symbol | String | nil)
+        def through=: (Symbol | String value) -> (Symbol | String)
+        def union_all: (*untyped) -> bool?
+        def union_all=: (bool value) -> bool
+        alias cte source
+
+        def relation_query?: (untyped obj) -> bool
+        def table: () -> arel_table
+        def table_name: () -> (String | Symbol)?
+        def sql: (String raw) -> ::Arel::Nodes::SqlLiteral
+
+        def initialize: (base base, statement_class source, ?bool? recursive) -> void
+        def base_name: () -> String
+        def base_table: () -> arel_table
+        def recursive?: () -> bool?
+        def depth?: () -> String?
+        def path?: () -> String?
+        def with_depth: (?column_ref name, ?start: untyped, ?as: column_ref?) -> [String, untyped, String?]?
+        def with_path: (?column_ref name, ?source: column_ref?, ?as: column_ref?) -> [String, String?, String?]?
+        def union_all!: () -> true?
+        def with_depth_and_path: () -> untyped
+        def query_table: () -> arel_table?
+        def col: (column_ref name) -> arel_attribute
+        alias column col
+        def query: (?query? value, ?untyped command) -> untyped
+        def sub_query: (?query? value, ?untyped command) -> untyped
+        def connect: (?column_ref | Hash[column_ref, column_ref] | Array[column_ref] | nil value) -> ([Symbol, Symbol] | Array[column_ref] | nil)
+        alias connect= connect
+
+        private
+
+        def sanitize_query: (query value, ?untyped command) -> untyped
+      end
+    end
+  end
+end

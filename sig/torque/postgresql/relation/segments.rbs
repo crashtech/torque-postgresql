@@ -1,0 +1,27 @@
+module Torque
+  module PostgreSQL
+    module Relation
+      module Segments
+        type condition = relation | Symbol | Proc | Hash[untyped, untyped] | String | Array[untyped] | arel_node | nil
+
+        def segments_value: () -> Hash[Symbol, arel_node?]
+        def segments_value=: (Hash[Symbol, arel_node?] value) -> Hash[Symbol, arel_node?]
+        def segments: (**condition map) -> relation
+        def segments!: (**condition map) -> self
+
+        private
+
+        def execute_simple_calculation: (String operation, column_spec | arel_node | nil column_name, bool? distinct) -> untyped
+        def execute_grouped_calculation: (String operation, column_spec | arel_node | nil column_name, bool? distinct) -> untyped
+        def execute_segments_calculation: (String operation, column_spec | arel_node | nil column_name, bool? distinct) -> untyped
+        def segments_projections: (Array[arel_node] groups, arel_node aggregate, connection connection) -> Array[::Arel::Nodes::As]
+        def segments_result: (ActiveRecord::Result data, Array[arel_node] groups, arel_node column, String operation) -> (Hash[untyped, untyped] | nil)
+        def segment_predicate_for: (Symbol name, condition condition) -> arel_node?
+      end
+    end
+  end
+end
+
+class ActiveRecord::Relation
+  include Torque::PostgreSQL::Relation::Segments
+end

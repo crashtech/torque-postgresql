@@ -327,3 +327,13 @@ Default value: `%i[function type view trigger]`
 
 <a name="versioned_commands.table_name"></a>`versioned_commands.table_name` The name of the table that inherits from `schema_migrations` and stores the list of versioned commands that have been executed.  
 Default value: `'schema_versioned_commands'`
+
+## Cross join configurations {#cross_join}
+
+These are the keys available to configure [cross join](/postgresql/experimental/cross-join/):
+
+<a name="cross_join.enabled"></a>`cross_join.enabled` Enables joining a query against a set-returning function, a `LATERAL` subquery, or a list of rows, through the `cross_join` method on relations. This is opt-in because the feature is experimental and its API may still move.  
+Default value: `false`
+
+<a name="cross_join.ordinality_column"></a>`cross_join.ordinality_column` The name of the counter column added by `with_ordinality: true`. It matches what PostgreSQL calls the column when it is not named at all.  
+Default value: `:ordinality`

@@ -1,0 +1,32 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module OID
+        class Ltree < ActiveModel::Type::Value
+          type path = Attributes::LTree | Attributes::LQuery
+
+          def type: () -> :ltree
+          def cast: (untyped value) -> path?
+          def serialize: (untyped value) -> String?
+          def deserialize: (String? value) -> path?
+          def items_for: (untyped value, ?sanitize: bool) -> ::Array[untyped]
+          def type_cast_for_schema: (untyped value) -> String
+          def changed_in_place?: (String? raw_old_value, untyped new_value) -> bool
+          def ==: (untyped other) -> bool
+          alias eql? ==
+          def hash: () -> Integer
+
+          private
+
+          def value_class: () -> (singleton(Attributes::LTree) | singleton(Attributes::LQuery))
+          def items_of: (untyped entry, bool sanitize) -> ::Array[untyped]
+          def labels_of: (String text, bool sanitize) -> ::Array[untyped]
+          def record_label: (record record) -> String
+          def sanitize: (String text) -> String
+          def compile: (untyped item) -> String
+          def parse: (String text) -> untyped
+        end
+      end
+    end
+  end
+end

@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
 
   s.require_paths = ['lib']
 
-  s.files        = Dir['MIT-LICENSE', 'README.rdoc', 'lib/**/*', 'Rakefile']
+  s.files        = Dir['MIT-LICENSE', 'README.rdoc', 'lib/**/*', 'sig/**/*', 'skills/**/*', 'Rakefile']
   s.test_files   = Dir['spec/**/*']
   s.rdoc_options = ['--title', 'Torque PostgreSQL']
 
@@ -39,6 +39,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'database_cleaner', '~> 2.0'
   s.add_development_dependency 'dotenv', '~> 3.1'
   s.add_development_dependency 'rspec', '~> 3.5'
+  s.add_development_dependency 'rbs', '~> 3.8'
 
   s.add_development_dependency 'factory_bot', '~> 6.2'
   s.add_development_dependency 'faker', '~> 3.5'

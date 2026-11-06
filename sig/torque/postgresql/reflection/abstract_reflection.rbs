@@ -1,0 +1,22 @@
+module Torque
+  module PostgreSQL
+    module Reflection
+      module AbstractReflection
+        AREL_ATTR: singleton(::Arel::Attributes::Attribute)
+        AREL_NODE: singleton(::Arel::Nodes::Node)
+
+        def connected_through_array?: () -> bool
+        def join_scope: (table_node table, table_node foreign_table, model | relation foreign_klass) -> relation
+        def build_join_constraint: (table_node table, table_node foreign_table) -> arel_node
+
+        private
+
+        def build_id_constraint_between: (table_node table, table_node foreign_table) -> arel_node
+      end
+    end
+  end
+end
+
+class ActiveRecord::Reflection::AbstractReflection
+  prepend Torque::PostgreSQL::Reflection::AbstractReflection
+end

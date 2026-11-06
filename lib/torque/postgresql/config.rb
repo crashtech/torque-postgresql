@@ -422,5 +422,20 @@ module Torque
 
     end
 
+    # Configure cross join features
+    config.nested(:cross_join) do |cross_join|
+
+      # This is an experimental feature that developers must explicitly opt-in.
+      # TODO: hook into how conditions and columns are resolved, so that the
+      # name of a joined set can shadow a real column
+      cross_join.enabled = false
+
+      # The name of the column added by +with_ordinality+ when it is given
+      # +true+ instead of a name. It matches what PostgreSQL calls the column
+      # when it is not named at all
+      cross_join.ordinality_column = :ordinality
+
+    end
+
   end
 end

@@ -1,0 +1,79 @@
+module Torque
+  module PostgreSQL
+    module Arel
+      module Math
+        def contained_by: (untyped other) -> ::Arel::Nodes::ContainedBy
+        def has_key: (untyped other) -> ::Arel::Nodes::HasKey
+        def has_all_keys: (untyped other) -> ::Arel::Nodes::HasAllKeys
+        def has_any_keys: (untyped other) -> ::Arel::Nodes::HasAnyKeys
+        def strictly_left: (untyped other) -> ::Arel::Nodes::StrictlyLeft
+        def strictly_right: (untyped other) -> ::Arel::Nodes::StrictlyRight
+        def doesnt_right_extend: (untyped other) -> ::Arel::Nodes::DoesntRightExtend
+        def doesnt_left_extend: (untyped other) -> ::Arel::Nodes::DoesntLeftExtend
+        def adjacent_to: (untyped other) -> ::Arel::Nodes::AdjacentTo
+        def matches_lquery: (untyped other) -> ::Arel::Nodes::MatchesLquery
+        def matches_any_lquery: (untyped other) -> ::Arel::Nodes::MatchesAnyLquery
+      end
+
+      def self.build_operations: (Hash[Symbol | String, String]? operations) -> Hash[Symbol | String, String]?
+    end
+  end
+end
+
+module Arel
+  module Nodes
+    class ContainedBy < InfixOperation
+      def initialize: (untyped left, untyped right) -> void
+    end
+
+    class HasKey < InfixOperation
+      def initialize: (untyped left, untyped right) -> void
+    end
+
+    class HasAllKeys < InfixOperation
+      def initialize: (untyped left, untyped right) -> void
+    end
+
+    class HasAnyKeys < InfixOperation
+      def initialize: (untyped left, untyped right) -> void
+    end
+
+    class StrictlyLeft < InfixOperation
+      def initialize: (untyped left, untyped right) -> void
+    end
+
+    class StrictlyRight < InfixOperation
+      def initialize: (untyped left, untyped right) -> void
+    end
+
+    class DoesntRightExtend < InfixOperation
+      def initialize: (untyped left, untyped right) -> void
+    end
+
+    class DoesntLeftExtend < InfixOperation
+      def initialize: (untyped left, untyped right) -> void
+    end
+
+    class AdjacentTo < InfixOperation
+      def initialize: (untyped left, untyped right) -> void
+    end
+
+    class MatchesLquery < InfixOperation
+      def initialize: (untyped left, untyped right) -> void
+    end
+
+    class MatchesAnyLquery < InfixOperation
+      def initialize: (untyped left, untyped right) -> void
+    end
+
+    class Node
+      include Torque::PostgreSQL::Arel::Math
+    end
+  end
+
+  module Attributes
+    class Attribute
+      include Torque::PostgreSQL::Arel::Math
+    end
+  end
+end

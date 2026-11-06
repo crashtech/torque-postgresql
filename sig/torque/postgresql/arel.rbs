@@ -1,0 +1,6 @@
+module Torque
+  module PostgreSQL
+    module Arel
+    end
+  end
+end

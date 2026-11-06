@@ -1,0 +1,48 @@
+module Torque
+  module PostgreSQL
+    module Relation
+      module Inheritance
+        RECORD_CLASS_TOKEN: Symbol
+
+        def expand_records_values: () -> Array[model]
+        def expand_records_values=: (Array[model] value) -> Array[model]
+        def expand_records_eager_load_value: () -> bool?
+        def expand_records_eager_load_value=: (bool? value) -> bool?
+        def expand_records_scoped_value: () -> Hash[model, Array[model]]
+        def expand_records_scoped_value=: (Hash[model, Array[model]] value) -> Hash[model, Array[model]]
+        def itself_only_value: () -> bool?
+        def itself_only_value=: (bool? value) -> bool?
+        def quote_table_name: (table_ref name) -> String
+        def quote_column_name: (column_ref name) -> String
+        def itself_only: () -> relation
+        def itself_only!: (*untyped) -> self
+        def expand_records: (*model types, ?eager_load: bool, ?filter: bool) -> relation
+        def expand_records!: (*model types, ?eager_load: bool, ?filter: bool) -> self
+        def select: (*untyped fields) ?{ (?) -> untyped } -> untyped
+
+        private
+
+        def raise_itself_only_conflict!: () -> bot
+        def build_arel: (*untyped) -> ::Arel::SelectManager
+        def inheritance_discriminated?: () -> bool
+        def build_record_class_marker: () -> ::Arel::Nodes::As
+        def build_inheritances: (::Arel::SelectManager arel) -> untyped
+        def build_inheritances_joins: (::Arel::SelectManager arel, Array[model] types) -> Hash[String, Array[::Arel::Nodes::TableAlias]]
+        def regclass: () -> Torque::PostgreSQL::Arel::Nodes::Cast
+
+        public
+
+        module Expansion
+          def preload_associations: (Array[record] records) -> untyped
+
+          private
+
+          def exec_queries: () ?{ (record) -> void } -> Array[record]
+          def preloaded_association_names: () -> Array[Symbol]
+          def warn_about_missing_record_class: (Array[record] records) -> untyped
+          def record_class_marker?: (arel_node | column_ref value) -> bool
+        end
+      end
+    end
+  end
+end

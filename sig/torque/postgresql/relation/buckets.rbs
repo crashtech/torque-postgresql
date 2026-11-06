@@ -1,0 +1,35 @@
+module Torque
+  module PostgreSQL
+    module Relation
+      module Buckets
+        type keys = Array[untyped] | ::Range[untyped]
+        type value = [arel_node, keys, Integer?, column_ref?, column_ref?]
+
+        def buckets_value: () -> value?
+        def buckets_value=: (value? value) -> value?
+        def buckets: (column_spec | arel_node attribute, keys values, ?count: Integer?, ?cast: column_ref?, ?as: column_ref?) -> relation
+        def buckets!: (column_spec | arel_node attribute, keys values, ?count: Integer?, ?cast: column_ref?, ?as: column_ref?) -> self
+        def calculate: (*untyped) -> untyped
+
+        module Initializer
+          def records: () -> (Array[record] | Hash[untyped, Array[record]])
+        end
+
+        private
+
+        def build_arel: (*untyped) -> ::Arel::SelectManager
+        def build_buckets_node: () -> ::Arel::Nodes::NamedFunction
+        def buckets_column: () -> String
+        def buckets_keys: () -> Array[untyped]
+      end
+
+      module Initializer
+        include Buckets::Initializer
+      end
+    end
+  end
+end
+
+class ActiveRecord::Relation
+  include Torque::PostgreSQL::Relation::Buckets
+end

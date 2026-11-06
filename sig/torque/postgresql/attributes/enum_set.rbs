@@ -1,0 +1,75 @@
+module Torque
+  module PostgreSQL
+    module Attributes
+      class EnumSet < Set[untyped]
+        include Comparable
+        extend Enumerable[untyped]
+
+        class EnumSetError < Enum::EnumError
+        end
+
+        @type_name: String
+        @hash: Hash[Enum, bool]
+
+        def self.each: (*untyped) ?{ (Enum) -> untyped } -> untyped
+        def self.values: () -> Array[String]?
+        def self.keys: () -> Array[Symbol]
+        def self.members: () -> Array[Enum]
+        def self.texts: () -> Array[String]
+        def self.to_options: () -> Array[[String, String]]
+        def self.valid?: (untyped value) -> bool
+        def self.size: () -> Integer
+        def self.length: () -> Integer
+        def self.connection_specification_name: (*untyped) -> untyped
+        def self.lookup: (table_ref name, singleton(Enum) enum_klass) -> singleton(EnumSet)
+        def self.include_on: (model klass, ?Symbol? method_name) -> untyped
+        def self.enum_source: () -> singleton(Enum)
+        def self.sample: () -> untyped
+        def self.new: (*untyped values) -> untyped
+        def self.type_name: () -> String
+        def self.fetch: (String | Symbol value, *untyped) -> untyped
+        alias self.[] self.fetch
+        def self.power: (*untyped values) -> Integer?
+        def self.scope: (arel_attribute attribute, untyped value) -> ::Arel::Nodes::InfixOperation
+
+        private
+
+        def self.respond_to_missing?: (Symbol method_name, ?bool include_private) -> bool
+        def self.method_missing: (Symbol method_name, *untyped arguments) -> untyped
+
+        public
+
+        def initialize: (*untyped values) -> void
+        def <=>: (untyped other) -> Integer?
+        def ==: (untyped other) -> bool
+        alias eql? ==
+        def replace: (*untyped values) -> self
+        def text: (?column_ref? attr, ?untyped model) -> String
+        alias to_s text
+        def to_i: () -> Integer?
+        def inspect: () -> String
+        def []=: (untyped key, untyped value) -> untyped
+        def merge: (Enumerable[untyped] other) -> self
+        def &: (Enumerable[untyped] other) -> untyped
+        def add: (untyped other) -> self
+        def delete: (untyped other) -> self
+        def include?: (untyped other) -> bool?
+        def subtract: (untyped other) -> self
+
+        private
+
+        def instantiate: (untyped value) -> untyped
+        def transform_power: (Integer value) -> Array[Enum]
+        def transform_values: (Array[untyped] values) -> Array[Enum]
+        def respond_to_missing?: (Symbol method_name, ?bool include_private) -> untyped
+        def method_missing: (Symbol method_name, *untyped arguments) -> untyped
+        def raise_invalid: (untyped value) -> bot
+        def raise_comparison: (untyped other) -> bot
+      end
+    end
+  end
+end
+
+class ActiveRecord::Base
+  def self.torque_enum_set: (*Torque::PostgreSQL::column_ref attributes, ?only: Array[Torque::PostgreSQL::column_ref] | Torque::PostgreSQL::column_ref, ?except: Array[Torque::PostgreSQL::column_ref] | Torque::PostgreSQL::column_ref, ?prefix: bool | Torque::PostgreSQL::column_ref, ?suffix: bool | Torque::PostgreSQL::column_ref, ?force: bool) -> untyped
+end

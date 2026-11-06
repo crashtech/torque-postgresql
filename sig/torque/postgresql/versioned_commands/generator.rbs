@@ -1,0 +1,17 @@
+module Torque
+  module PostgreSQL
+    module VersionedCommands
+      module Generator
+        TEMPLATES_PATH: String
+
+        attr_reader file_name: String?
+
+        def self.included: (singleton(Rails::Generators::Base) base) -> untyped
+        def type: () -> String
+        def create_migration_file: () -> untyped
+        def count_object_entries: () -> Integer
+        def validate_file_name!: () -> nil
+      end
+    end
+  end
+end

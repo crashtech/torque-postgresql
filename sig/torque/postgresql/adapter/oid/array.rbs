@@ -1,0 +1,20 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module OID
+        module Array
+          def force_equality?: (untyped value) -> bool
+
+          private
+
+          def type_cast_array: (untyped value, Symbol method) -> untyped
+          def path_subtype?: () -> bool
+        end
+      end
+    end
+  end
+end
+
+class ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Array[unchecked out Elem]
+  prepend Torque::PostgreSQL::Adapter::OID::Array
+end

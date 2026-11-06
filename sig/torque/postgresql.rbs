@@ -1,0 +1,26 @@
+module Torque
+  module PostgreSQL
+    type model = singleton(ActiveRecord::Base)
+    type record = ActiveRecord::Base
+    type relation = ActiveRecord::Relation
+    type connection = ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
+    type pool = ActiveRecord::ConnectionAdapters::ConnectionPool
+    type reflection = ActiveRecord::Reflection::AssociationReflection
+    type any_reflection = ActiveRecord::Reflection::AbstractReflection
+    type column = ActiveRecord::ConnectionAdapters::PostgreSQL::Column
+    type type_caster = ActiveModel::Type::Value
+    type column_ref = String | Symbol
+    type table_ref = String | Symbol | ActiveRecord::ConnectionAdapters::PostgreSQL::Name
+    type arel_table = ::Arel::Table
+    type arel_attribute = ::Arel::Attributes::Attribute
+    type arel_node = ::Arel::Nodes::Node | ::Arel::Nodes::SqlLiteral | arel_attribute
+    type collector = ::Arel::Collectors::SQLString | ::Arel::Collectors::Composite | ::Arel::Collectors::Bind | ::Arel::Collectors::SubstituteBinds
+    type stream = IO | StringIO
+    type table_node = arel_table | ::Arel::Nodes::TableAlias
+    type path_key = column_ref | Integer
+
+    interface _Callable
+      def call: (*untyped) -> untyped
+    end
+  end
+end

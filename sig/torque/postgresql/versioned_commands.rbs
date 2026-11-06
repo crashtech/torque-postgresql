@@ -1,0 +1,25 @@
+module Torque
+  module PostgreSQL
+    module VersionedCommands
+      type command_type = :function | :type | :view | :trigger
+      type dirs = String | Array[String]
+
+      RAILS_APP: untyped
+      NAME_MATCH: String
+
+      @filename_regexp: Regexp
+
+      def self.valid_type?: (Symbol | String type) -> bool
+      def self.validate!: (Symbol | String type, String content, String name) -> nil
+      def self.fetch_command: (dirs dirs, Symbol | String type, String name, Integer | String version) -> String
+      def self.filename_regexp: () -> Regexp
+
+      private
+
+      def self.validate_function!: (String content, String name) -> nil
+      def self.validate_type!: (String content, String name) -> nil
+      def self.validate_trigger!: (String content, String name) -> nil
+      def self.validate_view!: (String content, String name) -> nil
+    end
+  end
+end

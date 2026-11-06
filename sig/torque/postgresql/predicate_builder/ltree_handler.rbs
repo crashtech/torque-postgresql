@@ -1,0 +1,36 @@
+module Torque
+  module PostgreSQL
+    module PredicateBuilder
+      class LtreeHandler
+        @predicate_builder: ActiveRecord::PredicateBuilder
+        @attribute: arel_attribute
+        @column: Adapter::OID::Ltree
+        @array: bool
+        @list: bool
+
+        def self.candidate?: (type_caster? type) -> bool
+        def self.column_of: (type_caster? type) -> type_caster?
+        def initialize: (ActiveRecord::PredicateBuilder predicate_builder) -> void
+        def call: (arel_attribute attribute, type_caster type, untyped value) -> arel_node
+
+        private
+
+        def attribute: () -> arel_attribute
+        def column: () -> Adapter::OID::Ltree
+        def array: () -> bool
+        def list: () -> bool
+        def list?: (untyped value) -> bool
+        def lquery_column?: () -> bool
+        def lquery: () -> Adapter::OID::Lquery
+        def ltree: () -> Adapter::OID::Ltree
+        def bind: (untyped value, type_caster type) -> ::Arel::Nodes::BindParam
+        def equality: (Array[untyped] values) -> arel_node
+        def single_equality: (arel_node target, arel_node bind) -> arel_node
+        def empty_equality: (arel_node target) -> arel_node
+        def match: (Array[untyped] values) -> arel_node
+        def single_match: (arel_node bind) -> arel_node
+        def list_match: (arel_node binds) -> arel_node
+      end
+    end
+  end
+end

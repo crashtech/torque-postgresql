@@ -1,0 +1,10 @@
+module Torque
+  module PostgreSQL
+    class Railtie < Rails::Railtie
+    end
+  end
+end
+
+module ActiveRecord::Schema::Definition
+  include Torque::PostgreSQL::Adapter::Definition
+end

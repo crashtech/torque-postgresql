@@ -1,0 +1,30 @@
+module Torque
+  module PostgreSQL
+    module Arel
+      module Visitors
+        def visit_Arel_Nodes_JoinSource: (::Arel::Nodes::JoinSource o, collector collector) -> collector
+        def visit_Arel_Nodes_Quoted: (::Arel::Nodes::Quoted o, collector collector) -> collector
+        def visit_Torque_PostgreSQL_Arel_Nodes_Ref: (Nodes::Ref o, collector collector) -> collector
+        def visit_Torque_PostgreSQL_Arel_Nodes_Column: (Nodes::Column o, collector collector) -> collector
+        def visit_Torque_PostgreSQL_Arel_Nodes_Property: (Nodes::Property o, collector collector) -> collector
+        def visit_Torque_PostgreSQL_Arel_Nodes_CrossJoin: (Nodes::CrossJoin o, collector collector) -> collector
+        def visit_Torque_PostgreSQL_Arel_Nodes_FromItem: (Nodes::FromItem o, collector collector) -> collector
+        def visit_Torque_PostgreSQL_Arel_Nodes_Cast: (Nodes::Cast o, collector collector) -> collector
+
+        private
+
+        def visit_definitions: (Hash[column_ref, String?] definitions, collector collector) -> collector
+        def visit_alias_columns: (Hash[column_ref, String?] columns, collector collector) -> collector
+        def quote_array: (Enumerable[untyped] value, collector collector) -> collector
+      end
+    end
+  end
+end
+
+module Arel
+  module Visitors
+    class PostgreSQL
+      prepend Torque::PostgreSQL::Arel::Visitors
+    end
+  end
+end

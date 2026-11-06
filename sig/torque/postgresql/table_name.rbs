@@ -1,0 +1,20 @@
+module Torque
+  module PostgreSQL
+    class TableName < Delegator
+      @klass: model
+      @table_name: String
+      @schema: String?
+
+      def initialize: (model klass, String table_name) -> void
+      def schema: () -> String?
+      def to_s: () -> String
+      alias __getobj__ to_s
+      def ==: (untyped other) -> Integer?
+      def __setobj__: (String value) -> String
+
+      private
+
+      def search_path_schemes: () -> Array[String]
+    end
+  end
+end

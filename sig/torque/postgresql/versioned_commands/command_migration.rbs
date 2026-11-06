@@ -1,0 +1,54 @@
+module Torque
+  module PostgreSQL
+    module VersionedCommands
+      module Migration
+        @command: CommandMigration
+        @description: [String, String]
+        @connection: connection?
+        @execution_strategy: untyped
+
+        def initialize: (*untyped args) -> void
+        def migrate: (:up | :down direction) -> untyped
+        def exec_migration: (connection conn, :up | :down direction) -> untyped
+        def announce: (String message) -> untyped
+        def description_for: (:up | :down direction) -> [String, String]
+        def execute: (String command) -> untyped
+      end
+
+      class CommandMigration < ::Struct[untyped]
+        @migration: ActiveRecord::Migration?
+
+        def filename: () -> String
+        def filename=: (String value) -> String
+        def version: () -> Integer
+        def version=: (Integer value) -> Integer
+        def op: () -> String
+        def op=: (String value) -> String
+        def type: () -> String
+        def type=: (String value) -> String
+        def object_name: () -> String
+        def object_name=: (String value) -> String
+        def op_version: () -> Integer
+        def op_version=: (Integer value) -> Integer
+        def scope: () -> String?
+        def scope=: (String? value) -> String?
+
+        def execute: (String command) -> untyped
+        def initialize: (String filename, *untyped args) -> void
+        def name: () -> String
+        def disable_ddl_transaction: () -> false
+        def migrate: (:up | :down direction) -> untyped
+        def up: () -> untyped
+        def down: () -> untyped
+        def drop: () -> untyped
+
+        private
+
+        def drop_function: () -> untyped
+        def drop_type: () -> untyped
+        def drop_trigger: () -> untyped
+        def drop_view: () -> untyped
+      end
+    end
+  end
+end

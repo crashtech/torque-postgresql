@@ -1,7 +1,15 @@
 ---
 layout: docs-home
 title: Torque PostgreSQL
+description: >-
+  Ruby on Rails plugin that gives ActiveRecord access to PostgreSQL's advanced resources, such
+  as data types and query statements, through the same DSL Rails already uses.
 toc: false
+
+# Notes for the generated llms.txt and llms-full.txt, listed after the footer lines.
+llms:
+  - Agents can install the usage skill inside a Rails app with `rails g torque:skill`.
+  - Exact method signatures ship with the gem as RBS, under its `sig/` folder.
 
 meta:
   title: PostgreSQL
@@ -102,6 +110,8 @@ nav:
     id: experimental
     note: Newer ground - the API may still move between minor versions.
     pages:
+      - title: Cross Join
+        url: /experimental/cross-join/
       - title: Multiple Schemas
         url: /experimental/multiple-schemas/
       - title: Versioned Commands

@@ -1,0 +1,26 @@
+module Torque
+  module PostgreSQL
+    module PredicateBuilder
+      module ArrayHandler
+        def call: (arel_node attribute, untyped value) -> arel_node
+        def call_for_array: (arel_node attribute, untyped value) -> arel_node
+
+        private
+
+        def call_with_value: (arel_node attribute, untyped value) -> ::Arel::Nodes::InfixOperation
+        def call_with_array: (arel_node attribute, Array[untyped] value) -> ::Arel::Nodes::InfixOperation
+        def call_with_empty: (arel_node attribute) -> arel_node
+        def id_of: (untyped entry) -> untyped
+        def array_attribute?: (arel_node attribute) -> bool
+      end
+    end
+  end
+end
+
+class ActiveRecord::PredicateBuilder::ArrayHandler
+  prepend Torque::PostgreSQL::PredicateBuilder::ArrayHandler
+end
+
+class ActiveRecord::PredicateBuilder::BasicObjectHandler
+  prepend Torque::PostgreSQL::PredicateBuilder::ArrayHandler
+end

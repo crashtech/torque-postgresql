@@ -1,0 +1,50 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module SchemaStatements
+        type schema_options = { ?schema: table_ref }
+        type drop_options = { ?force: Symbol | String | nil, ?check: bool, ?schema: table_ref? }
+        type create_type_options = { ?force: Symbol | bool | nil, ?schema: table_ref }
+        type composite_column_options = { ?schema: table_ref, ?limit: Integer, ?precision: Integer, ?scale: Integer, ?array: bool, ?enum_type: table_ref, ?composite_type: table_ref }
+        type search_vector_options = { ?language: String | Symbol, ?stored: bool, ?index: bool | Hash[Symbol, untyped] }
+        type enum_values_options = { ?before: String | Symbol | false, ?after: String | Symbol | false, ?prepend: bool, ?prefix: String | bool, ?suffix: String | bool, ?schema: table_ref }
+
+        def drop_type: (table_ref name, ?drop_options options) -> untyped
+        def rename_type: (table_ref type_name, table_ref new_name, ?schema_options options) -> untyped
+        def create_composite_type: (table_ref name, ?create_type_options options) ?{ (CompositeTypeDefinition td) -> void } -> untyped
+        def change_composite_type: (table_ref name, ?schema_options options) { (CompositeTypeDefinition td) -> void } -> untyped
+        def add_composite_column: (table_ref type_name, column_ref column_name, Symbol | String type, ?composite_column_options options) -> untyped
+        def remove_composite_column: (table_ref type_name, column_ref column_name, ?Symbol | String | nil type, ?schema_options options) -> untyped
+        def change_composite_column: (table_ref type_name, column_ref column_name, Symbol | String type, ?composite_column_options options) -> untyped
+        def rename_composite_column: (table_ref type_name, column_ref column_name, column_ref new_name, ?schema_options options) -> untyped
+        def add_search_language: (table_ref table, column_ref name, ?Hash[Symbol, untyped] options) -> untyped
+        def add_search_vector: (table_ref table, column_ref name, search_columns columns, ?search_vector_options options) -> untyped
+        def add_enum_values: (table_ref name, Array[String | Symbol] values, ?enum_values_options options) -> Array[String]
+        def enum_values: (table_ref name) -> Array[String]
+        def create_table: (table_ref table_name, ?sync: bool | Hash[Symbol, bool], ?inherits: table_ref | Array[table_ref], ?schema: table_ref, **untyped options) ?{ (?) -> untyped } -> untyped
+        def primary_key: (table_ref table_name) -> (String | Array[String] | nil)
+        def table_options: (table_ref table_name) -> Hash[Symbol, untyped]
+        def quoted_scope: (?table_ref? name, ?type: String?) -> Hash[Symbol, String]
+        def data_source_sql: (?table_ref? name, ?type: String?) -> String
+        def valid_table_definition_options: () -> Array[Symbol]
+        def valid_column_definition_options: () -> Array[Symbol]
+        def type_to_sql: (Symbol | String type, ?composite_type: table_ref?, **untyped options) -> untyped
+        def assume_migrated_upto_version: (Integer | String version) -> untyped
+        def insert_versions_sql: (Array[Integer] versions) -> String
+
+        private
+
+        def sequence_name_from_parts: (String table_name, column_ref column_name, String suffix) -> String
+        def sanitize_name_with_schema: (table_ref name, Hash[Symbol, untyped]? options) -> table_ref
+        def create_composite_type_definition: (table_ref name) -> CompositeTypeDefinition
+        def alter_composite_type: (table_ref name, table_ref? schema, Array[String] actions) -> untyped
+        def composite_type_actions: (table_ref name, CompositeTypeDefinition td) -> Array[String]
+        def validate_composite_type!: (table_ref name, CompositeTypeDefinition td) -> nil
+        def composite_column_definition: (table_ref name, untyped column) -> String
+        def composite_column_type: (table_ref name, untyped column) -> untyped
+        def reset_composite_type: (table_ref name) -> untyped
+        def quote_enum_values: (table_ref name, Array[String | Symbol] values, enum_values_options options) -> Array[String]
+      end
+    end
+  end
+end

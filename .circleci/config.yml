@@ -34,6 +34,41 @@ jobs:
           environment:
             DATABASE_URL: 'postgresql://postgres:torque@localhost/torque_postgresql'
 
+  types:
+    docker:
+      - image: cimg/ruby:3.4
+      - image: cimg/postgres:14.6
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: torque
+          POSTGRES_DB: torque_postgresql
+
+    steps:
+      - checkout
+      - run: ruby --version
+      - run:
+          command: 'bundle install --gemfile gemfiles/Gemfile.rails-8.1'
+          name: Install Bundle
+      - run:
+          command: 'bundle exec --gemfile gemfiles/Gemfile.rails-8.1 rbs collection install'
+          name: Install RBS collection
+      - run:
+          command: 'bundle exec --gemfile gemfiles/Gemfile.rails-8.1 rbs -I sig validate --exit-error-on-syntax-error'
+          name: Validate signatures
+      - run:
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+          name: Wait for DB
+      - run:
+          command: 'bundle exec --gemfile gemfiles/Gemfile.rails-8.1 rspec'
+          name: Run Typed Tests
+          environment:
+            DATABASE_URL: 'postgresql://postgres:torque@localhost/torque_postgresql'
+            RBS_TEST: '1'
+            RBS_TEST_TARGET: 'Torque::PostgreSQL::*,Torque::Generators::*'
+            RBS_TEST_SKIP: '::Torque::PostgreSQL::Attributes::Lazy,::Torque::PostgreSQL::Adapter::OID::Range::Comparison'
+            RBS_TEST_OPT: '-I sig'
+            RBS_TEST_LOGLEVEL: warn
+
 references:
   matrix_build: &matrix_build
     test:
@@ -46,3 +81,4 @@ workflows:
   commit:
     jobs:
       - <<: *matrix_build
+      - types

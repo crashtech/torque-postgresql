@@ -1,0 +1,48 @@
+module Torque
+  module PostgreSQL
+    module Attributes
+      class LQuery
+        include Enumerable[untyped]
+
+        MARKERS: Regexp
+        LEVEL: Regexp
+        VARIANT: Regexp
+
+        attr_reader items: Array[untyped]
+
+        @pattern: Regexp
+
+        def inspect: () -> String
+        def each: (*untyped) ?{ (untyped) -> untyped } -> untyped
+        def size: () -> Integer
+        def empty?: () -> bool
+        def []: (*untyped) -> untyped
+
+        def self.[]: (*untyped items) -> instance
+
+        def initialize: (?untyped value, ?sanitize: bool) -> void
+        def to_s: () -> String
+        def pattern?: () -> bool
+        def pattern: () -> Regexp
+        def match?: (LTree | untyped path) -> bool
+        def =~: (LTree | untyped path) -> Integer?
+        def ==: (untyped other) -> bool
+        alias eql? ==
+        def hash: () -> Integer
+
+        private
+
+        def type: () -> Adapter::OID::Lquery
+        def compile: () -> Regexp
+        def compile_level: (String text) -> String
+        def compile_variants: (Array[String] variants) -> String
+        def compile_variant: (String text) -> String
+        def label: (String name, bool prefix) -> String
+        def words: (String name, bool prefix) -> String
+        def quantifier: (MatchData match) -> String
+      end
+    end
+
+    class LQuery = Attributes::LQuery
+  end
+end

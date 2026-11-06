@@ -1,0 +1,28 @@
+module Torque
+  module PostgreSQL
+    module Attributes
+      class Composite < Base
+        @type_name: String
+        @columns: Hash[String, type_caster]
+        @load_columns_monitor: Monitor
+
+        def self.type_name=: (String value) -> String
+        def self.lookup: (table_ref name) -> singleton(Composite)
+        def self.inherited: (singleton(Composite) subclass) -> untyped
+        def self.type_name: () -> String
+        def self.columns: () -> Hash[String, type_caster]?
+        def self.load_columns: () -> untyped
+        def self.reset_columns!: () -> untyped
+        def self.new: (*untyped args, **untyped xargs) ?{ (?) -> untyped } -> instance
+        def self.encrypts: (*column_ref names, **untyped options) -> untyped
+        def self.enum: (column_ref name, ?SimpleEnum::values values, **untyped options) -> untyped
+
+        private
+
+        def self.resolve: (singleton(Composite) klass, String name) -> singleton(Composite)
+      end
+    end
+
+    class Composite = Attributes::Composite
+  end
+end

@@ -1,0 +1,33 @@
+module Torque
+  module PostgreSQL
+    class Circle < ::Struct[untyped]
+      def x: () -> Numeric
+      def x=: (Numeric value) -> Numeric
+      def y: () -> Numeric
+      def y=: (Numeric value) -> Numeric
+      def r: () -> Numeric
+      def r=: (Numeric value) -> Numeric
+      alias radius r
+      alias radius= r=
+
+      def center: () -> untyped
+      def center=: (untyped value) -> Numeric
+
+      private
+
+      def point_class: () -> Class
+    end
+
+    module Adapter
+      module OID
+        class Circle < Torque::PostgreSQL::GeometryBuilder
+          PIECES: ::Array[Symbol]
+          FORMATION: String
+        end
+      end
+    end
+  end
+end
+
+class ActiveRecord::Circle < Torque::PostgreSQL::Circle
+end

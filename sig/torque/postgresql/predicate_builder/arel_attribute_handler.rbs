@@ -1,0 +1,15 @@
+module Torque
+  module PostgreSQL
+    module PredicateBuilder
+      class ArelAttributeHandler
+        def self.call: (arel_node attribute, arel_node value) -> arel_node
+        def initialize: (*untyped) -> void
+        def call: (arel_node attribute, arel_node value) -> arel_node
+
+        private
+
+        def array_typed?: (arel_node attribute) -> bool
+      end
+    end
+  end
+end

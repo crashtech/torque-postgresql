@@ -1,0 +1,39 @@
+module Torque
+  module PostgreSQL
+    module Attributes
+      module SimpleEnum
+        extend ActiveSupport::Concern
+
+        type values = Hash[column_ref, untyped] | Array[untyped] | nil
+
+        class Methods < Module
+          @klass: singleton(Base)
+
+          def initialize: (singleton(Base) klass) -> void
+
+          private
+
+          def klass: () -> singleton(Base)
+          def define_enum_methods: (column_ref name, String value_method_name, untyped value, untyped _scopes, bool instance_methods) -> Symbol?
+        end
+
+        def defined_enums: () -> Hash[String, type_caster]
+
+        module ClassMethods
+          include ActiveRecord::Enum
+
+          @_enum_methods_module: Methods
+
+          def defined_enums: () -> Hash[String, type_caster]
+          def defined_enums=: (Hash[String, type_caster] value) -> Hash[String, type_caster]
+          def enum: (column_ref name, ?values values, ?prefix: bool | column_ref, ?suffix: bool | column_ref, ?default: untyped, ?validate: bool | Hash[Symbol, untyped], ?instance_methods: bool, **untyped options) -> untyped
+
+          private
+
+          def _enum_methods_module: () -> Methods
+          def detect_enum_conflict!: (column_ref enum_name, String | Symbol method_name, ?bool klass_method) -> nil
+        end
+      end
+    end
+  end
+end

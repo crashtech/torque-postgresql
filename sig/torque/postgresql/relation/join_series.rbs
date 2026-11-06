@@ -1,0 +1,28 @@
+module Torque
+  module PostgreSQL
+    module Relation
+      module JoinSeries
+        type step = Numeric | ActiveSupport::Duration | Symbol | String
+        type with = column_ref | Hash[column_ref, untyped] | arel_node
+
+        def self.build: (relation relation, untyped range, ?with: with?, ?as: column_ref, ?step: step?, ?time_zone: untyped, ?cast: column_ref?, ?mode: Symbol) ?{ (Torque::PostgreSQL::Arel::Nodes::Ref series, arel_table table) -> arel_node } -> ::Arel::Nodes::Join
+
+        private
+
+        def self.validate_build!: (untyped range, step? step) -> nil
+        def self.bind_value: (untyped value) -> arel_node
+        def self.arel_join: (Symbol | String mode) -> singleton(::Arel::Nodes::Join)
+        def self.build_join_on: (Torque::PostgreSQL::Arel::Nodes::Ref result, relation relation, with? with, column_ref? cast) ?{ (Torque::PostgreSQL::Arel::Nodes::Ref series, arel_table table) -> arel_node } -> arel_node
+
+        public
+
+        def join_series: (untyped range, ?with: with?, ?as: column_ref, ?step: step?, ?time_zone: untyped, ?cast: column_ref?, ?mode: Symbol) ?{ (Torque::PostgreSQL::Arel::Nodes::Ref series, arel_table table) -> arel_node } -> relation
+        def join_series!: (untyped range, ?with: with?, ?as: column_ref, ?step: step?, ?time_zone: untyped, ?cast: column_ref?, ?mode: Symbol) ?{ (Torque::PostgreSQL::Arel::Nodes::Ref series, arel_table table) -> arel_node } -> self
+      end
+    end
+  end
+end
+
+class ActiveRecord::Relation
+  include Torque::PostgreSQL::Relation::JoinSeries
+end

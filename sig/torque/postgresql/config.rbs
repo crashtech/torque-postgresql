@@ -1,0 +1,9 @@
+module Torque
+  module PostgreSQL
+    AR810: bool
+
+    def self.config: () -> ActiveSupport::InheritableOptions
+    def self.configure: () { (ActiveSupport::InheritableOptions config) -> void } -> void
+    def self.logger: () -> untyped
+  end
+end

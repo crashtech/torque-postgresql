@@ -1,0 +1,32 @@
+module Torque
+  module PostgreSQL
+    module Associations
+      module Preloader
+        module Association
+          @run: bool
+          @records_by_owner: Hash[record, Array[record]]
+          @preloaded_records: Array[record]
+          @owners_by_key: Hash[untyped, Array[record]]
+
+          def connected_through_array?: () -> untyped
+          def run: () -> self
+          def set_inverse: (record record) -> untyped
+          def load_records: (?Array[record]? raw_records) -> untyped
+          def owners_by_key: () -> Hash[untyped, Array[record]]
+
+          private
+
+          def run_array_for_belongs_to_many: () -> untyped
+          def run_array_for_has_many: () -> untyped
+          def records_for: (Array[untyped] ids) ?{ (record) -> void } -> Array[record]
+          def associate_records_to_owner: (record owner, Array[record] records) -> untyped
+          def groupped_records: () -> Hash[untyped, Array[record]]
+        end
+      end
+    end
+  end
+end
+
+class ActiveRecord::Associations::Preloader::Association
+  prepend Torque::PostgreSQL::Associations::Preloader::Association
+end

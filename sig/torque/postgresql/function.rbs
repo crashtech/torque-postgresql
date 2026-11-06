@@ -1,0 +1,21 @@
+module Torque
+  module PostgreSQL
+    module Function
+      def self.bind: (column_ref name, untyped value, type_caster | ActiveModel::Attributes::Normalization::NormalizedValueType type, ?untyped original_attribute) -> ::Arel::Nodes::BindParam
+      def self.bind_for: (model model, column_ref attribute, untyped value) -> ::Arel::Nodes::BindParam
+      def self.bind_with: (arel_attribute arel_attribute, untyped value) -> ::Arel::Nodes::BindParam
+      def self.bind_type: (untyped value, ?Symbol | type_caster | nil type, ?name: column_ref, ?cast: column_ref?) -> (::Arel::Nodes::BindParam | Arel::Nodes::Cast)
+      def self.infix: (Symbol | String op, arel_node left, arel_node right) -> ::Arel::Nodes::InfixOperation
+      def self.concat: (*arel_node args) -> arel_node
+      def self.group_by: (arel_node arel, column_ref name) -> Arel::Nodes::Ref
+      def self.respond_to_missing?: (*untyped) -> true
+      def self.method_missing: (Symbol name, *untyped args) ?{ (?) -> untyped } -> ::Arel::Nodes::NamedFunction
+
+      private
+
+      def self.ruby_type_to_model_type: (untyped value) -> (Symbol | Adapter::OID::Interval)
+    end
+
+    FN: singleton(Function)
+  end
+end

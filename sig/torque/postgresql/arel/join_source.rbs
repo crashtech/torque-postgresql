@@ -1,0 +1,19 @@
+module Torque
+  module PostgreSQL
+    module Arel
+      module JoinSource
+        attr_accessor only: bool?
+
+        def only?: () -> bool
+      end
+    end
+  end
+end
+
+module Arel
+  module Nodes
+    class JoinSource
+      include Torque::PostgreSQL::Arel::JoinSource
+    end
+  end
+end

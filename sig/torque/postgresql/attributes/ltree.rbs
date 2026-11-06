@@ -1,0 +1,46 @@
+module Torque
+  module PostgreSQL
+    module Attributes
+      class LTree
+        include Enumerable[untyped]
+
+        attr_reader items: Array[untyped]
+
+        def inspect: () -> String
+        def each: (*untyped) ?{ (untyped) -> untyped } -> untyped
+        def size: () -> Integer
+        def empty?: () -> bool
+        def []: (*untyped) -> untyped
+        alias depth size
+
+        def self.[]: (*untyped items) -> instance
+        def self.compatible?: (untyped value) -> bool
+        def self.compatible: (untyped value) -> untyped
+
+        def initialize: (?untyped value, ?sanitize: bool) -> void
+        def to_s: () -> String
+        def ==: (untyped other) -> bool
+        alias eql? ==
+        def hash: () -> Integer
+        def root?: () -> bool
+        def root: () -> instance
+        def parent: () -> instance?
+        def /: (untyped other) -> instance
+        alias + /
+        def ancestor_of?: (untyped other) -> bool
+        alias covers? ancestor_of?
+        def descendant_of?: (untyped other) -> bool
+        alias covered_by? descendant_of?
+        def lca: (*untyped others) -> instance
+        def index_of: (untyped subpath, ?Integer offset) -> Integer
+
+        private
+
+        def type: () -> Adapter::OID::Ltree
+        def common_prefix: (Array[untyped] one, Array[untyped] other) -> Array[untyped]
+      end
+    end
+
+    class LTree = Attributes::LTree
+  end
+end

@@ -1,0 +1,13 @@
+module Torque
+  module PostgreSQL
+    module Attributes
+      module Period
+        def self.include_on: (model klass, ?Symbol? method_name) -> untyped
+      end
+    end
+  end
+end
+
+class ActiveRecord::Base
+  def self.period_for: (*Torque::PostgreSQL::column_ref attributes, ?pessimistic: bool, ?threshold: bool | Torque::PostgreSQL::column_ref | ActiveSupport::Duration | Numeric, ?methods: Hash[Symbol, Torque::PostgreSQL::column_ref], ?prefixed: bool, ?force: bool) -> untyped
+end

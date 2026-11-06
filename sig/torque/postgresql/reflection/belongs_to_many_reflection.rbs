@@ -1,0 +1,30 @@
+module Torque
+  module PostgreSQL
+    module Reflection
+      class BelongsToManyReflection < ::ActiveRecord::Reflection::AssociationReflection
+        @foreign_key: String
+        @association_foreign_key: String
+        @active_record_primary_key: String?
+
+        def macro: () -> :belongs_to_many
+        def connected_through_array?: () -> true
+        def belongs_to?: () -> true
+        def collection?: () -> true
+        def association_class: () -> singleton(Associations::BelongsToManyAssociation)
+        def foreign_key: () -> String
+        def association_foreign_key: () -> String
+        def active_record_primary_key: () -> String?
+        def join_primary_key: (*untyped) -> String?
+        def join_foreign_key: () -> String
+        def array_attribute: () -> arel_attribute
+
+        private
+
+        def derive_primary_key: () -> String?
+        def derive_foreign_key: () -> String
+      end
+    end
+  end
+end
+
+class ActiveRecord::Reflection::BelongsToManyReflection = Torque::PostgreSQL::Reflection::BelongsToManyReflection

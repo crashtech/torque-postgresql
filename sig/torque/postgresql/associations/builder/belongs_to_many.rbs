@@ -1,0 +1,24 @@
+module Torque
+  module PostgreSQL
+    module Associations
+      module Builder
+        class BelongsToMany < ::ActiveRecord::Associations::Builder::CollectionAssociation
+          def self.macro: () -> :belongs_to_many
+          def self.valid_options: (Hash[Symbol, untyped] options) -> Array[Symbol]
+          def self.valid_dependent_options: () -> Array[Symbol]
+          def self.define_callbacks: (model model, Reflection::BelongsToManyReflection reflection) -> untyped
+          def self.define_readers: (Module mixin, Symbol name) -> untyped
+          def self.define_writers: (Module mixin, Symbol name) -> untyped
+          def self.add_default_callbacks: (model model, Reflection::BelongsToManyReflection reflection) -> untyped
+          def self.add_touch_callbacks: (model model, Reflection::BelongsToManyReflection reflection) -> untyped
+          def self.touch_record: (record o, Hash[String, untyped] changes, String foreign_key, Symbol name, bool | Symbol touch, Symbol touch_method) -> untyped
+          def self.add_change_callbacks: (model model, Reflection::BelongsToManyReflection reflection) -> untyped
+          def self.add_destroy_callbacks: (model model, Reflection::BelongsToManyReflection reflection) -> untyped
+          def self.define_validations: (model model, Reflection::BelongsToManyReflection reflection) -> untyped
+        end
+      end
+    end
+  end
+end
+
+class ActiveRecord::Associations::Builder::BelongsToMany = Torque::PostgreSQL::Associations::Builder::BelongsToMany

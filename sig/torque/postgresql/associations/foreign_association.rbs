@@ -1,0 +1,16 @@
+module Torque
+  module PostgreSQL
+    module Associations
+      module ForeignAssociation
+        @inversed: bool
+
+        def inversed_from: (record record) -> untyped
+        def skip_statement_cache?: (*untyped) -> untyped
+
+        private
+
+        def set_owner_attributes: (record record) -> untyped
+      end
+    end
+  end
+end

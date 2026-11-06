@@ -1,0 +1,14 @@
+module Torque
+  module PostgreSQL
+    module Reflection
+      module ThroughReflection
+        def build_id_constraint: (*untyped) -> arel_node
+        def connected_through_array?: () -> bool?
+      end
+    end
+  end
+end
+
+class ActiveRecord::Reflection::ThroughReflection
+  include Torque::PostgreSQL::Reflection::ThroughReflection
+end

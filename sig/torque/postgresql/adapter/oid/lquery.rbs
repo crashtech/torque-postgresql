@@ -1,0 +1,21 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module OID
+        class Lquery < Ltree
+          STAR: Regexp
+
+          def type: () -> :lquery
+
+          private
+
+          def value_class: () -> singleton(Attributes::LQuery)
+          def items_of: (untyped entry, bool sanitize) -> ::Array[untyped]
+          def compile: (untyped item) -> String
+          def quantifier: (::Range[Integer?] range) -> String
+          def parse: (String text) -> (String | Symbol | ::Array[String] | ::Range[Integer?])
+        end
+      end
+    end
+  end
+end

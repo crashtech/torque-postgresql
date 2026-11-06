@@ -1,0 +1,22 @@
+module Torque
+  module PostgreSQL
+    class AuxiliaryStatement
+      class Recursive < AuxiliaryStatement
+        @connect: [Symbol, Symbol] | Array[column_ref] | nil
+        @union_all: bool?
+        @sub_query: query?
+        @depth: [String, untyped, String?]?
+        @path: [String, String?, String?]?
+
+        def initialize: (*untyped, **untyped options) -> void
+
+        private
+
+        def build_query: (relation base) -> (arel_node | ::Arel::SelectManager)
+        def prepare: (relation base, Settings | OpenStruct settings) -> untyped
+        def prepare_sub_query: (relation base, Settings | OpenStruct settings) -> untyped
+        def extra_columns: (relation base, Array[arel_node] columns, Array[arel_node] sub_columns) -> untyped
+      end
+    end
+  end
+end

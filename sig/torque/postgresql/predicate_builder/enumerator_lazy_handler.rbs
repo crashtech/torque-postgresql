@@ -1,0 +1,18 @@
+module Torque
+  module PostgreSQL
+    module PredicateBuilder
+      class EnumeratorLazyHandler < ::ActiveRecord::PredicateBuilder::ArrayHandler
+        class Timeout < ::Timeout::Error
+        end
+
+        def call: (arel_attribute attribute, Enumerator::Lazy[untyped, untyped] value) -> arel_node
+
+        private
+
+        def with_timeout: () { () -> arel_node } -> arel_node
+        def timeout: () -> Numeric?
+        def limit: () -> Integer?
+      end
+    end
+  end
+end
