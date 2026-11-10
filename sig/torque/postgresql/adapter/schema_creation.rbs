@@ -1,0 +1,13 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module SchemaCreation
+        def add_table_options!: (String create_sql, ActiveRecord::ConnectionAdapters::TableDefinition o) -> String
+      end
+    end
+  end
+end
+
+class ActiveRecord::ConnectionAdapters::PostgreSQL::SchemaCreation
+  prepend Torque::PostgreSQL::Adapter::SchemaCreation
+end

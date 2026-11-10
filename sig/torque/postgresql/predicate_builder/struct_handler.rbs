@@ -1,0 +1,24 @@
+module Torque
+  module PostgreSQL
+    module PredicateBuilder
+      class StructHandler
+        PLAIN_TYPES: Array[Symbol]
+
+        @predicate_builder: ActiveRecord::PredicateBuilder
+        @struct: type_caster?
+
+        def self.candidate?: (type_caster? type, ?untyped value) -> bool
+        def initialize: (ActiveRecord::PredicateBuilder predicate_builder) -> void
+        def call: (arel_node attribute, type_caster struct, Hash[untyped, untyped] value) -> ::Arel::Nodes::Grouping
+        def table_for: (arel_node attribute, type_caster? struct) -> PredicateTable
+        def property_for: (arel_node attribute, type_caster? struct, Array[path_key] path) -> arel_node
+        def type_of: (path_key name) -> [type_caster?, String?]
+
+        private
+
+        def predicate_builder: () -> ActiveRecord::PredicateBuilder
+        def cast_for: (type_caster? type) -> String?
+      end
+    end
+  end
+end

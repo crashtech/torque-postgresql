@@ -40,12 +40,58 @@ module Torque
           collector
         end
 
+        # A cross join only ever carries its source
+        def visit_Torque_PostgreSQL_Arel_Nodes_CrossJoin(o, collector)
+          collector << 'CROSS JOIN '
+          visit(o.left, collector)
+        end
+
+        # Every part here is written only when it is actually needed, since
+        # LATERAL is a noise word on functions and ROWS FROM is only forced
+        # by the counter
+        def visit_Torque_PostgreSQL_Arel_Nodes_FromItem(o, collector)
+          collector << 'LATERAL ' if o.lateral
+
+          collector << 'ROWS FROM (' if o.rows_from?
+          visit(o.left, collector)
+          collector = visit_definitions(o.definitions, collector) << ')' if o.rows_from?
+
+          collector << ' WITH ORDINALITY' if o.ordinality.present?
+          collector << ' ' << quote_table_name(o.name)
+
+          columns = o.alias_columns
+          return collector if columns.blank?
+
+          collector << '('
+          visit_alias_columns(columns, collector)
+          collector << ')'
+        end
+
         # Allow casting any node
         def visit_Torque_PostgreSQL_Arel_Nodes_Cast(o, collector)
           visit(o.left, collector) << '::' << o.right
         end
 
         private
+
+          # The column definition list a function has to be told to return
+          def visit_definitions(definitions, collector)
+            collector << ' AS ('
+            visit_alias_columns(definitions, collector)
+            collector << ')'
+          end
+
+          # A name on its own when it has no type, otherwise the name and the
+          # type it is being given
+          def visit_alias_columns(columns, collector)
+            columns.each_with_index do |(name, type), index|
+              collector << ', ' unless index.zero?
+              collector << quote_column_name(name)
+              collector << ' ' << type if type.present?
+            end
+
+            collector
+          end
 
           def quote_array(value, collector)
             value = value.map(&::Arel::Nodes.method(:build_quoted))

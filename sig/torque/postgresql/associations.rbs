@@ -1,0 +1,17 @@
+module Torque
+  module PostgreSQL
+    module Associations
+      class BelongsToManyAssociation
+        prepend ForeignAssociation
+      end
+    end
+  end
+end
+
+class ActiveRecord::Associations::HasManyAssociation
+  prepend Torque::PostgreSQL::Associations::ForeignAssociation
+end
+
+class ActiveRecord::Associations::JoinDependency
+  prepend Torque::PostgreSQL::Associations::JoinDependency
+end

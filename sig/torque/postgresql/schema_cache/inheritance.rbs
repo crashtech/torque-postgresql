@@ -1,0 +1,12 @@
+module Torque
+  module PostgreSQL
+    module SchemaCache
+      module Inheritance
+        def lookup_model: (String table_name, ?String | model scoped_class, source_to_model: Hash[String, model]) -> model
+        def find_model: (String | Array[String] max_name, String table_name, ?Module scope) -> model?
+        def generate_associations: (Hash[String, Array[String]] inheritance_dependencies) -> Hash[String, Array[String]]
+        def prepare_irregular_models: (Array[String] data_sources) -> Hash[String, model]
+      end
+    end
+  end
+end

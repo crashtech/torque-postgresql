@@ -1,0 +1,17 @@
+module Torque
+  module PostgreSQL
+    module Attributes
+      class Lazy < BasicObject
+        @klass: Class
+        @values: ::Array[untyped]
+
+        def initialize: (Class klass, *untyped values) -> void
+        def ==: (untyped other) -> bool
+        def nil?: () -> true
+        def inspect: () -> String
+        def __class__: () -> singleton(Lazy)
+        def method_missing: (Symbol name, *untyped args) ?{ (?) -> untyped } -> untyped
+      end
+    end
+  end
+end

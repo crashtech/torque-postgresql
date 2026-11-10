@@ -1,0 +1,55 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      type search_columns = column_ref | Array[column_ref] | Hash[column_ref, String]
+      type column_options = { ?limit: Integer, ?precision: Integer, ?scale: Integer, ?array: bool, ?null: bool, ?default: untyped, ?enum_type: table_ref, ?composite_type: table_ref, ?comment: String }
+
+      module ColumnMethods
+        def search_language: (*column_ref names, **untyped options) -> Array[column_ref]
+        def search_vector: (*column_ref names, columns: search_columns, **untyped options) -> Array[column_ref]
+        def composite: (*column_ref names, composite_type: table_ref, **untyped options) -> Array[column_ref]
+        def ltree: (*column_ref names, **untyped options) -> Array[column_ref]
+        def lquery: (*column_ref names, **untyped options) -> Array[column_ref]
+      end
+
+      module TableDefinition
+        include ColumnMethods
+
+        attr_reader inherits: Array[table_ref]?
+
+        def initialize: (*untyped args, **untyped options) -> void
+        def set_primary_key: (table_ref tn, untyped id, untyped primary_key, *untyped, **untyped) -> untyped
+
+        private
+
+        def create_column_definition: (column_ref name, Symbol | String type, Hash[Symbol, untyped]? options) -> untyped
+      end
+
+      class CompositeTypeDefinition < ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition
+        attr_reader changes: Array[untyped]
+        attr_reader removals: Array[String]
+        attr_reader renames: Array[[String, String]]
+
+        def initialize: (*untyped args, **untyped xargs) -> void
+        def change: (column_ref name, Symbol | String type, **untyped options) -> Array[untyped]
+        def remove: (*column_ref names) -> Array[String]
+        def rename: (column_ref name, column_ref new_name) -> Array[[String, String]]
+      end
+
+      module Definition
+        def create_function: (String name, version: Integer, ?dir: String | Array[String]) -> untyped
+        def create_type: (String name, version: Integer, ?dir: String | Array[String]) -> untyped
+        def create_view: (String name, version: Integer, ?dir: String | Array[String]) -> untyped
+        def create_trigger: (String name, version: Integer, ?dir: String | Array[String]) -> untyped
+      end
+    end
+  end
+end
+
+class ActiveRecord::ConnectionAdapters::PostgreSQL::Table
+  include Torque::PostgreSQL::Adapter::ColumnMethods
+end
+
+class ActiveRecord::ConnectionAdapters::PostgreSQL::TableDefinition
+  include Torque::PostgreSQL::Adapter::TableDefinition
+end

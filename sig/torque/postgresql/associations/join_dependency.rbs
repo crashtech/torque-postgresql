@@ -1,0 +1,16 @@
+module Torque
+  module PostgreSQL
+    module Associations
+      module JoinDependency
+        def apply_column_aliases: (relation relation) -> untyped
+
+        private
+
+        def cast_join_root?: (relation relation) -> bool
+        def root_record_class_marker: () -> ::Arel::Nodes::As
+        def joined_record_class_markers: () -> Array[::Arel::Nodes::As]
+        def record_class_column_name: () -> String
+      end
+    end
+  end
+end

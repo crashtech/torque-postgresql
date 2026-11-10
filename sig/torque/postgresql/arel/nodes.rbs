@@ -1,0 +1,83 @@
+module Torque
+  module PostgreSQL
+    module Arel
+      module Nodes
+        class Cast < ::Arel::Nodes::Binary
+          include ::Arel::Expressions
+          include ::Arel::Predications
+          include ::Arel::AliasPredication
+          include ::Arel::OrderPredications
+          include ::Arel::Math
+
+          def initialize: (arel_node left, column_ref right, ?bool | Symbol array) -> void
+        end
+
+        class Column < ::Arel::Nodes::Binary
+          include ::Arel::Expressions
+          include ::Arel::Predications
+          include ::Arel::AliasPredication
+          include ::Arel::OrderPredications
+          include ::Arel::Math
+
+          attr_reader type_caster: type_caster?
+          alias name right
+
+          def initialize: (arel_node source, column_ref name, type_caster? type_caster) -> void
+          def able_to_type_cast?: () -> true
+          def type_cast_for_database: (untyped value) -> untyped
+        end
+
+        class Property < ::Arel::Nodes::Binary
+          include ::Arel::Expressions
+          include ::Arel::Predications
+          include ::Arel::AliasPredication
+          include ::Arel::OrderPredications
+          include ::Arel::Math
+
+          attr_reader type_caster: type_caster?
+          attr_reader cast: column_ref?
+          alias path right
+
+          def initialize: (arel_node source, path_key key, type_caster? type_caster, ?column_ref? cast) -> void
+          def name: () -> String
+          def able_to_type_cast?: () -> true
+          def type_cast_for_database: (untyped value) -> untyped
+        end
+
+        class CrossJoin < ::Arel::Nodes::Join
+          def initialize: (arel_node left, ?arel_node? right) -> void
+        end
+
+        class FromItem < ::Arel::Nodes::Binary
+          attr_reader columns: Array[column_ref]?
+          attr_reader definitions: Hash[column_ref, String?]?
+          attr_reader ordinality: String?
+          attr_reader lateral: bool
+          alias name right
+
+          def initialize: (arel_node source, column_ref name, ?columns: Array[column_ref] | column_ref | nil, ?definitions: Hash[column_ref, String?]?, ?ordinality: column_ref?, ?lateral: bool) -> void
+          def rows_from?: () -> bool
+          def alias_columns: () -> Hash[column_ref, String?]
+        end
+
+        class Ref < ::Arel::Nodes::Unary
+          attr_reader reference: arel_node?
+          alias to_s expr
+
+          def initialize: (String | arel_node expr, ?arel_node? reference) -> void
+          def as: (column_ref other) -> ::Arel::Nodes::As
+        end
+      end
+    end
+  end
+end
+
+module Arel
+  def self.array: (*untyped values, ?cast: Torque::PostgreSQL::column_ref?) -> (::Arel::Nodes::Quoted | Torque::PostgreSQL::Arel::Nodes::Cast)
+
+  module Nodes
+    class Function
+      include ::Arel::Math
+    end
+  end
+end

@@ -30,6 +30,20 @@ module Torque
               Relation.include(Relation::Buckets)
             end
 
+            if torque_config.segments
+              require_relative 'relation/segments'
+              Relation.include(Relation::Segments)
+            end
+
+            ## Cross Join Setup
+            if torque_config.cross_join.enabled
+              require_relative 'relation/cross_join'
+              Relation.include(Relation::CrossJoin)
+
+              # TODO: delegate join_struct and join_composite once they exist
+              ActiveRecord::Base.singleton_class.delegate(:cross_join, to: :all)
+            end
+
             ## Schemas Enabled Setup
             if (config = torque_config.schemas).enabled
               require_relative 'adapter/schema_overrides'
@@ -140,6 +154,9 @@ module Torque
             if (config = torque_config.ltree).enabled
               require_relative 'adapter/oid/ltree'
               require_relative 'adapter/oid/lquery'
+
+              require_relative 'attributes/ltree'
+              require_relative 'attributes/lquery'
 
               ar_type.register(:ltree,  Adapter::OID::Ltree,  adapter: :postgresql)
               ar_type.register(:lquery, Adapter::OID::Lquery, adapter: :postgresql)

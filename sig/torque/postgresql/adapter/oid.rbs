@@ -1,0 +1,9 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module OID
+        def self.unwrap: (untyped type) -> type_caster?
+      end
+    end
+  end
+end

@@ -3,23 +3,21 @@
 module Torque
   module PostgreSQL
     module Attributes
-      # A label path, as stored by the +ltree+ data type. It is an Array of
-      # labels, so it flows through Ruby like any other list, which also means
-      # that an +ltree[]+ column simply becomes an Array of these
-      class LTree < Array
-        LABEL = /\A[[:alnum:]_-]+\z/
+      # A label path, as stored by the +ltree+ data type. It holds the plain
+      # list of labels, so it enumerates like any other list, and an +ltree[]+
+      # column simply becomes an Array of these
+      class LTree
+        include Enumerable
 
+        attr_reader :items
+
+        delegate :inspect, to: :to_s
+        delegate :each, :size, :empty?, :[], to: :items
         alias depth size
 
         class << self
-          def [](*labels)
-            new(labels)
-          end
-
-          # Values coming from the database are valid by construction, so they
-          # skip both the normalization and the validation
-          def load(value)
-            new(value.to_s.split('.'), normalize: false)
+          def [](*items)
+            new(items)
           end
 
           # Whether the object knows how to describe itself as a path, which is
@@ -34,44 +32,24 @@ module Torque
             method = PostgreSQL.config.ltree.compatible_method
             value.public_send(method) if compatible?(value)
           end
-
-          # A record stands for its primary key, which is what makes a path
-          # built out of other records work the same way as one built out of
-          # labels
-          def resolve_record(value)
-            return value unless value.is_a?(::ActiveRecord::Base)
-
-            id = value.id
-            raise ArgumentError, <<~MSG.squish if id.nil?
-              Unable to use #{value.class.name} as a label because its
-              #{value.class.primary_key} is still empty.
-            MSG
-
-            raise ArgumentError, <<~MSG.squish if id.is_a?(::Array)
-              Unable to use #{value.class.name} as a label because it has a
-              composite primary key, which cannot be a single label.
-            MSG
-
-            id
-          end
-
-          # Apply the configured replacements, so callers can feed a source that
-          # does not satisfy PostgreSQL's rules for a label on its own
-          def sanitize(value)
-            replacements = PostgreSQL.config.ltree.sanitize
-            return value if replacements.blank?
-
-            value.gsub(Regexp.union(replacements.keys), replacements)
-          end
         end
 
-        def initialize(labels = nil, normalize: true)
-          super()
-          concat(normalize ? normalized(labels) : Array.wrap(labels))
+        def initialize(value = nil, sanitize: true)
+          @items = type.items_for(value, sanitize: sanitize).freeze
         end
 
         def to_s
-          join('.')
+          type.serialize(self)
+        end
+
+        def ==(other)
+          other = other.items if other.is_a?(self.class)
+          other.is_a?(::Array) && items == other
+        end
+        alias eql? ==
+
+        def hash
+          items.hash
         end
 
         def root?
@@ -79,24 +57,23 @@ module Torque
         end
 
         def root
-          self.class.new(first, normalize: false)
+          self.class.new(items.first(1), sanitize: false)
         end
 
-        # A path with a single label has no parent, and neither does an empty one
         def parent
-          self.class.new(self[0..-2], normalize: false) unless root?
+          self.class.new(items[0..-2], sanitize: false) unless root?
         end
 
         def /(other)
-          self.class.new(to_a + self.class.new(other), normalize: false)
+          self.class.new(items + self.class.new(other).items, sanitize: false)
         end
 
         alias_method :+, :/
 
         # Same as the +@>+ operator, which includes the path itself
         def ancestor_of?(other)
-          other = self.class.new(other)
-          size <= other.size && other.first(size) == to_a
+          other = self.class.new(other).items
+          size <= other.size && other.first(size) == items
         end
         alias covers? ancestor_of?
 
@@ -109,51 +86,26 @@ module Torque
         # The longest common ancestor, which never includes the last label of
         # any of the paths, exactly like PostgreSQL's own +lca+
         def lca(*others)
-          paths = [self, *others].map { |path| self.class.new(path)[0..-2].to_a }
-          result = paths.shift || []
+          paths = [self, *others].map { |path| self.class.new(path).items[0..-2] }
+          result = paths.shift
           paths.each { |path| result = common_prefix(result, path) }
-          self.class.new(result, normalize: false)
+          self.class.new(result, sanitize: false)
         end
 
-        # The position where the given subpath starts, or -1 when it is not
-        # present. Named apart from +index+ so that Array's own contract, of
-        # returning +nil+ when the element is missing, stays intact
         def index_of(subpath, offset = 0)
-          subpath = self.class.new(subpath)
+          subpath = self.class.new(subpath).items
           offset += size if offset.negative?
           return -1 if subpath.empty? || offset.negative?
 
           range = offset..(size - subpath.size)
-          position = range.find { |i| self[i, subpath.size] == subpath.to_a }
+          position = range.find { |i| items[i, subpath.size] == subpath }
           position || -1
         end
 
         private
 
-          def normalized(labels)
-            entries = Array.wrap(labels).flat_map { |value| split_labels(value) }
-            entries.each { |label| assert_valid_label!(label) }
-          end
-
-          def split_labels(value)
-            return normalized(self.class.compatible(value)) if self.class.compatible?(value)
-
-            value = self.class.resolve_record(value)
-            plain = value.is_a?(::String) || value.is_a?(::Symbol) || value.is_a?(::Numeric)
-            raise ArgumentError, <<~MSG.squish unless plain
-              Unable to use #{value.inspect} as part of an ltree path. A path is a
-              plain sequence of labels, so it accepts neither the alternatives nor
-              the quantifiers that only make sense on an lquery.
-            MSG
-
-            self.class.sanitize(value.to_s).split('.')
-          end
-
-          def assert_valid_label!(label)
-            raise ArgumentError, <<~MSG.squish unless label.match?(LABEL)
-              #{label.inspect} is not a valid ltree label. Labels are limited to
-              letters, numbers, underscores and dashes.
-            MSG
+          def type
+            Adapter::OID::Ltree.new
           end
 
           def common_prefix(one, other)

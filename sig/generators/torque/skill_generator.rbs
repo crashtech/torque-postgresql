@@ -1,0 +1,7 @@
+module Torque
+  module Generators
+    class SkillGenerator < Rails::Generators::Base
+      def copy_skill: () -> void
+    end
+  end
+end

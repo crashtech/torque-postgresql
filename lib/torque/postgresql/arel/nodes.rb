@@ -81,6 +81,57 @@ module Torque
           end
         end
 
+        # A cross join, which PostgreSQL needs spelled out because an inner
+        # join without a condition is a syntax error
+        class CrossJoin < ::Arel::Nodes::Join
+          def initialize(left, right = nil)
+            super
+          end
+        end
+
+        # An aliased FROM item. +definitions+ maps a column name to the SQL
+        # type a function has to be told to return, +columns+ are the plain
+        # names the alias exposes, +ordinality+ names the appended counter,
+        # and +lateral+ is only needed when the source is a subquery
+        class FromItem < ::Arel::Nodes::Binary
+          attr_reader :columns, :definitions, :ordinality, :lateral
+
+          alias name right
+
+          def initialize(source, name, columns: nil, definitions: nil, ordinality: nil, lateral: false)
+            @columns = Array.wrap(columns).presence&.freeze
+            @definitions = definitions.presence&.freeze
+            @ordinality = ordinality&.to_s
+            @lateral = lateral
+
+            super(source, name.to_s)
+          end
+
+          # The definitions can only be moved into the source when the counter
+          # forces the +ROWS FROM+ form, since PostgreSQL refuses a column
+          # definition list next to +WITH ORDINALITY+
+          def rows_from?
+            ordinality.present? && definitions.present?
+          end
+
+          # What the alias exposes, as name => type, where a +nil+ type means
+          # the name stands on its own. Types are only spelled out here when
+          # they have not been moved into the +ROWS FROM+ source.
+          #
+          # The list is all or nothing, because PostgreSQL matches it
+          # positionally: a partial list silently renames the columns it does
+          # reach instead of naming the ones it does not
+          def alias_columns
+            return {} if columns.nil? && definitions.nil?
+
+            plain = rows_from? ? definitions.keys : columns
+            result = plain.nil? ? definitions : plain.to_h { |name| [name.to_s, nil] }
+
+            return result if ordinality.blank?
+            result.merge(ordinality => nil)
+          end
+        end
+
         class Ref < ::Arel::Nodes::Unary
           attr_reader :reference
           alias to_s expr

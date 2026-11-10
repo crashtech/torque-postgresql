@@ -45,7 +45,7 @@ module Torque
         # Check if the model's table depends on any inheritance
         def physically_inherited?
           inheritance_cache(:@physically_inherited) do
-            connection.schema_cache.dependencies(
+            connection_pool.schema_cache.dependencies(
               defined?(@table_name) ? @table_name : decorated_table_name,
             ).present?
           end
@@ -56,7 +56,7 @@ module Torque
         # Get the list of all tables directly or indirectly dependent of the
         # current one
         def inheritance_dependents
-          connection.schema_cache.associations(table_name) || []
+          connection_pool.schema_cache.associations(table_name) || []
         end
 
         # Check whether the model's table has directly or indirectly dependents
@@ -100,7 +100,7 @@ module Torque
         def casted_dependents
           inheritance_cache(:@casted_dependents) do
             inheritance_dependents.map do |table_name|
-              [table_name, connection.schema_cache.lookup_model(table_name)]
+              [table_name, connection_pool.schema_cache.lookup_model(table_name)]
             end.to_h.freeze
           end
         end
@@ -121,8 +121,8 @@ module Torque
           table = super
 
           adapter = ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
-          if Torque::PostgreSQL.config.eager_load && connection.is_a?(adapter)
-            connection.schema_cache.add_model_name(table, self)
+          if Torque::PostgreSQL.config.eager_load && connection_pool.db_config.adapter_class <= adapter
+            connection_pool.schema_cache.add_model_name(table, self)
           end
 
           table

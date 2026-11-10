@@ -1,0 +1,38 @@
+sources:
+  - type: git
+    name: ruby/gem_rbs_collection
+    remote: https://github.com/ruby/gem_rbs_collection.git
+    revision: a2080c5762e4d22bf00ca0591eb4c8ec5d1fdd55
+    repo_dir: gems
+
+path: .gem_rbs_collection
+
+gems:
+  - name: activerecord
+  - name: activesupport
+  - name: activemodel
+  - name: railties
+  - name: i18n
+  - name: concurrent-ruby
+  - name: pg
+    ignore: true
+  - name: rspec
+    ignore: true
+  - name: rspec-core
+    ignore: true
+  - name: rspec-mocks
+    ignore: true
+  - name: rspec-expectations
+    ignore: true
+  - name: factory_bot
+    ignore: true
+  - name: faker
+    ignore: true
+  - name: database_cleaner
+    ignore: true
+  - name: dotenv
+    ignore: true
+  - name: debug
+    ignore: true
+  - name: annotate
+    ignore: true

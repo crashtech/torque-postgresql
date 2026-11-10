@@ -1,0 +1,18 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module OID
+        class StructSet < ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Array[untyped]
+          @without_backfill: StructSet
+
+          def deserialize: (untyped value) -> ::Array[untyped]
+          def serialize: (untyped value) -> untyped
+          def changed_in_place?: (untyped raw_old_value, untyped new_value) -> bool
+          def without_backfill: () -> StructSet
+          def empty?: (untyped value) -> bool
+          def blank_document: () -> ::Array[untyped]
+        end
+      end
+    end
+  end
+end

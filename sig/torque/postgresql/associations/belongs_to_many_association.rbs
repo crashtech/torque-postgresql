@@ -1,0 +1,51 @@
+module Torque
+  module PostgreSQL
+    module Associations
+      class BelongsToManyAssociation < ::ActiveRecord::Associations::CollectionAssociation
+        include ::ActiveRecord::Associations::ForeignAssociation
+
+        type ids = Array[untyped]
+
+        @_building_changes: bool?
+        @_was_loaded: bool
+
+        def ids_reader: () -> ids
+        def ids_writer: (ids? ids) -> untyped
+        def size: () -> Integer
+        def empty?: () -> bool
+        def include?: (record record) -> untyped
+        def load_target: () -> Array[record]
+        def build_changes: (?bool from_target) { () -> untyped } -> untyped
+        def trigger: (Symbol prefix, ids before_ids, ids after_ids) -> untyped
+        def handle_dependency: () -> untyped
+        def insert_record: (record record, *untyped) ?{ (?) -> untyped } -> bool
+        def default: () { (?) -> untyped } -> untyped
+
+        private
+
+        def _create_record: (Hash[untyped, untyped] | Array[Hash[untyped, untyped]] attributes, ?bool raises) ?{ (record) -> void } -> (record | Array[record])
+        def delete_count: (Symbol? method, relation scope, ids ids) -> Integer
+        def delete_or_nullify_all_records: (Symbol? method) -> Integer
+        def delete_records: (Array[record] records, Symbol? method) -> untyped
+        def source_attr: () -> String
+        def klass_attr: () -> String
+        def read_records_ids: (Array[record] | record | nil records) -> ids?
+        def ids_rewriter: (untyped ids, Symbol operator) -> untyped
+        def column_default_value: () -> untyped
+        def callback: (*untyped) -> true
+        def replace_records: (*untyped) -> untyped
+        def concat_records: (*untyped) -> untyped
+        def delete_or_destroy: (*untyped) -> untyped
+        def difference: (Array[untyped] a, Array[untyped] b) -> Array[untyped]
+        def intersection: (Array[untyped] a, Array[untyped] b) -> Array[untyped]
+        def scope_for_create: () -> Hash[String, untyped]
+        def find_target?: () -> untyped
+        def foreign_key_present?: () -> bool
+        def invertible_for?: (record record) -> untyped
+        def stale_state: () -> ids?
+      end
+    end
+  end
+end
+
+class ActiveRecord::Associations::BelongsToManyAssociation = Torque::PostgreSQL::Associations::BelongsToManyAssociation

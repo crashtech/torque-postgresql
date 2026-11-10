@@ -1,0 +1,19 @@
+# The macros these builders install on models (torque_enum, torque_enum_set,
+# period_for, torque_search_for, struct_for) are declared under their default
+# names next to each feature. The per-attribute methods they generate, like
+# `roles`, `admin?`, the period scopes and the search scope, depend on the
+# model's columns and on config, so RBS cannot express them.
+module Torque
+  module PostgreSQL
+    module Attributes
+      module Builder
+        type builder_class = singleton(Enum) | singleton(Period) | singleton(FullTextSearch)
+
+        def self.include_on: (model klass, Symbol method_name, builder_class builder_klass, **untyped extra) ?{ (Enum | Period | FullTextSearch builder) -> void } -> untyped
+        def self.search_vector_options: (columns: Adapter::search_columns, ?language: String | Symbol | nil, ?stored: bool, **untyped options) -> Hash[Symbol, untyped]
+        def self.to_search_weights: (Adapter::search_columns columns) -> Hash[String, String]
+        def self.to_search_vector_operation: (String | Symbol | nil language, Hash[String, String] weights) -> arel_node
+      end
+    end
+  end
+end

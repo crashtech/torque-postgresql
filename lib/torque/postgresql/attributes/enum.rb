@@ -51,7 +51,7 @@ module Torque
 
             @load_values_monitor.synchronize do
               next if defined?(@values)
-              @values = connection.enum_values(type_name).freeze
+              @values = ::ActiveRecord::Base.with_connection { |c| c.enum_values(type_name) }.freeze
             end
 
             @values
@@ -113,11 +113,6 @@ module Torque
             def method_missing(method_name, *arguments)
               return super if self == Enum
               valid?(method_name) ? new(method_name.to_s) : super
-            end
-
-            # Get a connection based on its name
-            def connection
-              ::ActiveRecord::Base.connection
             end
 
         end

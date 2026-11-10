@@ -1,0 +1,69 @@
+module Torque
+  module PostgreSQL
+    module Attributes
+      class Enum < String
+        include Comparable
+        extend Enumerable[untyped]
+
+        class EnumError < ArgumentError
+        end
+
+        LAZY_VALUE: String
+
+        @values: Array[String]
+        @type_name: String
+        @load_values_monitor: Monitor
+
+        def self.each: (*untyped) ?{ (instance) -> untyped } -> untyped
+        def self.sample: (*untyped) -> instance?
+        def self.size: () -> Integer
+        def self.length: () -> Integer
+        def self.lookup: (table_ref name) -> singleton(Enum)
+        def self.include_on: (model klass, ?Symbol? method_name) -> untyped
+        def self.new: (untyped value) -> untyped
+        def self.inherited: (singleton(Enum) subclass) -> untyped
+        def self.values: () -> Array[String]?
+        def self.keys: () -> Array[Symbol]
+        def self.members: () -> Array[instance]
+        def self.texts: () -> Array[String]
+        def self.to_options: () -> Array[[String, String]]
+        def self.fetch: (String | Symbol value, *untyped) -> instance?
+        alias self.[] self.fetch
+        def self.type_name: () -> String
+        def self.valid?: (untyped value) -> bool
+        def self.scope: (arel_attribute attribute, String | Symbol value) -> ::Arel::Nodes::Equality
+
+        private
+
+        def self.respond_to_missing?: (Symbol method_name, ?bool include_private) -> bool
+        def self.method_missing: (Symbol method_name, *untyped arguments) -> untyped
+
+        public
+
+        def initialize: (untyped value) -> void
+        def <=>: (untyped other) -> Integer?
+        def ==: (untyped other) -> bool
+        alias eql? ==
+        def nil?: () -> bool
+        alias empty? nil?
+        def replace: (String | Symbol value) -> self
+        def text: (?column_ref? attr, ?untyped model) -> String
+        def to_s: () -> String
+        def to_i: () -> Integer?
+        def inspect: () -> String
+
+        private
+
+        def i18n_keys: (?column_ref? attr, ?untyped model) -> Array[Symbol]
+        def respond_to_missing?: (Symbol method_name, ?bool include_private) -> untyped
+        def method_missing: (Symbol method_name, *untyped arguments) -> untyped
+        def raise_invalid: (untyped value) -> bot
+        def raise_comparison: (untyped other) -> bot
+      end
+    end
+  end
+end
+
+class ActiveRecord::Base
+  def self.torque_enum: (*Torque::PostgreSQL::column_ref attributes, ?only: Array[Torque::PostgreSQL::column_ref] | Torque::PostgreSQL::column_ref, ?except: Array[Torque::PostgreSQL::column_ref] | Torque::PostgreSQL::column_ref, ?prefix: bool | Torque::PostgreSQL::column_ref, ?suffix: bool | Torque::PostgreSQL::column_ref, ?force: bool) -> untyped
+end

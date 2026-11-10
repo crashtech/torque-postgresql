@@ -1,0 +1,11 @@
+module Torque
+  module PostgreSQL
+    module Reflection
+      def create: (Symbol macro, Symbol name, Proc? scope, Hash[Symbol, untyped] options, model ar) -> reflection?
+    end
+  end
+end
+
+module ActiveRecord::Reflection
+  extend Torque::PostgreSQL::Reflection
+end

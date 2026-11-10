@@ -36,7 +36,7 @@ module Torque
               end
               parts_to_duration(parts.compact)
             when ::Array
-              value.compact!
+              value = value.compact
               parts = CAST_PARTS.drop(6 - value.size).zip(value).to_h
               parts_to_duration(parts)
             when ::Hash

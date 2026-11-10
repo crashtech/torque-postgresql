@@ -1,16 +1,15 @@
 ---
 title: Predicate Builder
 section: querying
-description: This is just somewhat specific to PostgreSQL, but mostly an enhancement
-  to Rails ActiveRecord::PredicateBuilder, whose primary purpose is to make .where
-  an
+description: An enhancement to Rails ActiveRecord::PredicateBuilder that makes .where
+  understand the PostgreSQL-specific types and operators provided by this gem
 ---
 
 This is just somewhat specific to PostgreSQL, but mostly an enhancement to Rails `ActiveRecord::PredicateBuilder`, whose primary purpose is to make `.where` and `.where.not` calls in the format for `(attribute: value)` correctly translate into several distinct Arel and SQL operations. Its sole purpose is to ease the process of writing queries, without the need to use Arel directly for everything.
 
 The inspiration for these features, and some notable examples, is the handling of `Array`, `Range`, and `ActiveRecord::Base` (A model). Each one of them gives the developer exactly what they would expect from their respective operation. That said, here are a few more options that are now made available.
 
-You can pick and choose the ones you want enabled/disabled using [`predicate_builder.enabled`]({{ site.baseurl }}/getting-started/configuring/#predicate_builder.enabled) config.
+You can pick and choose the ones you want enabled/disabled using [`predicate_builder.enabled`](/postgresql/getting-started/configuring/#predicate_builder.enabled) config.
 
 ## `Regexp`
 
@@ -23,7 +22,7 @@ Video.where(title: /(one|two)/i)    # WHERE "videos"."title" ~* '(one|two)'
 
 ## `Enumerator::Lazy`
 
-The rare use of `[].lazy`, where we would usually have to call `.force`, but there are cases where we would like to support both lazy and non-lazy operations simultaneously. This also makes it safe to use due to [`predicate_builder.lazy_timeout`]({{ site.baseurl }}/getting-started/configuring/#predicate_builder.lazy_timeout) and [`predicate_builder.lazy_limit`]({{ site.baseurl }}/getting-started/configuring/#predicate_builder.lazy_limit), which limit the resources used.
+The rare use of `[].lazy`, where we would usually have to call `.force`, but there are cases where we would like to support both lazy and non-lazy operations simultaneously. This also makes it safe to use due to [`predicate_builder.lazy_timeout`](/postgresql/getting-started/configuring/#predicate_builder.lazy_timeout) and [`predicate_builder.lazy_limit`](/postgresql/getting-started/configuring/#predicate_builder.lazy_limit), which limit the resources used.
 
 ```ruby
 Video.where(user_id: [1,2].lazy)    # WHERE "videos"."user_id" IN (1,2)
@@ -37,7 +36,7 @@ At first, this may seem unnecessary. However, when working with joins, this can 
 Video.joins(:tags).where(language: Tag.arel_table['language'])    # WHERE "videos"."language" = "tags"."language"
 ```
 
-Another great advantage of this is the proper handling of array columns, which completely facilitated the operations of [Belongs to Many]({{ site.baseurl }}/modeling/belongs-to-many/) features.
+Another great advantage of this is the proper handling of array columns, which completely facilitated the operations of [Belongs to Many](/postgresql/modeling/belongs-to-many/) features.
 
 ```ruby
 Video.where(tag_ids: Tag.arel_table['id'])          # WHERE "tags"."id" = ANY("videos"."tag_ids")
@@ -47,7 +46,7 @@ Video.where(tag_ids: User.arel_table['tag_ids'])    # WHERE "videos"."tag_ids" &
 
 ## `Array`
 
-> This feature needs to be enabled via [`predicate_builder.handle_array_attributes`]({{ site.baseurl }}/getting-started/configuring/#predicate_builder.handle_array_attributes) because it may break the current state of your application if you have been using `.where` with array columns and any type of value (eg, `.where(tag_ids: [1,2,3])`).
+> This feature needs to be enabled via [`predicate_builder.handle_array_attributes`](/postgresql/getting-started/configuring/#predicate_builder.handle_array_attributes) because it may break the current state of your application if you have been using `.where` with array columns and any type of value (eg, `.where(tag_ids: [1,2,3])`).
 
 The primary purpose of this feature is to more accurately convey the meaning of array and non-array values in these operations. It only takes place when `.where` is used against an array column.
 
@@ -55,13 +54,23 @@ The primary purpose of this feature is to more accurately convey the meaning of 
 Video.where(tag_ids: [1,2,3])    # WHERE "videos"."tag_ids" && '{1,2,3}'
 Video.where(tag_ids: 1)          # WHERE 1 = ANY("videos"."tag_ids")
 Video.where(tag_ids: [])         # WHERE CARDINALITY("videos"."tag_ids") = 0
+Video.where(tag_ids: nil)        # WHERE "videos"."tag_ids" IS NULL
+```
+
+Records stand for their ids and a `Set` is a list, as they are anywhere else in `where`, and a
+`nil` among the values keeps meaning `IS NULL`, the same way Rails treats it on a plain column.
+
+```ruby
+Video.where(tag_ids: [tag])      # WHERE "videos"."tag_ids" && '{7}'
+Video.where(tag_ids: Set[1, 2])  # WHERE "videos"."tag_ids" && '{1,2}'
+Video.where(tag_ids: [1, nil])   # WHERE ("videos"."tag_ids" && '{1}' OR "videos"."tag_ids" IS NULL)
 ```
 
 ## Features combined
 
 ### `Hash` on a composite column
 
-A `Hash` given to a [composite]({{ site.baseurl }}/data-types/composite/) column is broken down
+A `Hash` given to a [composite](/postgresql/data-types/composite/) column is broken down
 into one condition per column of the type, and every pair is sent back through the predicate
 builder. That means the whole `where` vocabulary above is available inside a composite, including
 ranges and arrays, and it nests as deep as the type does.
@@ -98,13 +107,16 @@ Place.where(offices: { street: 'Main' })
 # )
 ```
 
+The same resolution serves `order`, `group`, `having`, `distinct_on` and `buckets`, so
+`Place.order(home: { street: :asc })` sorts by that column.
+
 > **Note** A key that is not a column of the type raises an `ArgumentError`, instead of being
-> silently ignored. See [composite]({{ site.baseurl }}/data-types/composite/#querying) for the
+> silently ignored. See [composite](/postgresql/data-types/composite/#querying) for the
 > full behavior.
 
 ### `Hash` on a struct column
 
-A [struct]({{ site.baseurl }}/data-types/struct/) column works the same way, over the properties
+A [struct](/postgresql/data-types/struct/) column works the same way, over the properties
 of the document rather than the columns of a type. Each value is cast to the type its class
 declares before the comparison, so the condition is typed rather than a plain string match.
 
@@ -120,18 +132,25 @@ Profile.where(settings: { theme: %w[light dark] })
 
 Profile.where(settings: { address: { city: 'SP' } })
 # WHERE ("profiles"."settings" #>> ARRAY['address', 'city']) = 'SP'
+
+Profile.where(settings: { tags: { 0 => 'test' } })
+# WHERE ("profiles"."settings" #>> ARRAY['tags', '0']) = 'test'
 ```
+
+The same resolution serves `order`, `group`, `having`, `distinct_on` and `buckets`, so
+`Profile.order(settings: { theme: :asc })` sorts by that property, cast as declared.
 
 > **Note** Only `jsonb` columns can be queried by their properties, because `json` has no
 > operators for it, and a `json` column raises an `ArgumentError`. See
-> [struct]({{ site.baseurl }}/data-types/struct/#querying) for the full behavior.
+> [struct](/postgresql/data-types/struct/#querying) for the full behavior.
 
-### Path or pattern on an ltree column
+### Paths and patterns on ltree columns
 
-A condition over an [ltree]({{ site.baseurl }}/data-types/ltree/) column is rarely a plain
-equality, so the value decides which operator to use. A plain path is compared with `=`, which
-keeps `find_by`, uniqueness validations and associations behaving as usual. As soon as the value
-carries one of the lquery features, the condition becomes a `~` match instead.
+Every column of the [ltree](/postgresql/data-types/ltree/) extension goes through the
+same handler, so the value never decides whether it applies, only which operator to use. On an
+`ltree` column a plain path is compared with `=`, which keeps `find_by`, uniqueness validations
+and associations behaving as usual, and a value carrying one of the lquery features becomes a
+`~` match instead.
 
 ```ruby
 Category.where(path: 'Top.Science')
@@ -151,6 +170,35 @@ A star also matches zero labels, so `Top.*` covers `Top` itself and is the same 
 which a GiST index serves just as well. That is why the whole subtree query needs no operator of
 its own.
 
+An Array is one value, unless its first entry is itself an Array, a path or a pattern. Then it is
+a list of values, and the condition asks whether any of them matches.
+
+```ruby
+Category.where(path: [%w[Top a], %w[Top b]])
+# WHERE "categories"."path" IN ('Top.a', 'Top.b')
+
+Category.where(path: [['Top', :any], ['Other', 1..]])
+# WHERE "categories"."path" ? '{Top.*,"Other.*{1,}"}'::lquery[]
+```
+
+The same rules serve an `ltree[]` column, where a single value asks whether any entry matches
+it, and an `lquery` column, where the kinds swap: a pattern is the equality and a path is the
+match, meaning which stored patterns match that path.
+
+```ruby
+User.where(permissions: 'app.users')
+# WHERE 'app.users' = ANY("users"."permissions")
+
+User.where(permissions: ['app', :any])
+# WHERE "users"."permissions" ~ 'app.*'::lquery
+
+Rule.where(pattern: ['users', :any])
+# WHERE "rules"."pattern"::text = 'users.*'
+
+Rule.where(pattern: 'users.admin')
+# WHERE "rules"."pattern" ~ 'users.admin'::ltree
+```
+
 Records and objects that describe their own path are accepted anywhere a label is, the first by
 its primary key and the second by whatever `to_tree_path` returns.
 
@@ -162,6 +210,6 @@ Category.where(path: [parent, :any])
 # WHERE "categories"."path" ~ '1.*'::lquery
 ```
 
-> **Note** An `Array` here is never a list of values, so this is **not** an `IN`. At the top level
-> it is the sequence of items of a single path, and nested it is a group of alternatives. Testing a
-> path against several whole patterns is the `?` operator, reached through Arel.
+> **Note** `nil` is still `IS NULL` and an empty list still matches nothing, but a Relation or
+> an Arel attribute is not accepted as a value on these columns. See
+> [ltree](/postgresql/data-types/ltree/#querying) for the full table of operators.

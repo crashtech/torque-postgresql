@@ -18,7 +18,7 @@ end
 
 ## Using it
 
-The column is automatically identified and its value turned into what is defined in [`geometry.circle_class`]({{ site.baseurl }}/getting-started/configuring/#geometry.circle_class) or into a `Torque::PostgreSQL::Circle`. 
+The column is automatically identified and its value turned into what is defined in [`geometry.circle_class`](/postgresql/getting-started/configuring/#geometry.circle_class) or into a `Torque::PostgreSQL::Circle`. 
 
 This original implementation provides a couple of methods:
 ```ruby

@@ -74,7 +74,7 @@ end
 
 ## The composite Class
 
-There is nothing to declare. Classes are created on demand under the namespace defined by [`composite.namespace`]({{ site.baseurl }}/getting-started/configuring/#composite.namespace), and their attributes come from the columns of the type.
+There is nothing to declare. Classes are created on demand under the namespace defined by [`composite.namespace`](/postgresql/getting-started/configuring/#composite.namespace), and their attributes come from the columns of the type.
 ```ruby
 Composite::Address                          # Created on demand
 Composite::Address.type_name                # 'address'
@@ -101,7 +101,7 @@ class Composite::Address < Torque::PostgreSQL::Composite
 end
 ```
 
-Use [`composite.irregular_types`]({{ site.baseurl }}/getting-started/configuring/#composite.irregular_types) when the name of the class does not match the name of the type.
+Use [`composite.irregular_types`](/postgresql/getting-started/configuring/#composite.irregular_types) when the name of the class does not match the name of the type.
 ```ruby
 c.composite.irregular_types = { 'address' => 'Places::Location' }
 ```
@@ -172,6 +172,12 @@ Place.where(location: { base: { street: 'X' } })
 # WHERE (("places"."location")."base")."street" = 'X'
 ```
 
+A list of whole values asks whether any of them is the stored one.
+```ruby
+Place.where(home: [address, other])
+# WHERE "places"."home" IN ('("Main",,"9",)'::address, '("Side",,"1",)'::address)
+```
+
 For array columns, a whole value checks whether any entry matches it, while a `Hash` checks whether any entry matches the columns it describes.
 ```ruby
 Place.where(offices: address)
@@ -189,6 +195,31 @@ Place.where(offices: { street: 'Main' })
 
 > **Note** A key that is not a column of the type raises an `ArgumentError`, instead of being silently ignored.
 
+### Sorting and grouping
+
+The same `Hash` reaches a column wherever Rails takes one, so `order`, `group`, `pluck` and `having` work over the value as well.
+```ruby
+Place.order(home: { street: :desc })
+# ORDER BY ("places"."home")."street" DESC
+
+Place.group(home: :street).count
+# GROUP BY ("places"."home")."street"  => {"Main" => 1, "Side" => 1}
+
+Place.group(:home).having(home: { street: 'Main' })
+# HAVING (("places"."home")."street" = 'Main')
+
+Place.pluck(home: :number)                      # [9, 1]
+Place.order(:home)                              # The whole value, compared column by column
+```
+
+The gem's own [`distinct_on`](/postgresql/querying/distinct-on/), [`buckets`](/postgresql/querying/buckets/), [`join_series`](/postgresql/querying/join-series/) and the `Hash` form of calculations resolve a column the same way.
+```ruby
+Place.distinct_on(home: :street)
+Place.join_series(1..10, with: { home: :number })
+```
+
+> **Note** Rails resolves one level when sorting and grouping, so a column of a nested type is only reachable in `where`. Array columns are not resolved this way, and `having` follows PostgreSQL's rule that the column has to be grouped or aggregated.
+
 ## Validations
 
 Validations declared on the composite class run whenever the record is validated. A single `:invalid` error is added to the column, and every entry is validated for array columns.
@@ -201,7 +232,7 @@ place.errors.added?(:home, :invalid)            # true
 This is done with the `nested` validator, which is available for any attribute that holds objects that can validate themselves.
 ```ruby
 validates :home, nested: true
-validates :settings, nested: true, allow_blank: true
+validates :offices, nested: true, allow_blank: true
 ```
 
 ## Encryption

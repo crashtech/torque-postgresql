@@ -18,7 +18,7 @@ end
 
 ## Using it
 
-The column is automatically identified and its value turned into what is defined in [`geometry.box_class`]({{ site.baseurl }}/getting-started/configuring/#geometry.box_class) or into a `Torque::PostgreSQL::Box`. 
+The column is automatically identified and its value turned into what is defined in [`geometry.box_class`](/postgresql/getting-started/configuring/#geometry.box_class) or into a `Torque::PostgreSQL::Box`. 
 
 This original implementation provides a couple of methods:
 ```ruby

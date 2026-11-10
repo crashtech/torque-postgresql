@@ -1,0 +1,20 @@
+module Torque
+  module PostgreSQL
+    class GeometryBuilder < ActiveModel::Type::Value
+      DESTRUCTOR: Regexp
+      NUMBER_SERIALIZER: ^(Numeric) -> String
+
+      def type: () -> (Symbol | String)
+      def pieces: () -> Array[Symbol]
+      def formation: () -> String
+      def cast: (untyped value) -> untyped
+      def serialize: (untyped value) -> String?
+      def deserialize: (String? value) -> untyped
+      def type_cast_for_schema: (untyped value) -> (Array[Numeric] | String)
+      def changed_in_place?: (String? raw_old_value, untyped new_value) -> bool
+      def number_serializer: () -> ^(Numeric) -> String
+      def config_class: () -> Class
+      def build_klass: (*untyped args) -> untyped
+    end
+  end
+end

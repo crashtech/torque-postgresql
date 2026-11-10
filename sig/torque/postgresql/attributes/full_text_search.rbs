@@ -1,0 +1,13 @@
+module Torque
+  module PostgreSQL
+    module Attributes
+      module FullTextSearch
+        def self.include_on: (model klass, ?Symbol? method_name) -> untyped
+      end
+    end
+  end
+end
+
+class ActiveRecord::Base
+  def self.torque_search_for: (*Torque::PostgreSQL::column_ref attributes, ?with_rank: bool | Torque::PostgreSQL::column_ref, ?mode: Symbol, ?order: bool | Symbol, ?language: String | Symbol, ?prefix: Torque::PostgreSQL::column_ref, ?suffix: Torque::PostgreSQL::column_ref, ?force: bool) -> untyped
+end

@@ -1,0 +1,38 @@
+module Torque
+  module PostgreSQL
+    class Segment < ::Struct[untyped]
+      def point0: () -> untyped
+      def point0=: (untyped value) -> untyped
+      def point1: () -> untyped
+      def point1=: (untyped value) -> untyped
+
+      def x1=: (Numeric value) -> untyped
+      def x1: () -> Numeric
+      def y1=: (Numeric value) -> untyped
+      def y1: () -> Numeric
+      def x2=: (Numeric value) -> untyped
+      def x2: () -> Numeric
+      def y2=: (Numeric value) -> untyped
+      def y2: () -> Numeric
+
+      private
+
+      def new_point: (Numeric x, Numeric y) -> untyped
+    end
+
+    module Adapter
+      module OID
+        class Segment < Torque::PostgreSQL::GeometryBuilder
+          PIECES: ::Array[Symbol]
+          FORMATION: String
+
+          def point_class: () -> Class
+          def build_klass: (*untyped args) -> untyped
+        end
+      end
+    end
+  end
+end
+
+class ActiveRecord::Segment < Torque::PostgreSQL::Segment
+end

@@ -1,0 +1,20 @@
+module Torque
+  module PostgreSQL
+    module Inheritance
+      module Record
+        @partial_record: bool?
+        @readonly: bool
+
+        def partial_record?: () -> bool
+        def reload: (*untyped) -> self
+        def destroy: () -> untyped
+
+        private
+
+        def without_readonly: () { () -> untyped } -> untyped
+        def mark_as_partial_record!: () -> untyped
+        def mark_as_full_record!: () -> bool
+      end
+    end
+  end
+end

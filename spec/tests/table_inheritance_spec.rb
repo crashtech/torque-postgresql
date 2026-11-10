@@ -1419,4 +1419,14 @@ RSpec.describe 'TableInheritance' do
       expect(queries).to be_empty
     end
   end
+
+  context 'on connection' do
+    it 'checks the physical inheritance without a permanent connection' do
+      expect(ActiveRecord::Base).not_to receive(:connection)
+
+      ActivityPost.remove_instance_variable(:@physically_inherited) \
+        if ActivityPost.instance_variable_defined?(:@physically_inherited)
+      expect(ActivityPost.physically_inherited?).to be_truthy
+    end
+  end
 end

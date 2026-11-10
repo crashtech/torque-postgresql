@@ -1,0 +1,42 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module DatabaseStatements
+        EXTENDED_DATABASE_TYPES: Array[Symbol]
+
+        @_dump_mode: bool
+        @schemas_blacklist: Array[String]
+        @schemas_whitelist: Array[String]
+        @schemas_search_path_sanitized: Array[String]
+
+        def dump_mode!: () -> bool
+        def schemas_blacklist: () -> Array[String]
+        def schemas_whitelist: () -> Array[String]
+        def schemas_search_path_sanitized: () -> Array[String]
+        def valid_type?: (Symbol | String type) -> bool
+        def extended_types: () -> Array[Symbol]
+        def schema_exists?: (table_ref name, ?filtered: bool) -> bool
+        def type_exists?: (table_ref name) -> bool
+        alias data_type_exists? type_exists?
+        def initialize_type_map: (?untyped m) -> untyped
+        def load_additional_types: (?Array[Integer]? oids) -> untyped
+        def torque_load_additional_types: (?Array[Integer]? oids) -> untyped
+        def torque_load_additional_types?: () -> bool
+        def composite_column_types: (table_ref name) -> Hash[String, type_caster]
+        def composite_types: () -> Array[String]
+        def user_defined_types: (*String? categories) -> Hash[String, String]
+        def inherited_tables: () -> Hash[String, Array[String]]
+        def user_defined_schemas: () -> Array[String]
+        def user_defined_schemas_sql: () -> String
+        def column_definitions: (table_ref table_name) -> Array[Array[untyped]]
+        def list_versioned_commands: (Symbol type) -> Array[[String, String]]
+        def filter_by_schema: () -> Array[String]
+
+        private
+
+        def composite_type_dependencies: () -> Hash[String, Array[String]]
+        def sort_composite_type: (String name, Hash[String, Array[String]] dependencies, Array[String] result) -> Array[String]?
+      end
+    end
+  end
+end

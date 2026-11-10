@@ -1,0 +1,15 @@
+module Torque
+  module PostgreSQL
+    module I18n
+      def localize: (Symbol | String locale, untyped object, ?Symbol | String format, ?Hash[Symbol, untyped] options) -> String
+    end
+  end
+end
+
+module I18n
+  module Backend
+    module Base
+      prepend Torque::PostgreSQL::I18n
+    end
+  end
+end

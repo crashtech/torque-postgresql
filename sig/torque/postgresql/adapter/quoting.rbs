@@ -1,0 +1,20 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module Quoting
+        type name = table_ref
+
+        QUOTED_TYPE_NAMES: untyped
+        Name: singleton(ActiveRecord::ConnectionAdapters::PostgreSQL::Name)
+        Column: singleton(ActiveRecord::ConnectionAdapters::PostgreSQL::Column)
+        ColumnDefinition: untyped
+        Utils: singleton(ActiveRecord::ConnectionAdapters::PostgreSQL::Utils)
+
+        def quote_type_name: (name name, *table_ref args) -> String
+        def quote_identifier_name: (name name, ?table_ref? schema) -> String
+        def quote_default_expression: (untyped value, untyped column) -> String
+        def lookup_cast_type_for_column: (column column) -> type_caster
+      end
+    end
+  end
+end

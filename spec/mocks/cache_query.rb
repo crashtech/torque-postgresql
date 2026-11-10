@@ -32,7 +32,7 @@ module Mocks
 
       original_method = ActiveRecord::Base.connection.method(:raw_execute)
       original_method.receiver.define_singleton_method(:raw_execute) do |*args, **xargs, &block|
-        result ||= [args.first, args.third]
+        result ||= [args.first, args.third] unless %w[SCHEMA TRANSACTION].include?(args.second)
         super(*args, **xargs, &block)
       end
 

@@ -98,6 +98,13 @@ RSpec.describe 'Enum' do
       expect(subject.values).to be_eql(values)
     end
 
+    it 'loads the values without a permanent connection' do
+      expect(ActiveRecord::Base).not_to receive(:connection)
+
+      subject.remove_instance_variable(:@values) if subject.instance_variable_defined?(:@values)
+      expect(subject.values).to be_eql(values)
+    end
+
     it 'can return a sample value' do
       expect(Enum).to respond_to(:sample)
       expect(Enum::ContentStatus).to respond_to(:sample)
@@ -291,8 +298,13 @@ RSpec.describe 'Enum' do
     context 'on serialize' do
       it 'returns nil' do
         expect(subject.serialize(nil)).to be_nil
-        expect(subject.serialize('test')).to be_nil
-        expect(subject.serialize(15)).to be_nil
+      end
+
+      it 'keeps an invalid value for the database to reject' do
+        expect(subject.serialize('test')).to be_eql('test')
+        expect(subject.serialize(15)).to be_eql('15')
+        expect { User.create!(name: 'Rick', role: 'bogus') }
+          .to raise_error(ActiveRecord::StatementInvalid, /invalid input value for enum/)
       end
 
       it 'returns as string' do
@@ -306,10 +318,14 @@ RSpec.describe 'Enum' do
         expect(subject.cast(nil)).to be_nil
       end
 
-      it 'accepts invalid values as nil' do
+      it 'accepts blank values as nil' do
         expect(subject.cast(false)).to be_nil
-        expect(subject.cast(true)).to be_nil
         expect(subject.cast([])).to be_nil
+      end
+
+      it 'keeps invalid values for the database to reject' do
+        expect(subject.cast(true)).to be(true)
+        expect(subject.cast('bogus')).to be_eql('bogus')
       end
 
       it 'accepts string' do

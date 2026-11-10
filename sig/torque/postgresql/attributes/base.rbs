@@ -1,0 +1,37 @@
+module Torque
+  module PostgreSQL
+    module Attributes
+      class Base
+        include ActiveModel::Model
+        include ActiveModel::Attributes
+        include ActiveModel::Serialization
+        include ActiveModel::Serializers::JSON
+        include ActiveModel::Dirty
+        include ActiveModel::Validations::Callbacks
+        include SimpleEnum
+        extend SimpleEnum::ClassMethods
+        include ActiveRecord::Store
+        include ActiveModel::Attributes::Normalization
+        include ActiveRecord::Encryption::EncryptableRecord
+
+        def self.filter_attributes: () -> Array[Symbol | String | Regexp | Proc]
+        def self.filter_attributes=: (Array[Symbol | String | Regexp | Proc] value) -> Array[Symbol | String | Regexp | Proc]
+        def self.columns_hash: () -> Hash[String, column]
+        def self.encrypts: (*column_ref names, **untyped options) -> untyped
+        def self.inspection_filter: () -> ActiveSupport::ParameterFilter
+
+        def inspect: () -> String
+        def []: (column_ref key) -> untyped
+        def []=: (column_ref key, untyped value) -> untyped
+        def ==: (untyped other) -> bool
+        alias eql? ==
+        def empty?: () -> bool
+        def hash: () -> Integer
+        def to_h: () -> Hash[Symbol, untyped]
+        def type_for_attribute: (column_ref name) ?{ (?) -> untyped } -> type_caster
+        def read_attribute_before_type_cast: (column_ref name) -> untyped
+        def read_attribute_for_database: (column_ref name) -> untyped
+      end
+    end
+  end
+end

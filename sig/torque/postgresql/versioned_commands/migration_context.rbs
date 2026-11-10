@@ -1,0 +1,30 @@
+module Torque
+  module PostgreSQL
+    class IllegalCommandTypeError < ActiveRecord::MigrationError
+      def initialize: (String file) -> void
+    end
+
+    module VersionedCommands
+      module MigrationContext
+        type status = [String, String, String]
+
+        InvalidMigrationTimestampError: untyped
+        PGAdapter: singleton(ActiveRecord::ConnectionAdapters::PostgreSQLAdapter)
+
+        def migrations: () -> Array[untyped]
+        def migrations_status: () -> Array[status]
+        def migration_commands: () -> Array[CommandMigration]
+
+        private
+
+        def running_for_pg?: () -> bool
+        def command_files: () -> Array[String]
+        def parse_command_filename: (String filename) -> Array[String?]?
+      end
+    end
+  end
+end
+
+class ActiveRecord::MigrationContext
+  prepend Torque::PostgreSQL::VersionedCommands::MigrationContext
+end

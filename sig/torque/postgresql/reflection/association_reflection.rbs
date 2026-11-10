@@ -1,0 +1,18 @@
+module Torque
+  module PostgreSQL
+    module Reflection
+      module AssociationReflection
+        def initialize: (Symbol name, Proc? scope, Hash[Symbol, untyped] options, model active_record) -> void
+
+        private
+
+        def derive_foreign_key: (*untyped, **untyped) -> String
+        def automatic_inverse_of: () -> Symbol?
+      end
+    end
+  end
+end
+
+class ActiveRecord::Reflection::AssociationReflection
+  prepend Torque::PostgreSQL::Reflection::AssociationReflection
+end

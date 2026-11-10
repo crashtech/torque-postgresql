@@ -1,0 +1,38 @@
+module Torque
+  module PostgreSQL
+    module Attributes
+      module Builder
+        class Enum
+          type methods = Hash[String, [String, String, String, String]]
+
+          VALID_TYPES: Array[Symbol]
+          FN: String
+
+          attr_accessor klass: model
+          attr_accessor attribute: String
+          attr_accessor subtype: Adapter::OID::Enum
+          attr_accessor options: Hash[Symbol, untyped]
+          attr_accessor values: Array[String]
+          attr_accessor klass_module: Module?
+          attr_accessor instance_module: Module?
+
+          @values_methods: methods
+
+          def initialize: (model klass, column_ref attribute, Hash[Symbol, untyped] options) -> void
+          def values_methods: () -> methods
+          def set_features?: () -> bool
+          def conflicting?: () -> untyped
+          def build: () -> untyped
+
+          private
+
+          def dangerous?: (String | Symbol method_name, ?bool class_method) -> untyped
+          def plural: () -> untyped
+          def set_scopes: () -> untyped
+          def stringify: () -> untyped
+          def all_values: () -> untyped
+        end
+      end
+    end
+  end
+end

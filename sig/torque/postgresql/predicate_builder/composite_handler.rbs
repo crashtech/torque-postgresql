@@ -1,0 +1,26 @@
+module Torque
+  module PostgreSQL
+    module PredicateBuilder
+      class CompositeHandler
+        @predicate_builder: ActiveRecord::PredicateBuilder
+        @composite: Adapter::OID::Composite?
+
+        def self.candidate?: (type_caster? type, ?untyped value) -> bool
+        def self.columns?: (untyped value) -> bool
+        def initialize: (ActiveRecord::PredicateBuilder predicate_builder) -> void
+        def call: (arel_node attribute, type_caster type, untyped value) -> arel_node
+        def table_for: (arel_node source, type_caster type) -> PredicateTable
+        def type_of: (column_ref name) -> [type_caster]
+
+        private
+
+        def predicate_builder: () -> ActiveRecord::PredicateBuilder
+        def composite: () -> Adapter::OID::Composite?
+        def call_for_record: (arel_node attribute, untyped value, bool array) -> arel_node
+        def call_for_array: (arel_node attribute, untyped value) -> arel_node
+        def conditions_for: (arel_node source, untyped value) -> arel_node
+        def group_for: (arel_node source, untyped entry) -> ::Arel::Nodes::Grouping
+      end
+    end
+  end
+end

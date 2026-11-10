@@ -1,0 +1,16 @@
+module Torque
+  module PostgreSQL
+    module PredicateBuilder
+      class RegexpHandler
+        @predicate_builder: ActiveRecord::PredicateBuilder
+
+        def initialize: (ActiveRecord::PredicateBuilder predicate_builder) -> void
+        def call: (arel_attribute attribute, Regexp value) -> ::Arel::Nodes::InfixOperation
+
+        private
+
+        def predicate_builder: () -> ActiveRecord::PredicateBuilder
+      end
+    end
+  end
+end

@@ -1,0 +1,36 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module InheritanceStatements
+        type features = Hash[Symbol, bool]
+        type tree = Array[[String, Array[String]]]
+
+        SYNC_MARKER: String
+        SYNC_FEATURES: Array[Symbol]
+
+        def sync_inheritance_features: (table_ref table_name, ?table_ref | Array[table_ref] | nil children, ?prune: bool, **bool features) -> tree
+
+        private
+
+        def sync_inheritance_tree: (table_ref table_name, table_ref | Array[table_ref] | nil children) -> tree
+        def sync_inheritance_descendants: (Hash[String, Array[String]] dependencies, String table_name) -> Array[String]
+        def sync_inheritance_selection: (Hash[Symbol, bool] | bool features) -> features
+        def sync_inheritance_into: (String child, Array[String] parents, features features, bool prune) -> untyped
+        def sync_inheritance_primary_key: (String child, Array[String] parents) -> untyped
+        def sync_inheritance_indexes: (String child, Array[String] parents, features features, bool prune) -> untyped
+        def sync_inheritance_unique_constraints: (String child, Array[String] parents, bool prune) -> untyped
+        def sync_inheritance_exclusion_constraints: (String child, Array[String] parents, bool prune) -> untyped
+        def sync_inheritance_foreign_keys: (String child, Array[String] parents, bool prune) -> untyped
+        def sync_inheritance_name: (String child, String parent, String source) -> String
+        def sync_inheritance_copy?: (String | Symbol name) -> bool
+        def sync_inheritance_stale: (Array[untyped] existing, Hash[String, untyped] expected) -> Array[String]
+        def sync_inheritance_constraint_indexes: (String table_name, ?features? features) -> Array[String]
+        def sync_inheritance_index_options: (ActiveRecord::ConnectionAdapters::IndexDefinition index) -> Hash[Symbol, untyped]
+        def sync_inheritance_index?: (ActiveRecord::ConnectionAdapters::IndexDefinition current, ActiveRecord::ConnectionAdapters::IndexDefinition source) -> bool
+        def sync_inheritance_exclusion?: (untyped current, untyped source) -> bool
+        def sync_inheritance_foreign_key?: (untyped current, untyped source) -> bool
+        def sync_inheritance_parent_primary_key?: (table_ref table_name) -> bool
+      end
+    end
+  end
+end

@@ -4,7 +4,7 @@ section: data-types
 description: Enum type manager.
 ---
 
-Enum type manager. For each enum-type created on the database, it allows 2 behaviors: Single enum attribution, Array (Set-like) attribution. For [Array attribution]({{ site.baseurl }}/data-types/enum-set/) check the link. It creates a separated class to hold each enum set that can be used by multiple models, it also keeps the database consistent. The enum type is known to have a better performance against string- and integer-like enums. [PostgreSQL Docs](https://www.postgresql.org/docs/9.6/static/datatype-enum.html)
+Enum type manager. For each enum-type created on the database, it allows 2 behaviors: Single enum attribution, Array (Set-like) attribution. For [Array attribution](/postgresql/data-types/enum-set/) check the link. It creates a separated class to hold each enum set that can be used by multiple models, it also keeps the database consistent. The enum type is known to have a better performance against string- and integer-like enums. [PostgreSQL Docs](https://www.postgresql.org/docs/9.6/static/datatype-enum.html)
 
 ## Migration
 
@@ -13,16 +13,15 @@ First, you have to create the enum during your migration, since it's the databas
 create_enum :roles, %i(visitor manager admin)
 ```
 
-Some other examples are:
+On Rails older than 7.0, where the gem still provided `create_enum`, the values could also be prefixed or suffixed:
 ```ruby
-# Only for Rails < 7.0
 # ['status_foo', 'status_bar']
 create_enum :status, %i(foo bar), prefix: true
-# 'foo_tst', 'bar_tst']
+# ['foo_tst', 'bar_tst']
 create_enum :status, %i(foo bar), suffix: 'tst'
 ```
 
-> **Note** The `create_enum` method now exists on Rails, so it was removed from the gem, preventing the use of prefix and suffix. However, the `add_enum_values` still exists only in this gem.
+> **Note** Rails now ships its own `create_enum`, so the gem removed its version — and with it the `prefix` and `suffix` options above. `add_enum_values` still exists only in this gem.
 
 You can also manage this type alongside other migrations, renaming, adding values, or deleting it.
 ```ruby
@@ -72,7 +71,7 @@ end
 
 ## The type Class
 
-Each enum type loaded from the database will have its own class type of value, created under the [`enum.namespace`]({{ site.baseurl }}/getting-started/configuring/#enum.namespace) namespace.
+Each enum type loaded from the database will have its own class type of value, created under the [`enum.namespace`](/postgresql/getting-started/configuring/#enum.namespace) namespace.
 ```ruby
 Enum::Roles
 
@@ -97,7 +96,7 @@ Enum::Roles.admin.to_i   # 2
 
 ## Models
 
-You have to go to each of your models and enable the functionality for each enum-type field. You don't need to provide the values since they will be loaded from the database. The method name is defined on [`enum.base_method`]({{ site.baseurl }}/getting-started/configuring/#enum.base_method).
+You have to go to each of your models and enable the functionality for each enum-type field. You don't need to provide the values since they will be loaded from the database. The method name is defined on [`enum.base_method`](/postgresql/getting-started/configuring/#enum.base_method).
 ```ruby
 # models/user.rb
 class User < ActiveRecord::Base
@@ -119,6 +118,9 @@ user.role = :manager   # :manager
 user.role = 0          # :visitor
 ```
 
+A value that is not one of the type's values is kept as it is, so the database rejects it when
+the record is saved, exactly like any other invalid input.
+
 This allows you to compare values, or ask questions about it:
 ```ruby
 other_user = User.new(role: :manager)
@@ -130,14 +132,14 @@ user.role.manager?               # true
 user.visitor?                    # false
 ```
 
-The `bang!` methods are controlled by the [`enum.save_on_bang`]({{ site.baseurl }}/getting-started/configuring/#enum.save_on_bang):
+The `bang!` methods are controlled by the [`enum.save_on_bang`](/postgresql/getting-started/configuring/#enum.save_on_bang):
 ```ruby
 # The following will only perform a save on the database if enum.save_on_bang is set to true
 user = User.new(role: :manager)
 user.admin!
 ```
 
-You can reach the I18n translations in three different ways, and the scopes are configured on [`enum.i18n_scopes`]({{ site.baseurl }}/getting-started/configuring/#enum.i18n_scopes). On the third one, only the scopes on [`enum.i18n_type_scopes`]({{ site.baseurl }}/getting-started/configuring/#enum.i18n_type_scopes) are used, which allows per-model customization.
+You can reach the I18n translations in three different ways, and the scopes are configured on [`enum.i18n_scopes`](/postgresql/getting-started/configuring/#enum.i18n_scopes). On the third one, only the scopes on [`enum.i18n_type_scopes`](/postgresql/getting-started/configuring/#enum.i18n_type_scopes) are used, which allows per-model customization.
 ```ruby
 user = User.new(role: :manager)
 user.role.text                # User's manager

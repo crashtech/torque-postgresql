@@ -1,0 +1,63 @@
+module Torque
+  module PostgreSQL
+    module Relation
+      module CrossJoin
+        type row = Hash[column_ref, untyped] | Array[untyped]
+        type source = arel_node | relation | ::Arel::SelectManager | Array[row]
+        type ordinality = bool | column_ref
+
+        class Entry < ::Struct[untyped]
+          def node: () -> ::Arel::Nodes::Join
+          def node=: (::Arel::Nodes::Join value) -> ::Arel::Nodes::Join
+          def table: () -> arel_table
+          def table=: (arel_table value) -> arel_table
+        end
+
+        def self.build: (untyped source, column_ref as, Array[column_ref]? columns, Symbol | String mode, ordinality with_ordinality, ?Hash[column_ref, String?]? definitions) -> Entry
+
+        private
+
+        def self.columns_for: (untyped source, Array[column_ref]? columns) -> Array[column_ref]?
+        def self.ordinality_for: (ordinality value) -> column_ref?
+        def self.validate_ordinality!: (column_ref? ordinality, Array[column_ref]? columns, Hash[column_ref, String?]? definitions) -> nil
+        def self.source_for: (untyped source, Array[column_ref]? columns) -> [arel_node, bool]
+        def self.unnest_rows: (Array[row] rows, Array[column_ref]? columns) -> ::Arel::Nodes::NamedFunction
+        def self.row_values: (row row, Array[Symbol] keys) -> Array[untyped]
+        def self.join_for: (Symbol | String mode, Torque::PostgreSQL::Arel::Nodes::FromItem item) -> ::Arel::Nodes::Join
+
+        public
+
+        def cross_joins_value: () -> Hash[Symbol, Entry]
+        def cross_joins_value=: (Hash[Symbol, Entry] value) -> Hash[Symbol, Entry]
+        def cross_join: (untyped source, as: column_ref, ?columns: Array[column_ref]?, ?mode: Symbol | String, ?with_ordinality: ordinality) -> relation
+        def cross_join!: (untyped source, as: column_ref, ?columns: Array[column_ref]?, ?mode: Symbol | String, ?with_ordinality: ordinality) -> self
+
+        private
+
+        def build_arel: (*untyped) -> ::Arel::SelectManager
+
+        public
+
+        module Merger
+          def merge: () -> relation
+
+          private
+
+          def merge_cross_joins: () -> untyped
+        end
+      end
+    end
+  end
+end
+
+class ActiveRecord::Relation
+  include Torque::PostgreSQL::Relation::CrossJoin
+end
+
+class ActiveRecord::Relation::Merger
+  prepend Torque::PostgreSQL::Relation::CrossJoin::Merger
+end
+
+class ActiveRecord::Base
+  def self.cross_join: (untyped source, as: Torque::PostgreSQL::column_ref, ?columns: Array[Torque::PostgreSQL::column_ref]?, ?mode: Symbol | String, ?with_ordinality: Torque::PostgreSQL::Relation::CrossJoin::ordinality) -> ActiveRecord::Relation
+end

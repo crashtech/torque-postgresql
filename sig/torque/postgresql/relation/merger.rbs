@@ -1,0 +1,23 @@
+module Torque
+  module PostgreSQL
+    module Relation
+      module Merger
+        def merge: () -> relation
+
+        private
+
+        def merge_select_extra: () -> untyped
+        def merge_distinct_on: () -> untyped
+        def merge_auxiliary_statements: () -> untyped
+        def merge_inheritance: () -> untyped
+        def raise_eager_load_conflict!: () -> bot
+        def merge_buckets: () -> untyped
+        def merge_segments: () -> untyped
+      end
+    end
+  end
+end
+
+class ActiveRecord::Relation::Merger
+  prepend Torque::PostgreSQL::Relation::Merger
+end

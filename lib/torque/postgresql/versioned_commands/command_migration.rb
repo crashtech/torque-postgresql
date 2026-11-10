@@ -131,6 +131,29 @@ module Torque
             execute "DROP TYPE #{name.first.first};"
           end
 
+          # Drop the trigger and any function bundled with it
+          def drop_trigger
+            content = File.read(filename)
+            trigger, table = content.scan(Regexp.new([
+              '^\s*CREATE\s+(?:OR\s+REPLACE\s+)?',
+              "TRIGGER\\s+#{NAME_MATCH}",
+              '.*?\bON\s+',
+              NAME_MATCH,
+            ].join, 'mi')).first
+
+            execute "DROP TRIGGER #{trigger} ON #{table};"
+
+            definitions = content.scan(Regexp.new([
+              '^\s*CREATE\s+(?:OR\s+REPLACE\s+)?',
+              "FUNCTION\\s+#{NAME_MATCH}",
+              '\s*(\([_a-z0-9 ,]*\))?',
+            ].join, 'mi'))
+            return if definitions.empty?
+
+            functions = definitions.map(&:join).join(', ')
+            execute "DROP FUNCTION #{functions};"
+          end
+
           # Drop view or materialized view
           def drop_view
             mat, name = File.read(filename).scan(Regexp.new([

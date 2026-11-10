@@ -38,6 +38,9 @@ module Torque
     # Add support for querying and calculating histogram buckets
     config.buckets = true
 
+    # Add support for segmenting calculations by named conditions
+    config.segments = true
+
     # Set a list of irregular model name when associated with table names
     config.irregular_models = {}
     def config.irregular_models=(hash)
@@ -309,8 +312,8 @@ module Torque
       ltree.enabled = true
 
       # A hash of replacements applied to every label provided by the
-      # application before it gets validated, so that a source that does not
-      # satisfy PostgreSQL's rules on its own can still be used. Dashes, for
+      # application before it is sent to the database, so that a source that
+      # does not satisfy PostgreSQL's rules on its own can still be used. Dashes, for
       # example, are only accepted as of PostgreSQL 16
       #   { '-' => '_' } turns dashes into underscores
       #   { '-' => '' }  drops dashes
@@ -411,11 +414,26 @@ module Torque
 
       # Define the list of commands that are going to be versioned by this
       # method
-      vs.types = %i[function type view]
+      vs.types = %i[function type view trigger]
 
       # The name of the table that will inherit from +schema_migrations+ and
       # store the list of versioned commands that have been executed
       vs.table_name = 'schema_versioned_commands'
+
+    end
+
+    # Configure cross join features
+    config.nested(:cross_join) do |cross_join|
+
+      # This is an experimental feature that developers must explicitly opt-in.
+      # TODO: hook into how conditions and columns are resolved, so that the
+      # name of a joined set can shadow a real column
+      cross_join.enabled = false
+
+      # The name of the column added by +with_ordinality+ when it is given
+      # +true+ instead of a name. It matches what PostgreSQL calls the column
+      # when it is not named at all
+      cross_join.ordinality_column = :ordinality
 
     end
 

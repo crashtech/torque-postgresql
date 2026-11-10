@@ -34,6 +34,7 @@ module Torque
           MSG
 
           count ||= 1 if values.is_a?(Range)
+          attribute = resolve_column(attribute).first if attribute.is_a?(Hash)
           attribute = arel_table[attribute] unless ::Arel.arel_node?(attribute)
           self.buckets_value = [attribute, values, count, cast, as]
           self
@@ -51,7 +52,7 @@ module Torque
 
           keys = buckets_keys
           self.group_values = [FN.group_by(build_buckets_node, :bucket)]
-          super.transform_keys { |key| keys[key - 1] }
+          super.transform_keys { |key| keys[key - 1] if key&.positive? }
         end
 
         module Initializer

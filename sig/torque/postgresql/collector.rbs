@@ -1,0 +1,7 @@
+module Torque
+  module PostgreSQL
+    module Collector
+      def self.new: (*Symbol | Array[Symbol] args) -> Class
+    end
+  end
+end

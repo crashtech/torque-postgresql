@@ -13,7 +13,9 @@ module Torque
       include DistinctOn
       include Inheritance
 
-      SINGLE_VALUE_METHODS = %i[itself_only buckets expand_records_eager_load expand_records_scoped]
+      SINGLE_VALUE_METHODS = %i[
+        itself_only buckets segments expand_records_eager_load expand_records_scoped
+      ]
       MULTI_VALUE_METHODS = %i[
         select_extra distinct_on auxiliary_statements expand_records
       ]
@@ -76,6 +78,9 @@ module Torque
         return unless relation
 
         table = predicate_builder.send(:table)
+        part = part_table_for(table, relation.to_s)
+        return part if part
+
         associated = AR810 ? table.associated_with(relation.to_s) : table.associated_with?(relation.to_s)
         if associated
           table.associated_table(relation.to_s).send(:klass)
@@ -88,8 +93,11 @@ module Torque
       # the given column
       def cast_for_condition(column, value)
         column = columns_hash[column.to_s] unless column.is_a?(ARColumn)
-        caster = connection.lookup_cast_type_for_column(column)
-        connection.type_cast(caster.serialize(value))
+
+        klass.with_connection do |connection|
+          caster = connection.lookup_cast_type_for_column(column)
+          connection.type_cast(caster.serialize(value))
+        end
       end
 
       private
@@ -98,6 +106,16 @@ module Torque
           arel = super
           arel.project(*select_extra_values) if select_values.blank?
           arel
+        end
+
+        def part_table_for(table, name)
+          return unless table.has_column?(name)
+
+          type = Adapter::OID.unwrap(table.type(name))
+          handler = PredicateBuilder.handler_for(type)
+          return if handler.nil?
+
+          handler.new(predicate_builder).table_for(table.arel_table[name], type)
         end
 
       class_methods do
@@ -144,7 +162,8 @@ module Torque
     ActiveRecord::Relation::MULTI_VALUE_METHODS.concat(Relation::MULTI_VALUE_METHODS)
     ActiveRecord::Relation::VALUE_METHODS.concat(Relation::VALUE_METHODS)
     ActiveRecord::QueryMethods::VALID_UNSCOPING_VALUES.merge(%i[expand_records itself_only
-      expand_records_eager_load expand_records_scoped distinct_on auxiliary_statements buckets])
+      expand_records_eager_load expand_records_scoped distinct_on auxiliary_statements buckets
+      segments])
 
   end
 end

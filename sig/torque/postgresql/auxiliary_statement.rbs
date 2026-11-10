@@ -1,0 +1,57 @@
+module Torque
+  module PostgreSQL
+    class AuxiliaryStatement
+      type query = relation | ::Arel::SelectManager | String | Symbol | Proc | _Callable
+      type base = relation | model
+      type statement_class = AuxiliaryStatement | singleton(AuxiliaryStatement)
+      type join_type = :inner | :left | :right | :full
+
+      TABLE_COLUMN_AS_STRING: Regexp
+
+      @table: arel_table
+      @join: Hash[untyped, untyped]
+      @args: Hash[Symbol, untyped]
+      @where: Hash[untyped, untyped] | String
+      @select: Hash[untyped, untyped]
+      @join_type: join_type?
+      @dependencies: Array[untyped]
+      @query: query
+      @association: String?
+
+      def self.config: () -> (Proc | OpenStruct | nil)
+      def self.table_name: () -> (String | Symbol)?
+      def self.lookup: (Symbol | String name, model base) -> singleton(AuxiliaryStatement)
+      def self.instantiate: (Symbol statement, model | relation base, **untyped options) -> AuxiliaryStatement
+      def self.build: (Symbol statement, relation base, ?Array[untyped] bound_attributes, ?Array[::Arel::Nodes::Join] join_sources, **untyped options) -> [Array[untyped], ::Arel::Nodes::As]
+      def self.relation_query?: (untyped obj) -> bool
+      def self.arel_query?: (untyped obj) -> bool
+      def self.create: (String | Symbol | model | relation | Hash[Symbol, untyped] table_or_settings) ?{ (Settings) -> void } -> singleton(AuxiliaryStatement)
+      def self.configurator: (Proc | Hash[Symbol, untyped] | nil config) -> (Proc | OpenStruct | nil)
+      def self.configure: (base base, statement_class instance) -> (Settings | OpenStruct)
+      def self.table: () -> arel_table
+
+      def config: () -> (Proc | OpenStruct | nil)
+      def table: () -> arel_table
+      def table_name: () -> (String | Symbol)?
+      def relation: (*untyped) -> untyped
+      def configure: (base base, statement_class instance) -> (Settings | OpenStruct)
+      def relation_query?: (untyped obj) -> bool
+
+      attr_reader bound_attributes: Array[untyped]
+      attr_reader join_sources: Array[::Arel::Nodes::Join]
+
+      def initialize: (*untyped, **untyped options) -> void
+      def build: (relation base) -> [Array[untyped], ::Arel::Nodes::As]
+
+      private
+
+      def prepare: (relation base, Settings | OpenStruct settings) -> untyped
+      def build_query: (relation base) -> (arel_node | ::Arel::SelectManager)
+      def build_join: (relation base) -> ::Arel::Nodes::Join
+      def arel_join: () -> singleton(::Arel::Nodes::Join)
+      def expose_columns: (relation base, ?arel_table? query_table) -> Array[arel_node]
+      def ensure_dependencies: (Array[untyped] list, relation base) -> Array[untyped]
+      def project: (column_ref | arel_node column, ?arel_table? arel_table) -> arel_node
+    end
+  end
+end

@@ -24,8 +24,7 @@ module Torque
         case value
         when ::String
           return if value.blank?
-          value.gsub!(DESTRUCTOR, '')
-          build_klass(*value.split(','))
+          build_klass(*value.gsub(DESTRUCTOR, '').split(','))
         when ::Hash
           build_klass(*value.symbolize_keys.slice(*pieces).values)
         when ::Array
@@ -49,8 +48,8 @@ module Torque
         parts = parts&.compact&.flatten
         return if parts.blank?
 
-        raise 'Invalid format' if parts.size < pieces.size
-        format(formation, *parts.first(pieces.size).map(&number_serializer))
+        parts = ::Array.new(pieces.size) { |index| parts[index] }
+        format(formation, *parts.map(&number_serializer))
       end
 
       def deserialize(value)
@@ -81,13 +80,8 @@ module Torque
 
         def build_klass(*args)
           return nil if args.empty?
-          check_invalid_format!(args)
 
-          config_class.new(*args.try(:first, pieces.size)&.map(&:to_f))
-        end
-
-        def check_invalid_format!(args)
-          raise 'Invalid format' if args.size < pieces.size
+          config_class.new(*args.first(pieces.size).map(&:to_f))
         end
     end
   end

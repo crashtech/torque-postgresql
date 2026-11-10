@@ -1,0 +1,20 @@
+module Torque
+  module PostgreSQL
+    module Associations
+      module Preloader
+        module LoaderQuery
+          @foreign_column: column?
+
+          def foreign_column: () -> column?
+          def load_records_for_keys: (Enumerable[untyped] keys) ?{ (record) -> void } -> (Array[record] | relation)
+          def query_condition_for: (Enumerable[untyped] keys) -> arel_node?
+          def connected_through_array?: () -> untyped
+        end
+      end
+    end
+  end
+end
+
+class ActiveRecord::Associations::Preloader::Association::LoaderQuery
+  prepend Torque::PostgreSQL::Associations::Preloader::LoaderQuery
+end

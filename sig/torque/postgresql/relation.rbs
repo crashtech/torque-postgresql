@@ -1,0 +1,48 @@
+module Torque
+  module PostgreSQL
+    module Relation
+      extend ActiveSupport::Concern
+      include DistinctOn
+      include Inheritance
+
+      type column_spec = column_ref | Hash[column_ref, untyped] | Array[untyped]
+
+      SINGLE_VALUE_METHODS: Array[Symbol]
+      MULTI_VALUE_METHODS: Array[Symbol]
+      VALUE_METHODS: Array[Symbol]
+      FROZEN_EMPTY_ARRAY: Array[untyped]
+      ARColumn: singleton(ActiveRecord::ConnectionAdapters::PostgreSQL::Column)
+
+      def select_extra_values: () -> Array[arel_node]
+      def select_extra_values=: (Array[arel_node] value) -> Array[arel_node]
+      def calculate: (Symbol | String operation, column_spec | nil column_name) -> untyped
+      def resolve_column: (column_spec list, ?column_ref | false base) -> Array[arel_node]
+      def resolve_base_table: (column_ref | false relation) -> (model | PredicateTable | nil)
+      def cast_for_condition: (column_ref | column column, untyped value) -> untyped
+
+      private
+
+      def build_arel: (*untyped) -> ::Arel::SelectManager
+      def part_table_for: (ActiveRecord::TableMetadata table, String name) -> PredicateTable?
+
+      public
+
+      module ClassMethods
+        def _record_class_attribute: () -> Symbol
+        def _record_class_column_name: () -> String
+      end
+
+      module Initializer
+        def initialize: (model klass, *untyped, **untyped) -> void
+        def upsert_all: (Array[Hash[column_ref, untyped]] attributes, ?where: String | relation | nil, **untyped xargs) -> untyped
+      end
+    end
+  end
+end
+
+class ActiveRecord::Relation
+  include Torque::PostgreSQL::Relation
+  extend Torque::PostgreSQL::Relation::ClassMethods
+  prepend Torque::PostgreSQL::Relation::Initializer
+  prepend Torque::PostgreSQL::Relation::Inheritance::Expansion
+end

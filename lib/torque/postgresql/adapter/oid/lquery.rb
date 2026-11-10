@@ -1,50 +1,67 @@
 # frozen_string_literal: true
 
+require_relative 'ltree'
+
 module Torque
   module PostgreSQL
     module Adapter
       module OID
-        class Lquery < ActiveModel::Type::Value
+        # Same as a path, but the items are the pure parts of a pattern: +:any+
+        # for a star, a Range for a quantified star and an Array for a group of
+        # alternatives. Everything else is a label, written as it appears in SQL
+        class Lquery < Ltree
+          STAR = /\A\*\{(?<min>\d+)?(?<comma>,)?(?<max>\d+)?\}\z/
 
           def type
             :lquery
           end
 
-          def cast(value)
-            return if value.blank?
-            return value if value.is_a?(LQuery)
+          private
 
-            LQuery.new(value)
-          end
+            def value_class
+              LQuery
+            end
 
-          def deserialize(value)
-            return if value.nil?
+            def items_of(entry, sanitize)
+              case entry
+              when ::Symbol then entry == :any ? [:any] : super
+              when ::Range then [entry]
+              when ::Array then [entry.flat_map { |item| items_of(item, sanitize) }]
+              else super
+              end
+            end
 
-            LQuery.load(value)
-          end
+            def compile(item)
+              case item
+              when ::Symbol then item == :any ? '*' : item.to_s
+              when ::Range then quantifier(item)
+              when ::Array then item.map { |entry| compile(entry) }.join('|')
+              else item.to_s
+              end
+            end
 
-          def serialize(value)
-            cast(value)&.to_s
-          end
+            def quantifier(range)
+              min = range.begin
+              max = range.end
+              max -= 1 if max && range.exclude_end?
 
-          def type_cast_for_schema(value)
-            cast(value).to_s.inspect
-          end
+              return '*' if min.nil? && max.nil?
+              return "*{#{min}}" if min == max
 
-          def changed_in_place?(raw_old_value, new_value)
-            raw_old_value != serialize(new_value)
-          end
+              "*{#{min},#{max}}"
+            end
 
-          # Types resolved through the type map are deduplicated and frozen, so
-          # they need to be comparable
-          def ==(other)
-            other.is_a?(self.class)
-          end
-          alias eql? ==
+            def parse(text)
+              return :any if text == '*'
+              return text.split('|') if text.include?('|') && !text.match?(/[!{]/)
 
-          def hash
-            self.class.hash
-          end
+              match = text.match(STAR)
+              return text if match.nil?
+
+              min = match[:min]&.to_i
+              max = match[:comma] ? match[:max]&.to_i : min
+              min..max
+            end
 
         end
       end

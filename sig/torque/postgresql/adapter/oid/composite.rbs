@@ -1,0 +1,35 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      module OID
+        class Composite < ActiveModel::Type::Value
+          ARRAY: singleton(ActiveRecord::ConnectionAdapters::PostgreSQL::OID::Array)
+          DATA: untyped
+          ENCODER: untyped
+          DECODER: untyped
+
+          attr_reader name: String
+
+          def self.from: (untyped type) -> Composite?
+          def self.create: (Hash[String, untyped] row, ActiveRecord::Type::HashLookupTypeMap type_map) -> untyped
+          def initialize: (table_ref name) -> void
+          def klass: () -> singleton(Attributes::Composite)
+          def columns: () -> Hash[String, type_caster]
+          def type: () -> :composite
+          def cast: (untyped value) -> untyped
+          def deserialize: (untyped value) -> Attributes::Composite?
+          def serialize: (untyped value) -> untyped
+          def changed_in_place?: (untyped raw_old_value, untyped new_value) -> bool
+          def ==: (untyped other) -> bool
+          alias eql? ==
+          def hash: () -> Integer
+
+          private
+
+          def build: (Hash[column_ref, untyped] attrs) -> Attributes::Composite
+          def attributes_of: (Attributes::Composite record) -> ActiveModel::AttributeSet
+        end
+      end
+    end
+  end
+end

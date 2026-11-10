@@ -23,6 +23,8 @@ bin/
 .ruby-version
 .ruby-gemset
 gemfiles/*.lock
+.gem_rbs_collection/
+rbs_collection.lock.yaml
 docs/_site/
 docs/.jekyll-cache/
 docs/.jekyll-metadata

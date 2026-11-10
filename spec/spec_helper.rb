@@ -1,3 +1,4 @@
+require_relative 'rbs_helper' if ENV['RBS_TEST']
 require 'torque-postgresql'
 require 'database_cleaner'
 require 'factory_bot'

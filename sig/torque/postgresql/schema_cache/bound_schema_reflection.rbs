@@ -1,0 +1,14 @@
+module Torque
+  module PostgreSQL
+    module BoundSchemaReflection
+      def add_model_name: (String table_name, model model) -> model?
+      def dependencies: (String table_name) -> Array[String]?
+      def associations: (String table_name) -> Array[String]?
+      def lookup_model: (String table_name, ?String | model scoped_class) -> model
+    end
+  end
+end
+
+class ActiveRecord::ConnectionAdapters::BoundSchemaReflection
+  prepend Torque::PostgreSQL::BoundSchemaReflection
+end

@@ -227,6 +227,10 @@ RSpec.describe 'Enum' do
         expect(subject.serialize(enum.B | enum.C)).to be_eql('{B,C}')
         expect(subject.serialize(3)).to be_eql('{A,B}')
       end
+
+      it 'keeps an invalid value for the database to reject' do
+        expect(subject.serialize(%w[A E])).to be_eql('{A,E}')
+      end
     end
 
     context 'on cast' do

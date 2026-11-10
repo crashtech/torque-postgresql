@@ -1,0 +1,24 @@
+module Torque
+  module PostgreSQL
+    module Adapter
+      include Quoting
+      include DatabaseStatements
+      include InheritanceStatements
+      include SchemaStatements
+
+      @version: Gem::Version
+
+      class DeduplicatableArray < ::Array[untyped]
+        def deduplicate: () -> Array[untyped]
+        alias -@ deduplicate
+      end
+
+      def version: () -> Gem::Version
+      def build_insert_sql: (ActiveRecord::InsertAll::Builder insert) -> String
+    end
+  end
+end
+
+class ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
+  prepend Torque::PostgreSQL::Adapter
+end

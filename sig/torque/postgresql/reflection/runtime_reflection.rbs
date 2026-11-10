@@ -1,0 +1,18 @@
+module Torque
+  module PostgreSQL
+    module Reflection
+      module RuntimeReflection
+        def klass: () -> model
+        def active_record: () -> model
+        def connected_through_array?: () -> bool?
+        def macro: () -> Symbol
+        def name: () -> Symbol
+        def array_attribute: () -> arel_attribute
+      end
+    end
+  end
+end
+
+class ActiveRecord::Reflection::RuntimeReflection
+  include Torque::PostgreSQL::Reflection::RuntimeReflection
+end

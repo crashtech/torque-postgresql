@@ -25,3 +25,9 @@ User.joins(:photos).distinct_on(photos: :type).all
 # SELECT DISTINCT ON ( "photos"."type", "photos"."size" ) "users".* FROM "users" INNER JOIN "photos" ON "users"."id" = "photos"."user_id"
 User.joins(:photos).distinct_on(photos: [:type, :size]).all
 ```
+
+The same syntax reaches a property of a [struct](/postgresql/data-types/struct/) column or a column of a [composite](/postgresql/data-types/composite/) one:
+```ruby
+# SELECT DISTINCT ON ( ("profiles"."settings" #>> ARRAY['theme']) ) "profiles".* FROM "profiles"
+Profile.distinct_on(settings: :theme).all
+```

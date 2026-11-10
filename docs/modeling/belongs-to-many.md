@@ -6,7 +6,7 @@ description: Belongs to an array of records, storing those locally.
 
 > It's so nice to be able to say that my videos belong to many tags! So clear and simple! Love it!
 
-Belongs to an array of records, storing those locally. The original `belongs_to` association defines a `SingularAssociation`, which means that it could be extended with `array: true`. In this case, I decided to create my own `CollectionAssociation` called `belongs_to_many`, which behaves similarly to the single one, but stores and returns a list of records. This was only possible due to PostgreSQL arrays and the new [Arel]({{ site.baseurl }}/querying/arel/) infix operators. [PostgreSQL Docs](https://www.postgresql.org/docs/9.6/arrays.html)
+Belongs to an array of records, storing those locally. The original `belongs_to` association defines a `SingularAssociation`, which means that it could be extended with `array: true`. In this case, I decided to create my own `CollectionAssociation` called `belongs_to_many`, which behaves similarly to the single one, but stores and returns a list of records. This was only possible due to PostgreSQL arrays and the new [Arel](/postgresql/querying/arel/) infix operators. [PostgreSQL Docs](https://www.postgresql.org/docs/9.6/arrays.html)
 
 With this, now you can say things like `Project belongs to many employees`, which is more syntactically correct than `Project has many employees`.
 
@@ -15,11 +15,11 @@ With this, now you can say things like `Project belongs to many employees`, whic
 The only difference here, while creating the association, is that you just need to set the column as an array. The `references` or similar helpers are not yet available.
 
 ```ruby
-create_table "employee" do |t|
+create_table "employees" do |t|
   t.string "name"
 end
 
-create_table "project" do |t|
+create_table "projects" do |t|
   t.bigint "employee_ids", array: true
   t.string "title"
 end
@@ -47,11 +47,11 @@ Most of the options are just like the `has_many` association, but they also incl
 - `required`: When set to **true**, the association will also have its presence validated. Default: `false`
 - `dependent`: Controls what happens to the associated objects when their owner is destroyed. Default: `:nullify`
 - `primary_key`: The name of the column on the foreign table that connects to the array. Default: `:id`
-- `foreign_key`: The name of the array column used to store the association IDs locally. Default: `:"#{name.singular}_ids"`
+- `foreign_key`: The name of the array column used to store the association IDs locally. Default: `:"#{name.to_s.singularize}_ids"`
 
-There are no additional or custom features on top of those provided by a normal `has_many` association.
+Beyond those, the behavior matches a normal `has_many` association.
 
-## Combined with [Predicate Builder]({{ site.baseurl }}/querying/predicate-builder/#array)
+## Combined with [Predicate Builder](/postgresql/querying/predicate-builder/#array)
 
 You can enable enhancements to Rails' `PredicateBuilder` to simplify how you query the association column even further.
 

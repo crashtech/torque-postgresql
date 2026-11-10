@@ -1,0 +1,24 @@
+module Torque
+  module PostgreSQL
+    class PredicateTable
+      type handler = PredicateBuilder::CompositeHandler | PredicateBuilder::StructHandler
+      type node = Arel::Nodes::Column | Arel::Nodes::Property
+
+      @handler: handler
+      @source: arel_node
+      @node: singleton(::Arel::Nodes::Binary)
+
+      def initialize: (handler handler, arel_node source, singleton(::Arel::Nodes::Binary) node) -> void
+      def arel_table: () -> self
+      def []: (column_ref | Integer name) -> node
+      def type: (column_ref | Integer name) -> type_caster?
+      def has_column?: (*untyped) -> true
+      def primary_key: () -> nil
+      def associated_with: (*untyped) -> false
+      alias associated_with? associated_with
+      def aggregated_with?: (*untyped) -> false
+      def polymorphic_association?: () -> false
+      def through_association?: () -> false
+    end
+  end
+end

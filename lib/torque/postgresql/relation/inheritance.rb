@@ -219,11 +219,10 @@ module Torque
             # once per explicit select that merely omits the marker
             def warn_about_missing_record_class(records)
               return unless model.physically_inheritances?
+              return if itself_only_value === true
               return if records.empty? || group_values.present? || distinct_value || select_values.empty?
               return unless from_clause.empty?
-              return if itself_only_value === true
               return if select_values.any? { |value| record_class_marker?(value) }
-              return if records.any? { |record| record.class != model }
 
               warn(<<~MSG.squish)
                 #{model.name} was queried with an explicit select that omits

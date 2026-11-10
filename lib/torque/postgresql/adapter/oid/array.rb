@@ -11,10 +11,6 @@ module Torque
 
           private
 
-            # A label path is an Array of labels, so the regular recursion would
-            # take each of its labels as another dimension of the column. Paths
-            # are a single value to PostgreSQL, which means that the entries of
-            # the array are never a dimension of their own
             def type_cast_array(value, method)
               return super unless path_subtype?
               return subtype.public_send(method, value) unless value.is_a?(::Array)

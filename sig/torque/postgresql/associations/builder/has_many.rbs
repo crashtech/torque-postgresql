@@ -1,0 +1,15 @@
+module Torque
+  module PostgreSQL
+    module Associations
+      module Builder
+        module HasMany
+          def valid_options: (Hash[Symbol, untyped] options) -> Array[Symbol]
+        end
+      end
+    end
+  end
+end
+
+class ActiveRecord::Associations::Builder::HasMany
+  extend Torque::PostgreSQL::Associations::Builder::HasMany
+end

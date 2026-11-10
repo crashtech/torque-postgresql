@@ -9,7 +9,7 @@ description: This feature uses the width_bucket() function to return results or 
 
 This feature uses the `width_bucket()` function to return results or produce calculations in which the results fall into the configured buckets. [PostgreSQL Docs](https://www.postgresql.org/docs/current/functions-math.html#width_bucket)
 
-You can disable this feature using [config.buckets]({{ site.baseurl }}/getting-started/configuring/#buckets).
+You can disable this feature using [config.buckets](/postgresql/getting-started/configuring/#buckets).
 
 ## How to
 
@@ -23,6 +23,9 @@ User.buckets(:age, 0..100, count: 10).count      # Expect { (0...10) => N, (10..
 # Array
 User.buckets(:role, %w[visitor manager admin])   # Expect { nil => [...], 'visitor' => [...], ... }
                                                  # nil represents values that did not fall on any bucket
+
+# A property of a struct column, or a column of a composite one
+Profile.buckets({ settings: :theme }, %w[dark light]).count
 ```
 Here is a list of all options that can be used to configure this operation:
 
@@ -47,7 +50,8 @@ GROUP BY "bucket";
 Since the resulting bucket attribute is added to the resulting query, you can access the raw value from each record:
 ```ruby
 keys = 16.times.map { |add| Date.new(2010 + add) }
-records = User.buckets(:created_at, keys, cast: :date).load
+key, records = User.buckets(:created_at, keys, cast: :date).records.first
 
-records.values.first.bucket       # Will return the numeric value of the bucket
+key                    # Have the bucket range
+records.first.bucket   # Will return the numeric value of the bucket
 ```

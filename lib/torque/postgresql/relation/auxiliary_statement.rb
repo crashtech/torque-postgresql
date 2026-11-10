@@ -32,11 +32,15 @@ module Torque
         # Get all auxiliary statements bound attributes and the base bound
         # attributes as well
         def bound_attributes
-          visitor = ::Arel::Visitors::PostgreSQL.new(ActiveRecord::Base.connection)
-          visitor.accept(self.arel.ast, ::Arel::Collectors::Composite.new(
+          collector = ::Arel::Collectors::Composite.new(
             ::Arel::Collectors::SQLString.new,
             ::Arel::Collectors::Bind.new,
-          )).value.last
+          )
+
+          klass.with_connection do |connection|
+            visitor = ::Arel::Visitors::PostgreSQL.new(connection)
+            visitor.accept(arel.ast, collector).value.last
+          end
         end
 
         private

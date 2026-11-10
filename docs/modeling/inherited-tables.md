@@ -1,23 +1,23 @@
 ---
 title: Inherited Tables
 section: modeling
-description: This is one great feature from PostgreSQL, the ability to have a table
-  with the most generic data, and then many other tables with the information necessar
+description: One great feature from PostgreSQL, the ability to have a table with
+  the most generic data and other tables with the information for specific types
 ---
 
-> Tired of `polymorphic` or the infamous `type` column. Well, **NEVER MORE!!!**
+> Tired of `polymorphic` or the infamous `type` column? Well, **NEVER MORE!!!**
 
-This is one great feature from PostgreSQL, the ability to have a table with the most generic data, and then many other tables with the information necessary only for that specific type of the main one. Rails does allow us to do that, using the `type` attribute, but its biggest problem is that columns from different types end up getting mixed together. [PostgreSQL Docs](https://www.postgresql.org/docs/current/static/ddl-inherit.html)
+This is one great feature from PostgreSQL, the ability to have a table with the most generic data, and then many other tables with the information necessary only for that specific type of the main one. Rails does allow us to do that, using the `type` attribute, but its biggest problem is that columns from different types end up getting mixed together. [PostgreSQL Docs](https://www.postgresql.org/docs/current/ddl-inherit.html)
 
 This will allow you to work with inherited models, as they are separated tables but share methods, scopes, validations, and all other features from the super models.
 
 > **Feature rich** Table inheritance is now a stable and complete part of this gem. Records come back as their real class without any opt-in, they carry the guarantees you would expect from a regular record, and the rough edges of the previous opt-in approach are gone. What you will find below is the behavior you should be able to assume, not a preview.
 
-**CAUTION** PostgreSQL has some [**caveats**](https://www.postgresql.org/docs/9.1/static/ddl-inherit.html#DDL-INHERIT-CAVEATS) while using this resource. Most of them come down to what a child table does **not** get from its parent, which is what [Syncing features](#syncing-features) exists to solve.
+**CAUTION** PostgreSQL has some [**caveats**](https://www.postgresql.org/docs/current/ddl-inherit.html#DDL-INHERIT-CAVEATS) while using this resource. Most of them come down to what a child table does **not** get from its parent, which is what [Syncing features](#syncing-features) exist to solve.
 
 ## Migration
 
-First, you have to create a base table. Then, create as many tables as wanted, specifying the `:inherited` key.
+First, you have to create a base table. Then, create as many tables as wanted, specifying the `inherits:` key.
 
 ```ruby
 create_table "activities" do |t|
@@ -25,12 +25,12 @@ create_table "activities" do |t|
 end
 
 create_table "activity_books", inherits: :activities do |t|
-  t.belongs_to "author_id"
+  t.belongs_to "author"
   t.datetime   "published_at"
 end
 
 create_table "activity_posts", inherits: :activities do |t|
-  t.belongs_to "post_id"
+  t.belongs_to "post"
   t.datetime   "published_at"
 end
 ```
@@ -153,9 +153,9 @@ end
 
 Since the data that indicates the record type is a table name, this process relies on Rails' standard translation from class name to table name. But this is tricky, because `activity_posts` can either be `ActivityPost` or `Activity::Post` (or even another model using `self.table_name = "activity_posts"`). This gem tries its best to translate the table name to a model name, checking all the possibilities, so you might not face issues. **But**, you can always help it, and make the process more accurate or even faster.
 
-Please check the [Configuration Page]({{ site.baseurl }}/getting-started/configuring/) to see the options for improving this operation.
+Please check the [Configuration Page](/postgresql/getting-started/configuring/) to see the options for improving this operation.
 
-The most important setting is the [`irregular_models`]({{ site.baseurl }}/getting-started/configuring/#irregular_models) option, which can both help describe the correct relationship between a table name and a model name and improve performance by avoiding the default behavior of searching for the model based on the table name. Although the table name once associated with a model name is cached, please note this when setting irregular names.
+The most important setting is the [`irregular_models`](/postgresql/getting-started/configuring/#irregular_models) option, which can both help describe the correct relationship between a table name and a model name and improve performance by avoiding the default behavior of searching for the model based on the table name. Although the table name once associated with a model name is cached, please note this when setting irregular names.
 
 ```ruby
 Torque::PostgreSQL.configure do |c|
@@ -189,7 +189,7 @@ Author.eager_load(:activities).first.activities.map(&:class)
 # [Activity, ActivityPost, ActivityBook]
 ```
 
-If the table name cannot be translated into a model, the query raises a `Torque::PostgreSQL::InheritanceError` telling you to describe it through the [`irregular_models`]({{ site.baseurl }}/getting-started/configuring/#irregular_models) setting.
+If the table name cannot be translated into a model, the query raises a `Torque::PostgreSQL::InheritanceError` telling you to describe it through the [`irregular_models`](/postgresql/getting-started/configuring/#irregular_models) setting.
 
 ### Partial and read-only records
 
@@ -289,7 +289,7 @@ list.second.class.table_name               # "activity_posts"
 list.third.class.table_name                # "activity_books"
 ```
 
-> **Note** The `_record_class` name, which can be changed through the [`inheritance.record_class_column_name`]({{ site.baseurl }}/getting-started/configuring/#inheritance.record_class_column_name) setting, is only the alias of the marker column in the generated SQL. It is consumed while instantiating each record and is not kept as an attribute, which is why `record._record_class` does not exist.
+> **Note** The `_record_class` name, which can be changed through the [`inheritance.record_class_column_name`](/postgresql/getting-started/configuring/#inheritance.record_class_column_name) setting, is only the alias of the marker column in the generated SQL. It is consumed while instantiating each record and is not kept as an attribute, which is why `record._record_class` does not exist.
 
 ### Things to be aware of
 

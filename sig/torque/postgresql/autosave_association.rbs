@@ -1,0 +1,16 @@
+module Torque
+  module PostgreSQL
+    module AutosaveAssociation
+      module ClassMethods
+        def add_autosave_association_callbacks: (reflection reflection) -> untyped
+      end
+
+      def save_belongs_to_many_association: (reflection reflection) -> untyped
+    end
+  end
+end
+
+class ActiveRecord::Base
+  extend Torque::PostgreSQL::AutosaveAssociation::ClassMethods
+  include Torque::PostgreSQL::AutosaveAssociation
+end

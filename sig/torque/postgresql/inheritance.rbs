@@ -1,0 +1,47 @@
+module Torque
+  module PostgreSQL
+    class InheritanceError < ArgumentError
+    end
+
+    module Inheritance
+      extend ActiveSupport::Concern
+
+      type dependents = Hash[String, model]
+
+      module ClassMethods
+        def _record_class_attribute: () -> Symbol
+        def _record_class_column_name: () -> String
+        def inheritance_merged_attributes: () -> Array[String]
+        def inheritance_mergeable_attributes: () -> Array[String]
+        def physically_inherited?: () -> bool
+        def inheritance_dependents: () -> Array[String]
+        def physically_inheritances?: () -> bool
+        def inheritance_column_prefix: () -> String
+        def physically_inheritance_root: () -> model
+        def inheritance_foreign_attribute_names: () -> Set[String]
+        def inheritance_dependent_prefixes: () -> Set[String]
+        def casted_dependents: () -> dependents
+        def inheritance_expandable_dependents: () -> dependents
+        def reset_table_name: () -> (String | TableName)
+        def decorated_table_name: () -> String
+        def base_class: () -> model
+        def primary_key: () -> (String | Array[String] | nil)
+        def compute_table_name: () -> (String | TableName)
+        def raise_unable_to_cast: (String record_class_value) -> bot
+        def reload_schema_from_cache: (?bool recursive) -> untyped
+
+        private
+
+        def inheritance_cache: (Symbol name) { () -> untyped } -> untyped
+        def instantiate_instance_of: (model klass, Hash[String, untyped] attributes, ?Hash[String, type_caster] types) ?{ (record) -> void } -> record
+        def sanitize_attributes: (model real_class, Hash[String, untyped] attributes, Hash[String, type_caster] types) -> [Hash[String, untyped], Hash[String, type_caster]]
+      end
+    end
+  end
+end
+
+class ActiveRecord::Base
+  include Torque::PostgreSQL::Inheritance
+  extend Torque::PostgreSQL::Inheritance::ClassMethods
+  include Torque::PostgreSQL::Inheritance::Record
+end

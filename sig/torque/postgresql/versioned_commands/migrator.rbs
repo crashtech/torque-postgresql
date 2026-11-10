@@ -1,0 +1,19 @@
+module Torque
+  module PostgreSQL
+    module VersionedCommands
+      module Migrator
+        @versioned_command: CommandMigration | false
+        @versioned_table: SchemaTable
+        @versioned_counter: Integer
+
+        def execute_migration_in_transaction: (untyped migration) -> untyped
+        def record_version_state_after_migrating: (Integer version) -> untyped
+        def versioned_command?: (untyped migration) -> bool
+      end
+    end
+  end
+end
+
+class ActiveRecord::Migrator
+  prepend Torque::PostgreSQL::VersionedCommands::Migrator
+end

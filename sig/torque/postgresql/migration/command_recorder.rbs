@@ -1,0 +1,30 @@
+module Torque
+  module PostgreSQL
+    module Migration
+      module CommandRecorder
+        type inversion = [Symbol, Array[untyped]]
+
+        def rename_type: (*untyped args) ?{ (?) -> untyped } -> untyped
+        def invert_rename_type: (Array[untyped] args) ?{ (?) -> untyped } -> inversion
+        def create_composite_type: (*untyped args) ?{ (?) -> untyped } -> untyped
+        def invert_create_composite_type: (Array[untyped] args) ?{ (?) -> untyped } -> inversion
+        def change_composite_type: (*untyped args) ?{ (?) -> untyped } -> untyped
+        def add_composite_column: (*untyped args) ?{ (?) -> untyped } -> untyped
+        def invert_add_composite_column: (Array[untyped] args) ?{ (?) -> untyped } -> inversion
+        def remove_composite_column: (*untyped args) ?{ (?) -> untyped } -> untyped
+        def invert_remove_composite_column: (Array[untyped] args) ?{ (?) -> untyped } -> inversion
+        def change_composite_column: (*untyped args) ?{ (?) -> untyped } -> untyped
+        def rename_composite_column: (*untyped args) ?{ (?) -> untyped } -> untyped
+        def invert_rename_composite_column: (Array[untyped] args) ?{ (?) -> untyped } -> inversion
+        def sync_inheritance_features: (*untyped args) ?{ (?) -> untyped } -> untyped
+        def invert_sync_inheritance_features: (Array[untyped] args) ?{ (?) -> untyped } -> inversion
+        def create_schema: (*untyped args) ?{ (?) -> untyped } -> untyped
+        def invert_create_schema: (Array[untyped] args) ?{ (?) -> untyped } -> inversion
+      end
+    end
+  end
+end
+
+class ActiveRecord::Migration::CommandRecorder
+  include Torque::PostgreSQL::Migration::CommandRecorder
+end

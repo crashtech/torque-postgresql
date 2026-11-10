@@ -27,6 +27,9 @@ Default value: `true`
 <a name="buckets"></a>`buckets` Add support for querying and calculating histogram buckets, through the `buckets` method on relations.  
 Default value: `true`
 
+<a name="segments"></a>`segments` Add support for segmenting calculations by named conditions, through the `segments` method on relations.  
+Default value: `true`
+
 <a name="irregular_models"></a>`irregular_models` Set a list of irregular model names when associated with table names. It uses the `'table_name' => 'ModelName'` format. This is widely used for inheritance because record types need to be associated with a model class.  
 Default value: `{}`
 
@@ -38,7 +41,7 @@ These are the keys available to configure associations features:
 Default value: `false`
 
 <!--
-<a name="associations.belongs_to_many_required_by_default"></a>`associations.optimize_for_binds` Define if `belongs_to_many` and `has_many array: true` will use `ANY($1)` when possible to reduce the number of binds (and the number of necessary prepared statements).  
+<a name="associations.optimize_for_binds"></a>`associations.optimize_for_binds` Define if `belongs_to_many` and `has_many array: true` will use `ANY($1)` when possible to reduce the number of binds (and the number of necessary prepared statements).  
 Default value: `false`
 -->
 
@@ -50,7 +53,7 @@ These are the keys available to configure schemas features:
 Default value: `true`
 
 <a name="schemas.blacklist"></a>`schemas.blacklist` Defines a list of LIKE-based schemas to not consider for a multiple schema database. This is also available on `config/database.yml` as `schemas` and nested to it, `blacklist`.  
-Default value: `['information_schema ', 'pg_%']`
+Default value: `['information_schema', 'pg_%']`
 
 <a name="schemas.whitelist"></a>`schemas.whitelist` Defines a list of LIKE-based schemas to consider for a multiple schema database. This is also available on `config/database.yml` as `schemas` and nested to it, `whitelist`.  
 Default value: `['public']`
@@ -116,10 +119,10 @@ Default value: `true`
 <a name="geometry.point_class"></a>`geometry.point_class` Define the class that will be handling Point data types after decoding it. Any class provided here must respond to 'x', and 'y'.  
 Default value: `ActiveRecord::Point`
 
-<a name="geometry.box_class"></a>`geometry.box_class` Define the class that will be handling Circle data types after decoding it. Any class provided here must respond to 'x', 'y', and 'r'.  
+<a name="geometry.box_class"></a>`geometry.box_class` Define the class that will be handling Box data types after decoding it. Any class provided here must respond to 'x1', 'y1', 'x2', and 'y2'.  
 Default value: `nil # Which will define an internal Circle class`
 
-<a name="geometry.circle_class"></a>`geometry.circle_class` Define the class that will be handling Box data types after decoding it. Any class provided here must respond to 'x1', 'y1', 'x2', and 'y2'.  
+<a name="geometry.circle_class"></a>`geometry.circle_class` Define the class that will be handling Circle data types after decoding it. Any class provided here must respond to 'x', 'y', and 'r'.  
 Default value: `nil # Which will define an internal Box class`
 
 <a name="geometry.line_class"></a>`geometry.line_class` Define the class that will be handling Line data types after decoding it. Any class provided here must respond to 'a', 'b', and 'c'.  
@@ -168,7 +171,7 @@ Default value: `{}`
 
 These are the keys available to configure Period features:
 
-<a name="period.enabled"></a>`period.enabled` Enables period handler by this gem  
+<a name="period.enabled"></a>`period.enabled` Enables the period handler provided by this gem.  
 Default value: `true`
 
 <a name="period.base_method"></a>`period.base_method` The name of the method to be used on any ActiveRecord::Base to initialize model-based period features.  
@@ -248,7 +251,7 @@ These are the keys available to configure LTree features:
 <a name="ltree.enabled"></a>`ltree.enabled` Enables the ltree and lquery data types handler by this gem.  
 Default value: `true`
 
-<a name="ltree.sanitize"></a>`ltree.sanitize` A hash of replacements applied to every label provided by the application before it gets validated, so that a source that does not satisfy PostgreSQL's rules on its own can still be used. Dashes, for example, are only accepted as of PostgreSQL 16, so `{ '-' => '_' }` turns them into underscores and `{ '-' => '' }` drops them. It never applies to values read from the database.  
+<a name="ltree.sanitize"></a>`ltree.sanitize` A hash of replacements applied to every label provided by the application before it is sent to the database, so that a source that does not satisfy PostgreSQL's rules on its own can still be used. Dashes, for example, are only accepted as of PostgreSQL 16, so `{ '-' => '_' }` turns them into underscores and `{ '-' => '' }` drops them. It never applies to values read from the database.  
 Default value: `nil`
 
 <a name="ltree.compatible_method"></a>`ltree.compatible_method` The name of a method that, whenever the given object responds to it, is used to translate that object into a path or a pattern. It lets any class be used wherever one is expected, on assignment, on a condition, and while comparing one path to another. Set it to `nil` to turn the behavior off.  
@@ -303,10 +306,10 @@ These are the keys available to configure Predicate Builder features:
 <a name="predicate_builder.enabled"></a>`predicate_builder.enabled` List which handlers are enabled by default. Possible values are: `regexp`, `arel_attribute`, `enumerator_lazy`.  
 Default value: `%i[regexp arel_attribute enumerator_lazy]`
 
-<a name="predicate_builder.handle_array_attributes"></a>`predicate_builder.handle_array_attributes` When active, values provided to array attributes will be handled more friendly. It will use the +ANY+ operator on a equality check and overlaps when the given value is an array.  
+<a name="predicate_builder.handle_array_attributes"></a>`predicate_builder.handle_array_attributes` When active, values provided to array attributes will be handled more friendly. It will use the `ANY` operator on an equality check and overlaps when the given value is an array.  
 Default value: `false`
 
-<a name="predicate_builder.lazy_timeout"></a>`predicate_builder.lazy_timeout`  Make sure that the predicate builder will not spend more than 20ms trying to produce the underlying array.  
+<a name="predicate_builder.lazy_timeout"></a>`predicate_builder.lazy_timeout` Make sure that the predicate builder will not spend more than this many seconds trying to produce the underlying array.  
 Default value: `0.02`
 
 <a name="predicate_builder.lazy_limit"></a>`predicate_builder.lazy_limit` Since lazy array is uncommon, it is better to limit the number of entries we try to pull so we don't cause a timeout or a long wait iteration.  
@@ -314,13 +317,23 @@ Default value: `2_000`
 
 ## Versioned commands configurations {#versioned_commands}
 
-These are the keys available to configure [versioned commands]({{ site.baseurl }}/experimental/versioned-commands/):
+These are the keys available to configure [versioned commands](/postgresql/experimental/versioned-commands/):
 
-<a name="versioned_commands.enabled"></a>`versioned_commands.enabled` Enables managing `views`, `functions`, and non-enum `types` from versioned `.sql` migrations. This is opt-in because it changes how migrations behave and adds an extra schema table.  
+<a name="versioned_commands.enabled"></a>`versioned_commands.enabled` Enables managing `views`, `functions`, `triggers`, and non-enum `types` from versioned `.sql` migrations. This is opt-in because it changes how migrations behave and adds an extra schema table.  
 Default value: `false`
 
 <a name="versioned_commands.types"></a>`versioned_commands.types` The list of commands that are versioned by this feature.  
-Default value: `%i[function type view]`
+Default value: `%i[function type view trigger]`
 
 <a name="versioned_commands.table_name"></a>`versioned_commands.table_name` The name of the table that inherits from `schema_migrations` and stores the list of versioned commands that have been executed.  
 Default value: `'schema_versioned_commands'`
+
+## Cross join configurations {#cross_join}
+
+These are the keys available to configure [cross join](/postgresql/experimental/cross-join/):
+
+<a name="cross_join.enabled"></a>`cross_join.enabled` Enables joining a query against a set-returning function, a `LATERAL` subquery, or a list of rows, through the `cross_join` method on relations. This is opt-in because the feature is experimental and its API may still move.  
+Default value: `false`
+
+<a name="cross_join.ordinality_column"></a>`cross_join.ordinality_column` The name of the counter column added by `with_ordinality: true`. It matches what PostgreSQL calls the column when it is not named at all.  
+Default value: `:ordinality`

@@ -1,0 +1,14 @@
+module Torque
+  module PostgreSQL
+    module Reflection
+      module HasManyReflection
+        def connected_through_array?: () -> bool?
+        def array_attribute: () -> arel_attribute
+      end
+    end
+  end
+end
+
+class ActiveRecord::Reflection::HasManyReflection
+  include Torque::PostgreSQL::Reflection::HasManyReflection
+end

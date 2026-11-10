@@ -1,0 +1,43 @@
+module Torque
+  module PostgreSQL
+    class LookupError < ArgumentError
+    end
+
+    # initialize is not declared: schema_cache/inheritance.rb reopens this
+    # module before it is defined, and the runtime checker hooks it eagerly
+    module SchemaCache
+      include SchemaCache::Inheritance
+
+      type source = connection | pool
+
+      @data_sources_model_names: Hash[String, model]
+      @inheritance_dependencies: Hash[String, Array[String]]
+      @inheritance_associations: Hash[String, Array[String]]
+      @inheritance_loaded: bool
+
+      def initialize_dup: (*untyped) -> untyped
+      def encode_with: (untyped coder) -> untyped
+      def init_with: (untyped coder) -> untyped
+      def add: (source | String connection_or_table_name, ?String table_name, *untyped) -> untyped
+      def clear!: () -> untyped
+      def size: () -> Integer
+      def clear_data_source_cache!: (source | String connection_or_name, ?String name) -> untyped
+      def marshal_dump: () -> Array[untyped]
+      def marshal_load: (Array[untyped] array) -> untyped
+      def add_model_name: (*untyped args) -> model?
+      def dependencies: (source | String source, ?String table_name) -> Array[String]?
+      def associations: (source | String source, ?String table_name) -> Array[String]?
+      def lookup_model: (String table_name, ?String | model scoped_class) -> model
+
+      private
+
+      def reload_inheritance_data!: (source source) -> untyped
+      def generate_associations: () -> Hash[String, Array[String]]
+      def add_all: (?source? source) -> untyped
+    end
+  end
+end
+
+class ActiveRecord::ConnectionAdapters::SchemaCache
+  prepend Torque::PostgreSQL::SchemaCache
+end

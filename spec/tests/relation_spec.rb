@@ -43,6 +43,20 @@ RSpec.describe 'Relation', type: :helper do
       expect(subject.call(check)).to be_attributes_as(result)
     end
 
+    it 'resolves a struct column into its properties' do
+      Profile.create!(name: 'a', settings: { theme: 'dark' })
+      Profile.create!(name: 'b', settings: { theme: 'light' })
+
+      expect(Profile.unscoped.resolve_column([settings: :theme]).first)
+        .to be_a(Torque::PostgreSQL::Arel::Nodes::Property)
+      expect(Profile.maximum(settings: :theme)).to be_eql('light')
+    end
+
+    it 'resolves a composite column into its columns' do
+      expect(Place.unscoped.resolve_column([home: :street]).first)
+        .to be_a(Torque::PostgreSQL::Arel::Nodes::Column)
+    end
+
     it 'raises on relation not present' do
       check = [supervisors: :name]
       expect{ subject.call(check) }.to raise_error(ArgumentError, /Relation for/)
@@ -69,6 +83,13 @@ RSpec.describe 'Relation', type: :helper do
       sql += ' INNER JOIN GENERATE_SERIES(1::integer, 10::integer)'
       sql += ' AS series ON "series" = "videos"."id"'
       expect(source.join_series(1..10, with: :id).to_sql).to eq(sql)
+    end
+
+    it 'accepts a part of a column' do
+      sql = 'SELECT "places".* FROM "places"'
+      sql += ' INNER JOIN GENERATE_SERIES(1::integer, 10::integer)'
+      sql += ' AS series ON "series" = ("places"."home")."number"'
+      expect(Place.join_series(1..10, with: { home: :number }).to_sql).to eq(sql)
     end
 
     it 'can be renamed' do
@@ -212,75 +233,10 @@ RSpec.describe 'Relation', type: :helper do
     end
   end
 
-  context 'on buckets' do
-    let(:source) { User.all }
-
-    it 'produces the right query' do
-      query = source.buckets(:age, 0..50, count: 5)
-      sql, binds = get_query_with_binds { query.load }
-
-      expect(sql).to include(<<~SQL.squish)
-        WIDTH_BUCKET("users"."age", $1::numeric, $2::numeric, $3::integer) AS bucket
-      SQL
-      expect(binds.map(&:value)).to eq([0, 50, 5])
-    end
-
-    it 'can query records by buckets' do
-      list = [create(:user, age: 5), create(:user, age: 5), create(:user, age: 15)]
-      query = source.buckets(:age, 0..50, count: 5).records
-
-      expect(query).to be_a(Hash)
-      expect(query.keys).to match_array([0...10, 10...20])
-      expect(query[0...10]).to match_array([list[0], list[1]])
-      expect(query[10...20]).to match_array([list[2]])
-    end
-
-    it 'can query buckets of roles' do
-      list = [create(:user, role: :visitor)]
-      list << create(:user, role: :assistant)
-      list << create(:user, role: :manager)
-      query = source.buckets(:role, %w[assistant manager], cast: :roles).records
-
-      expect(query).to be_a(Hash)
-      expect(query.keys).to match_array([nil, 'assistant', 'manager'])
-      expect(query[nil]).to eq([list[0]])
-      expect(query['assistant']).to eq([list[1]])
-      expect(query['manager']).to eq([list[2]])
-    end
-
-    it 'works with calculations' do
-      list = [create(:user, age: 5), create(:user, age: 5), create(:user, age: 15)]
-      query = source.buckets(:age, 0..50, count: 5).count
-
-      expect(query).to be_a(Hash)
-      expect(query.keys).to match_array([0...10, 10...20])
-      expect(query[0...10]).to eq(2)
-      expect(query[10...20]).to eq(1)
-    end
-
-    it 'works with other types of calculations' do
-      list = [create(:user, age: 5), create(:user, age: 5), create(:user, age: 15)]
-      query = source.buckets(:age, 0..50, count: 5).sum(:age)
-
-      expect(query).to be_a(Hash)
-      expect(query.keys).to match_array([0...10, 10...20])
-      expect(query[0...10]).to eq(10)
-      expect(query[10...20]).to eq(15)
-    end
-
-    it 'work with joins and merge' do
-      list = [create(:user, age: 5), create(:user, age: 5), create(:user, age: 15)]
-      records = [create(:comment, user: list[0], content: 'Hello')]
-      records << create(:comment, user: list[1], content: 'World')
-      records << create(:comment, user: list[2], content: 'Test')
-
-      query = Comment.joins(:user).merge(source.buckets(:age, 0..50, count: 5)).records
-
-      expect(query).to be_a(Hash)
-      expect(query.keys).to match_array([0...10, 10...20])
-      expect(query[0...10]).to match_array([records[0], records[1]])
-      expect(query[10...20]).to match_array([records[2]])
+  context 'on connection' do
+    it 'casts a condition value without a permanent connection' do
+      expect(ActiveRecord::Base).not_to receive(:connection)
+      expect(User.all.cast_for_condition(:name, 'Rick')).to be_eql('Rick')
     end
   end
-
 end

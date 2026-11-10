@@ -22,10 +22,14 @@ require_relative '../lib/torque/postgresql/attributes/enum_set'
 require_relative '../lib/torque/postgresql/attributes/period'
 require_relative '../lib/torque/postgresql/attributes/struct'
 require_relative '../lib/torque/postgresql/attributes/full_text_search'
+require_relative '../lib/torque/postgresql/attributes/ltree'
+require_relative '../lib/torque/postgresql/attributes/lquery'
 
 require_relative '../lib/torque/postgresql/relation/auxiliary_statement'
 require_relative '../lib/torque/postgresql/relation/join_series'
 require_relative '../lib/torque/postgresql/relation/buckets'
+require_relative '../lib/torque/postgresql/relation/segments'
+require_relative '../lib/torque/postgresql/relation/cross_join'
 
 require_relative '../lib/torque/postgresql/versioned_commands'
 
@@ -42,6 +46,11 @@ module Torque
     Relation.include(Relation::AuxiliaryStatement)
     Relation.include(Relation::JoinSeries)
     Relation.include(Relation::Buckets)
+    Relation.include(Relation::Segments)
+    Relation.include(Relation::CrossJoin)
+
+    config.cross_join.enabled = true
+    ActiveRecord::Base.singleton_class.delegate(:cross_join, to: :all)
 
     config.versioned_commands.enabled = true
     ActiveRecord::Schema::Definition.include(Adapter::Definition)

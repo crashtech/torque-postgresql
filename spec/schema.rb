@@ -102,6 +102,8 @@ ActiveRecord::Schema.define do
     t.integer  "parent_id"
     t.string   "title"
     t.ltree    "path", index: { using: :gist }
+    t.lquery   "pattern"
+    t.lquery   "patterns", array: true
   end
 
   create_table "texts", force: :cascade do |t|

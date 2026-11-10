@@ -56,9 +56,7 @@ RSpec.describe 'Arel' do
     it 'does not break the change column default value method' do
       connection.add_column(:authors, :enabled, :boolean)
       expect { connection.change_column_default(:authors, :enabled, { from: nil, to: true }) }.not_to raise_error
-      # Rails 8.1 type casts column defaults, so it is no longer a string
-      expected = Torque::PostgreSQL::AR810 ? true : 'true'
-      expect(Author.columns_hash['enabled'].default).to eq(expected)
+      expect(Author.new.enabled).to be(true)
     end
 
     it 'does not break jsonb' do

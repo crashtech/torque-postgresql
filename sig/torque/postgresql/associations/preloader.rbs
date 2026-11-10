@@ -1,0 +1,8 @@
+module Torque
+  module PostgreSQL
+    module Associations
+      module Preloader
+      end
+    end
+  end
+end

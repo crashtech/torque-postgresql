@@ -1,0 +1,13 @@
+module Torque
+  module PostgreSQL
+    module Validations
+      class NestedValidator < ActiveModel::EachValidator
+        def validate_each: (ActiveModel::Validations record, column_ref attribute, untyped value) -> untyped
+      end
+    end
+  end
+end
+
+class ActiveRecord::Base
+  include Torque::PostgreSQL::Validations
+end
